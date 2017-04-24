@@ -1,0 +1,10 @@
+Options -Indexes
+
+ErrorDocument 500 /internalerror.html
+ErrorDocument 401 /authrequired.html
+ErrorDocument 403 /errores/403.html
+
+<Files .htaccess>
+	Order allow,deny
+	Deny from all
+</Files>

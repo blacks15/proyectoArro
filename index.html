@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8">
+	<link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32" />
+	<link rel="stylesheet" type="text/css" href="plugins/material/css/materialize.css">
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
+	<link rel="stylesheet" type="text/css" href="plugins/sweetalert/sweetalert2.css">
+<style type="text/css">
+html,
+body {
+    height: 100%;
+}
+html {
+    display: table;
+    margin: auto;
+}
+
+</style>
+</head>
+<body class="blue lighten-3" id="login">
+<div class="row" id="login-page">
+	<div class="col s8 z-depth-6 card-panel" style="margin-left: 20%;">
+		<form id="frmLogin" name="frmLogin">
+			<div class="row"> 
+				<div class="input-field col s12 center">
+					<img src="img/logo_sin_fondo.png" width="50%" class="responsive-img valign profile-image-login">
+					<p class="slogan center login-form-text">Leer Aumenta el Saber</p>
+				</div>
+			</div>
+			<div class="col s10">
+				<div class="centerDiv"> 
+					<div class="row margin"> 
+						<div class="input-field col s12">
+							<i class="material-icons prefix">perm_identity</i>
+							<input type="text" name="usuario" id="usuario" placeholder="Usuario" maxlength="20" class="textoNomral">
+						</div>
+					</div>
+					<div class="row margin">
+						<div class="input-field col s12">
+							<i class="material-icons prefix">lock_outline</i>
+							<input id="password" name="password" type="password" placeholder="Contraseña" maxlength="20" class="textoNomral">
+						</div>
+					</div>
+					<div class="row" style="margin-bottom: 20px;">
+						<div class="input-field col s12">
+							<button type="button" class="btn waves-effect waves-light col s12" disabled="true" id="btnLogin">Login</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+	<script type="text/javascript" src="plugins/jquery/jquery.js"></script>
+	<script type="text/javascript" src="plugins/material/js/materialize.js"></script>
+	<script type="text/javascript" src="js/global.js"></script>
+	<script type="text/javascript" src="js/conf.js"></script>
+	<script type="text/javascript" src="js/login.js"></script>
+	<script type="text/javascript" src="plugins/sweetalert/sweetalert2.min.js"></script>
+</body>
+</html>
