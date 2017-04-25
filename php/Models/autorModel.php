@@ -12,7 +12,7 @@ class AutorModel {
 		$log->insert('Entro metodo cargarAutores!', false, true, true);	
 		$i = 0;
 		$datos = array($codigo,$inicio,5);
-		$consulta = "CALL spConsultaAutores(?,?,?,@msg,@codRetorno)";
+		$consulta = "CALL spConsultaAutores(?,?,?,@msg,@codRetorno,@numFilas)";
 
 		$stm = SQL($consulta,$datos);
 
@@ -25,8 +25,11 @@ class AutorModel {
 				$i++;
 			}
 		}
+	
+		$retorno->numFilas = $stm->numFilas[0];
+		$retorno->autores = $autores;
 
-		return $autores; 
+		return $retorno; 
 	}
 }
 ?>

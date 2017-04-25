@@ -15,6 +15,7 @@
 			$res->datos = $stm->fetchAll(PDO::FETCH_ASSOC);
 			$stm->closeCursor();
 			$res->codRetorno = $db->query('select @codRetorno')->fetch();
+			$res->numFilas = $db->query('select @numFilas')->fetch();
 				//ESCRIBIMOS ERROR EN EL LOG
 			if ($error[2] != "") {
 				$log->insert('Error SQL: '.$error[2], false, true, true);	
