@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Actualizar Stock</title>
+</head>
+<body>
+<div class="card-panel">
+	<form id="updateStock">
+		<table>
+			<tr class="row">
+				<td width="25%">
+					<button type="button" id="btnNuevo" class="icon-agregar btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+					<button type="button" id="btnBuscarProducto" class="white-text icon-box-search btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+					<button type="button" id="btnRefresh" class="btn-floating btn-large blue darken-4 waves-effect waves-light"><i class="material-icons">autorenew</i>
+					</button>
+				</td>
+				<td width="30%" id="inputs">
+					<fieldset>
+						<p>Stock</p>
+						<input type="radio" name="tipo" id="agregar" value="agregar"><label for="agregar">Agregar Stock</label>
+						<input type="radio" name="tipo" id="dev" value="dev"><label for="dev">Devolución</label>
+					</fieldset>
+				</td>
+				<td width="75%" id="filaBusqueda">
+					<fieldset>
+						<p>Busqueda</p>
+						<div class="col s3">
+							<select class="browser-default" id="busqueda" name="busqueda">
+								<option value="0">SELECCIONE</option>
+								<option value="1">Código</option>
+								<option value="2">Nombre</option>
+							</select>
+						</div>
+						<div class="col s6" id="busquedas">
+							<input type="text" class="buscar" name="buscarE" id="buscarE" placeholder="Buscar por Código">
+							<input type="text" class="buscar" name="buscarN" id="buscarN" placeholder="Buscar por Nombre">
+						</div>
+						<div class="col s2">
+							<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
+							</button>
+						</div>
+					</fieldset>
+				</td>
+			</tr>
+		</table>
+		<fieldset style="margin-top: 25px;" id="stock">
+			<legend id="titulo"></legend>
+			<div class="row">
+				<div class="col s3">
+					<label>Código Producto</label>
+					<input type="hidden" name="codigo" id="codigo">
+					<input type="text" name="codigoProducto" id="codigoProducto" readonly="true">
+				</div>
+				<div class="col s5">
+					<label>Nombre Producto</label>
+					<input type="text" name="producto" id="producto" readonly="true">	
+				</div>
+				<div class="col s2">
+					<label>Stock Actual</label>
+					<input type="text" name="stockActual" id="stockActual" readonly="true">	
+					<input type="hidden" name="stockMax" id="stockMax">
+				</div>
+				<div class="col s2">
+					<label id="lblAgDev"></label>
+					<input type="text" name="nuevoStock" id="nuevoStock" >	
+					<input type="hidden" name="bandera" id="bandera">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12" align="right">
+					<button type="button" class="icon-save btn-floating btn-large blue darken-4 waves-effect waves-light" id="btnSave" disabled="true"></button>
+				</div>
+			</div>
+		</fieldset>
+	</form>
+</div>
+	<script type="text/javascript" src="js/stock.js"></script>
+</body>
+</html>

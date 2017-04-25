@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Buscar Retiros</title>
+</head>
+<body>
+<div class="card-panel">
+	<form id="buscarRetiros">
+		<fieldset>
+			<legend>Buscar Retiros</legend>
+			<table class="table" border="0">
+				<tr class="row">
+					<td width="60%">
+						<button type="button" id="btnNuevo" class="icon-agregar btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+						<button type="button" id="btnReporte" class="icon-reporte btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+					</td>
+					<td width="40%">
+						<div class="col s8">
+							<input type="text" class="buscar" name="buscar" id="buscar" placeholder="Buscar">
+						</div>
+						<div class="col s4">
+							<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
+							</button>
+						</div>
+					</td>
+				</tr>
+			</table>
+			<table class="centered bordered striped highlight responsive-table">
+				<thead>
+					<tr>
+						<th style="display: none" data-field="id"">Código</th>
+						<th data-field="folio">Folio</th>
+						<th data-field="nombreEmpleado">Nombre Empleado</th>
+						<th data-field="cantidad">Cantidad</th>
+						<th data-field="descripcion">Descripción</th>
+						<th data-field="fecha">Fecha Retiro</th>
+					</tr>
+				</thead>
+				<tbody id="table"></tbody>
+			</table>
+			<div class="pagination" id="pages">
+				<center><ul id="page-numbers"></ul></center>
+			</div>
+		</fieldset>
+	</form>
+</div>
+	<script type="text/javascript" src="js/buscarRetiro.js"></script>
+</body>
+</html>

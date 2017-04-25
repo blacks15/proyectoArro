@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Abono Cliente</title>
+</head>
+<body>
+<div class="card-panel">
+	<form id="frmAgregarAbono">
+		<fieldset>
+			<legend>Abonos</legend>
+			<table class="table" border="0">
+				<tr class="row">
+					<td width="35%">
+						<button type="button" id="btnNuevo" class="icon-agregar btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+						<button type="button" id="btnReporte" class="icon-reporte btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+					</td>
+					<td width="65%">
+						<fieldset>
+							<p>Busqueda</p>
+							<div class="col s4">
+								<select class="browser-default" id="busqueda" name="busqueda">
+									<option value="0">SELECCIONE</option>
+									<option value="1">Nombre</option>
+									<option value="2">Empresa</option>
+								</select>
+							</div>
+							<div class="col s5" id="busquedas">
+								<input type="text" class="buscar" name="buscarE" id="buscarE" placeholder="Buscar por Empresa">
+								<input type="text" class="buscar" name="buscarN" id="buscarN" placeholder="Buscar por Nombre">
+							</div>
+							<div class="col s3">
+								<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
+								</button>
+							</div>
+						</fieldset>
+					</td>
+				</tr>
+			</table>
+			<div class="col s12">
+				<div class="row">
+					<div class="col s5">
+						<div class="row">
+							<div class="col s9">
+								<label for="nombreCliente">Nombre Cliente: </label>
+								<input type="text" id="nombreCliente" name="nombreCliente" readonly="true">
+								<input type="hidden" name="codigoCliente" id="codigoCliente">
+							</div>
+							<div class="col s3" style="margin-top: 15px;">
+								<button type="button" id="btnCancela" class="btn-floating red waves-effect waves-light"><i class="material-icons">close</i></button>
+							</div>
+						</div>
+					</div>
+					<div class="col s4">
+						<label for="matricula">Dirección Empleado </label>
+						<input type="text" id="direccionEmpleado" name="direccionEmpleado" readonly="true">
+					</div>
+					<div class="col s3">
+						<label for="repcontrasenia">Total Deuda </label>
+						<input type="text" id="totalDeuda" name="totalDeuda" readonly="true">
+					</div>
+				</div>
+			</div>
+			<table class="centered bordered highlight responsive-table" style="margin-top: 20px;">
+				<thead>
+					<tr>
+						<th data-field="folio">Folio</th>
+						<th data-field="fechaVenta">Fecha venta</th>
+						<th data-field="subTotal">SubTotal</th>
+					</tr>
+				</thead>
+				<tbody id="tableDeudas"></tbody>
+			</table>
+			<div class="pagination" id="pages">
+				<center><ul id="page-numbers"></ul></center>
+			</div>
+	<!-- SE CREA LA MODAL  -->
+			<div id="modal" class="modal" style="top: 25% !important;">
+				<div class="modal-content">
+					<span style="cursor: pointer;" id="btnClose"><i class="material-icons right">close</i></span>
+					<form class="col s12">
+					<fieldset>
+						<legend class="titulo">Abono a Cuenta</legend>
+						<div class="col s12">
+							<div class="row">
+								<div class="col s3">
+									<label>Folio venta</label>
+									<p id="folioVenta"></p>
+								</div>
+								<div class="col s2">
+									<label>Saldo Anterior</label>
+									<p id="saldoAnterior"></p>
+								</div>
+								<div class="col s2">
+									<label>Abono</label>
+									<input type="text" name="abono" id="abono" maxlength="10">
+								</div>
+								<div class="col s3">
+									<label>Nuevo Saldo</label>
+									<p id="saldoNuevo"></p>
+								</div>
+								<dir class="col s2">
+									<button type="button" class="icon-save btn-floating btn-large blue darken-1" id="btnSave" disabled="true"></button>
+								</dir>
+							</div>
+						</div>
+					</fieldset>
+					</form>
+				</div>
+			</div>
+		</fieldset>
+	</form>
+</div>
+	<script type="text/javascript" src="js/abono.js"></script>
+</body>
+</html>

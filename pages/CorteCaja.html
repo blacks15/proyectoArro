@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Corte de Caja</title>
+</head>
+<body>
+<div class="card-panel">
+	<form id="frmAgregarCorteCaja">
+		<fieldset>
+		<legend>Corte Caja</legend>
+		<div class="col s12">
+			<div class="row">
+				<div class="col s3">
+					<div class="row"> 
+						<div class="col s10">
+							<label>Folio Corte</label>
+							<input type="text" name="folio" id="folio" readonly="true">	
+						</div>
+					</div>
+				</div>
+				<div class="col s3">
+					<label>Fecha</label>
+					<input type="text" name="fechaCorte" id="fechaCorte" readonly="true">
+				</div>
+				<div class="col s4">
+					<label>Nombre Empleado</label>
+					<input type="text" name="nombreEmpleado" id="nombreEmpleado" readonly="true">
+				</div>
+				<div class="center col s2">
+					<button type="button" id="btnSave" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>
+				</div>
+			</div>
+			<table class="bordered centered responsive-table" id="datos">
+				<thead>
+					<th width="10%">Ingreso</th>
+					<th width="10%">Egreso</th>
+					<th width="10%">Total</th>
+				</thead>
+				<tbody id="tabla" name="tabla" style="text-align: center; text-transform: uppercase;"></tbody>
+			</table>
+			<input type="hidden" name="ingreso" id="ingreso">
+			<input type="hidden" name="egreso" id="egreso">
+			<input type="hidden" name="total" id="total">
+		</div>
+	</fieldset>
+	</form>
+</div>
+<script type="text/javascript" src="js/corteCaja.js"></script>
+</body>
+</html>

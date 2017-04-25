@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Autor</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8">
+</head>
+<body>
+	<div class="card-panel">
+		<form id="frmAgregarAutor">	
+			<fieldset>
+				<legend class="titulo">Autores</legend>
+				<table class="table" border="0">
+					<tr class="row">
+						<td width="60%">
+							<button type="button" id="btnNuevo" class="icon-agregar btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+							<button type="button" id="btnReporte" class="icon-reporte btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+						</td>
+						<td width="40%">
+							<div class="col s8">
+								<input type="text" class="buscar" name="buscar" id="buscar" placeholder="Buscar">
+							</div>
+							<div class="col s4">
+								<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
+								</button>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<input type="hidden" name="codigoLibro" id="codigoLibro">
+				<table class="centered bordered striped highlight responsive-table">
+					<thead>
+						<tr>
+							<th data-field="id">Código</th>
+							<th data-field="nombreAutor">Nombre Autor</th>
+						</tr>
+					</thead>
+					<tbody id="table"></tbody>
+				</table>
+				<div class="pagination" id="pages">
+					<center><ul id="page-numbers"></ul></center>
+				</div>
+			</fieldset>
+					<!-- SE CREA LA modal  -->
+			<div id="modal" class="modal modal-fixed-footer">
+				<div class="modal-content">
+					<form class="col s12">
+					<fieldset>
+						<legend class="titulo">Autores</legend>
+						<table>
+							<tr>
+								<td class="row">
+									<div class="col s6">
+										<label for="codigo">Código Autor</label>
+										<input type="text" id="codigo" name="codigo" class="validate" readonly="true">
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td class="row">
+									<div class="col s7">
+										<div class="input-field">
+											<label for="textfield">*Nombre Autor: </label>
+											<input type="text" name="nombre" id="nombre" autofocus maxlength="30">
+										</div>
+									</div>
+									<div class="col s5">
+										<br>
+										<a class="tooltipped""><i class="material-icons">info_outline</i></a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</fieldset>	
+					</form>
+				</div>
+				<div class="modal-footer">
+					Los Campos con * Son Obligatorios.
+					<button type="button" class="icon-save btn card-panel blue darken-4 waves-effect waves-light" id="btnSave"></button>
+					<button type="button" class="icon-editar btn card-panel blue darken-4 waves-effect waves-light" id="btnUpdate"></button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<script type="text/javascript" src="js/autor.js"></script>
+</body>
+</html>

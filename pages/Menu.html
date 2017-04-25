@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Menù</title>
+	<meta charset="utf-8">
+	<link rel="icon" type="image/png" href="img/favicon-16x16.png" sizes="16x16" />
+	<link rel="stylesheet" type="text/css" href="plugins/material/css/materialize.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/loading.css">
+	<link rel="stylesheet" type="text/css" href="plugins/fileinput/css/fileinput.min.css">
+	<link rel="stylesheet" type="text/css" href="plugins/sweetalert/sweetalert2.css">
+	<link rel="stylesheet" type="text/css" href="plugins/jqueryui/jquery-ui.min.css">
+</head>
+<body>
+<header>
+	<nav class="top-nav">
+		<div class="nav-wrapper">
+			<a href="#" data-activates="mobile-demo" class="button-collapse">
+				<i class="black-text material-icons mdi-navigation-menu">menu</i></a>
+			<a href="#" class="black-text center brand-logo">Sistema de Gestión de Libros</a>
+			<ul class="right">
+				<li>
+					<a class="dropdown-button black-text icon-usuario" href="#" data-activates="dropdown1" id="user-name">
+						<i class="material-icons right">arrow_drop_down</i>
+					</a>
+				</li>
+			</ul>
+			<ul id="dropdown1" class="dropdown-content">
+				<li><a href="#">Perfil</a></li>
+				<li class="divider"></li>
+				<li><a href="#" id="CerrarSesion">Cerrar Sesión</a></li>
+			</ul>
+		</div>
+	</nav>
+	<ul class="side-nav fixed collapsible collapsible-accordion" id="mobile-demo">
+		<li class="logo">
+			<div class="userView">
+				<div class="background ">
+					<img src="img/logo2.png" height="100%" width="100%">
+				</div>
+			</div>
+		</li>
+		<li class="bold"><a href="#" class="collapsible-header waves-effect waves-teal white-text" id="inicio">
+			<i class="white-text icon-home"></i>Home</a>
+		</li>
+		<li class="no-padding">
+			<ul class="collapsible collapsible-accordion">
+				<li class="bold"><a class="collapsible-header waves-effect waves-teal white-text">
+					<i class="icon-venta white-text"></i>Ventas</a>
+					<div class="collapsible-body">
+						<ul class="red lighten-1">
+							<li><a href="#" class="white-text" id="ventas">Ventas</a></li>
+							<li><a href="#" class="white-text" id="buscarVenta">Buscar Ventas</a></li>
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</li>
+		<li class="no-padding">
+			<ul class="collapsible collapsible-accordion">
+				<li class="bold"><a class="collapsible-header waves-effect waves-teal white-text">
+					<i class="icon-libro white-text"></i>Libros</a>
+					<div class="collapsible-body">
+						<ul class=" red lighten-1">
+							<li><a href="#" class="white-text" id="libros">Crear Libros</a></li>
+							<li><a href="#" class="white-text" id="buscarLibro">Buscar Libro</a></li>
+							<li class="divider"></li>
+							<li><a href="#" class="white-text" id="autores">Autores</a></li>
+							<li class="divider"></li>
+							<li><a href="#" class="white-text" id="editoriales">Editoriales</a></li>
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</li>
+		<li class="no-padding">
+			<ul class="collapsible collapsible-accordion">
+				<li class="bold"><a class="collapsible-header waves-effect waves-teal white-text">
+					<i class="icon-inventario white-text"></i>Inventario</a>
+					<div class="collapsible-body red lighten-1">
+						<ul>
+							<li><a href="#" class="white-text" id="provedores">Proveedores</a></li>
+							<li><a href="#" class="white-text" id="buscarProveedor">Buscar Proveedor</a></li>
+							<li class="divider"></li>
+							<li><a href="#" class="white-text" id="productos">Productos</a></li>
+							<li><a href="#" class="white-text" id="buscarProductos">Buscar Productos</a></li>
+							<li><a href="#" class="white-text" id="modificarInventario">Actualizar Inventario</a></li>
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</li>
+		<li class="no-padding" id="mEmpleado">
+			<ul class="collapsible collapsible-accordion">
+				<li class="bold"><a class="collapsible-header waves-effect waves-teal white-text">
+					<i class="icon-empleado white-text"></i>Empleados</a>
+					<div class="collapsible-body red lighten-1">
+						<ul>
+							<li><a href="#" class="white-text" id="empleados">Empleado</a></li>
+							<li><a href="#" class="white-text" id="buscarEmpleado">Buscar Empleado</a></li>
+							<li class="divider"></li>
+							<li><a href="#" class="white-text" id="usuarios">Usuario</a></li>
+							<li><a href="#" class="white-text" id="buscarUsuario">Buscar Usuarios</a></li>
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</li>
+		<li class="no-padding" id="mClientes">
+			<ul class="collapsible collapsible-accordion">
+				<li class="bold"><a class="collapsible-header waves-effect waves-teal white-text">
+					<i class="icon-clientes white-text"></i>Clientes</a>
+					<div class="collapsible-body red lighten-1">
+						<ul>
+							<li><a href="#" class="white-text" id="clientes">Clientes</a></li>
+							<li><a href="#" class="white-text" id="buscarClientes">Buscar Clientes</a></li>
+						<!--  <li class="divider"></li>
+							<li><a href="#" class="white-text" id="deudas">Deudas</a></li>
+							<li><a href="#" class="white-text" id="buscarDeudas">Buscar Deudas</a></li>
+							<li class="divider"></li>
+							<li><a href="#" class="white-text" id="abonos">Abonos</a></li>
+							<li><a href="#" class="white-text" id="buscarAbonos">Buscar Abonos</a></li> -->
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</li>
+		<li class="no-padding" id="mMovimientos">
+			<ul class="collapsible collapsible-accordion">
+				<li class="bold"><a class="collapsible-header waves-effect waves-teal white-text">
+					<i class="icon-retiro white-text"></i>Movimientos</a>
+					<div class="collapsible-body red lighten-1">
+						<ul>
+							<li><a href="#" class="white-text" id="retiros">Retiro Efectivo</a></li>
+							<li><a href="#" class="white-text" id="buscarRetiros">Buscar Retiros</a></li>
+							<li class="divider"></li>
+							<li><a href="#" class="white-text" id="corteCaja">Corte Caja</a></li>
+							<li><a href="#" class="white-text" id="buscarCorteCaja">Buscar Corte Caja</a></li>
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</li>
+	</ul>
+</header>
+	<input type="hidden" name="tipoUsuario" id="tipoUsuario">
+	<main>
+		<div class="container section" id="pages" name="pages"></div>
+		<!-- The Modal -->
+		<div id="loader" class="popup">
+			<div class="popup-content">
+				<div class="cssload-loadr">
+					<img src="img/libro-gift.gif" height="100px" width="150px" style="margin-left: 20%;">
+					<div class="slogan" style="margin-left: 20%;">Cargando....</div>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+	<script type="text/javascript" src="plugins/jquery/jquery.js"></script>
+	<script type="text/javascript" src="plugins/material/js/materialize.js"></script>
+	<script type="text/javascript" src="js/global.js"></script>
+	<script type="text/javascript" src="js/conf.js"></script>
+	<script type="text/javascript" src="js/menu.js"></script>
+	<script type="text/javascript" src="plugins/sweetalert/sweetalert2.min.js"></script>
+	<script type="text/javascript" src="plugins/fileinput/js/fileinput.js"></script>
+	<script type="text/javascript" src="plugins/fileinput/js/fileinput_locale_es.js"></script>
+	<script type="text/javascript" src="plugins/jqueryui/jquery-ui.js"></script>
+	<script type="text/javascript" src="plugins/jquery.tabletojson.js"></script>
+</html>												

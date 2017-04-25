@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Crear Deuda</title>
+</head>
+<body>
+<div class="card-panel">
+	<form id="frmAgregarDeuda">
+		<fieldset>
+			<legend>Crear Deuda</legend>
+			<table class="table" border="0">
+				<tr class="row">
+					<td width="35%">	
+						<button type="button" id="btnReporte" class="icon-reporte btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+						<button type="button" id="btnRefresh" class="btn-floating btn-large blue darken-4 waves-effect waves-light">
+							<i class="material-icons">autorenew</i>
+						</button>
+					</td>
+					<td width="65%">
+						<fieldset>
+							<p>Busqueda</p>
+							<div class="col s4">
+								<select class="browser-default" id="busqueda" name="busqueda">
+									<option value="0">SELECCIONE</option>
+									<option value="1">Nombre</option>
+									<option value="2">Empresa</option>
+								</select>
+							</div>
+							<div class="col s5" id="busquedas">
+								<input type="text" class="buscar" name="buscarE" id="buscarE" placeholder="Buscar por Empresa">
+								<input type="text" class="buscar" name="buscarN" id="buscarN" placeholder="Buscar por Nombre">
+							</div>
+							<div class="col s3">
+								<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
+								</button>
+							</div>
+						</fieldset>
+					</td>
+				</tr>
+			</table>
+				<div class="row">
+					<div class="col s12" style="margin-bottom: 25px;">
+						<ul class="tabs">	
+							<li class="tab col s6"><a href="#datosDeuda" class="active">Datos Cliente</a></li>
+							<li class="tab col s5"><a  href="#detalleDeuda">Detalle Deuda</a></li>
+						</ul>
+					</div>
+				</div>
+				<div id="datosDeuda" class="col s12">
+					<div class="row">
+						<div class="col s5">
+							<input type="hidden" name="codigoCliente" id="codigoCliente">
+							<label>*Nombre Cliente</label>
+							<input type="text" name="nombreCliente" id="nombreCliente" readonly="true">
+							<label>*Apellidos</label>
+							<input type="text" name="apellidos" id="apellidos" readonly="true">
+							<p>Los Campos con * son Obligatorios</p>
+						</div>
+						<div class="col s5">
+							<label>*Nombre Empresa</label>
+							<input type="text" name="nombreEmpresa" id="nombreEmpresa" readonly="true">
+							<label>*Dirección</label>
+							<input type="text" name="direccion" id="direccion" readonly="true">
+							<div class="row">
+								<div class="col s6">
+									<label>*Teléfono</label>
+									<input type="text" name="telefono" id="telefono" readonly="true">
+								</div>
+								<div class="col s6">
+									<label>*Celular</label>
+									<input type="text" name="celular" id="celular" readonly="true">
+								</div>
+							</div>
+						</div>
+						<div class="col s2">
+							<button type="button" id="btnSig" class="arrow_right btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_forward</i>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div id="detalleDeuda" class="col s12">
+					<div class="row">
+						<div class="col s2" align="left">
+							<button type="button" id="btnAnt" class="btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
+							</button>
+						</div>
+						<div class="col s7">
+							<div class="row">
+								<div class="col s3">
+									<label>*Folio</label>
+									<input type="text" name="folio" id="folio" maxlength="13">
+								</div>
+								<div class="col s2" style="margin-top: 15px;" id="borrar">
+									<button type="button" class="btn-floating red waves-effect waves-light"><i class="material-icons">close</i></button>
+								</div>
+								<div class="col s4">
+									<label>Fecha Compra</label>
+									<input type="text" name="fechaCompra" id="fechaCompra" readonly="true">
+									<input type="hidden" name="fechaCompra2" id="fechaCompra2">
+								</div>
+								<div class="col s3">
+									<label>Total Compra</label>
+									<input type="text" name="totalCompra" id="totalCompra" readonly="true">
+								</div>
+							</div>
+						</div>
+						<div class="col s3" align="right">
+							<button type="button" class="icon-save btn-floating btn-large blue darken-1" id="btnSave" disabled="true"></button>
+							<button type="button" class="icon-editar btn-floating btn-large green" id="btnUpdate" disabled="true"></button>
+							<button type="button" class="icon-borrar btn-floating btn-large red" id="btnDelete" disabled="true"></button>
+						</div>
+						<div class="col s10">
+							<table class="centered bordered highlight responsive-table">
+								<thead>
+									<tr>
+										<th style="display: none" data-field="id"">Código</th>
+										<th data-field="nombreProducto">Nombre Producto</th>
+										<th data-field="cantidad">Cantidad</th>
+										<th data-field="precio">Precio</th>
+										<th data-field="subtotal">Subtotal</th>
+									</tr>
+								</thead>
+								<tbody id="table"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+		</fieldset>
+	</form>
+</div>
+	<script type="text/javascript" src="js/deudas.js"></script>
+</body>
+</html>

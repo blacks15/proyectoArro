@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Cambiar Contraseña</title>
+</head>
+<body>
+<div class="card-panel">
+	<form id="frmCambiarPassword">
+		<fieldset>
+			<legend>Cambiar Contraseña</legend>
+			<table class="table col s12">
+				<tr>
+					<div class="row">
+						<div class="col s6">
+							<div class="row">
+								<div class="col s8">
+									<label for="nombreUsuario">Nombre Usuario: </label>
+									<input type="text" class="email" id="nombreUsuario" name="nombreUsuario" maxlength="20">
+								</div>
+								<div class="col s4" style="margin-top: 15px;">
+									<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
+								</div>
+							</div>
+							<label for="matricula">Matricula Empleado </label>
+							<input type="text" id="codigoEmpleado" name="codigoEmpleado" readonly="true">
+							<label for="repcontrasenia">Nombre Empleado </label>
+							<input type="text" id="nombreEmpleado" name="nombreEmpleado" disabled="true">
+						</div>
+						<div class="col s4">
+							<label for="contrasenia">Contraeña </label>
+							<input type="password" id="contrasenia" name="contrasenia" maxlength="20" disabled="true">
+							<label for="repcontrasenia">Confirmar Contraeña </label>
+							<input type="password" id="repContrasenia" name="repContrasenia" maxlength="20" disabled="true">	
+							<label>Tipo</label>
+							<select class="browser-default" id="tipo" name="tipo" disabled="true">
+								<option value="0">SELECCIONE</option>
+								<option value="1">Administrador</option>
+								<option value="2">Cajero</option>
+								<option value="3">Vendedor</option>
+							</select>
+						</div>
+						<div class="col s2" align="center">
+							<button type="button" class="icon-save btn blue darken-1" id="btnSave" disabled="true"></button>
+						</div>
+					</div>
+				</tr>
+			</table>
+		</fieldset>
+	</form>
+</div>
+	<script type="text/javascript" src="js/cambiarContrasenia.js"></script>
+</body>
+</html>
