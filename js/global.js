@@ -10,7 +10,7 @@ var global = {
 			allowOutsideClick: false
 		}).then(function() {
 			if (form != '' && form != undefined) {
-				global.cargarPagina('pages/'+form+'.html');
+				global.cargarPagina(form);
 			} else if (logOut == 1) {
 				window.open('php/cerrarSesion.php','_top');
 			}
@@ -109,14 +109,14 @@ var global = {
 				$("#pages").load('pages/'+form+'.html');
 			} else if (bus == '1') {
 				alert(form);
-				global.cargarPagina('pages/'+form+'.html');
+				global.cargarPagina(form);
 			}
 		});
 	},
 		//FUNCIÓN PARA CARGAR LAS PÁGINAS
-	cargarPagina: function(url){
+	cargarPagina: function(pagina){
 		$("#loader").fadeIn(500);
-		$("#pages").load('pages/'+url+'.html',function(responseText,statusText, xhr){
+		$("#pages").load('pages/'+pagina+'.html',function(responseText,statusText, xhr){
 			if(statusText == "error") {
 				$("#pages").load("pages/404.html");
 			}
@@ -127,9 +127,9 @@ var global = {
 	pagination: function (url,page,dato,opc) {
 		var parametros;
 		if (page == "") {
-			parametros = 'partida='+1+'&folio='+dato+'&tipoBusqueda='+opc;
+			parametros = 'partida='+1+'&codigo='+dato+'&tipoBusqueda='+opc;
 		} else {
-			parametros = 'partida='+page+'&folio='+dato+'&tipoBusqueda='+opc;
+			parametros = 'partida='+page+'&codigo='+dato+'&tipoBusqueda='+opc;
 		}
 
 		$.ajax({

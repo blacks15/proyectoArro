@@ -7,32 +7,32 @@
 */
 
 class Usuario {
+	private $clave;
 	private $usuario;
-	private $password;
 	private $tipoUsuario;
 	private $status;
-	
-	function __construct($usuario,$password,$tipoUsuario) {
+
+	function __construct($clave,$usuario,$tipoUsuario,$status) {
+		$this->clave = $clave;
 		$this->usuario = $usuario;
-		$this->password = $password;
 		$this->tipoUsuario = $tipoUsuario;
 		$this->status = $status;
 	}
 		//GETTERS AND SETTERS
+	public function getClave(){
+		return $this->clave;
+	}
+
+	public function setClave($clave){
+		$this->clave = $clave;
+	}
+
 	public function getUsuario(){
 		return $this->usuario;
 	}
 
 	public function setUsuario($usuario){
 		$this->usuario = $usuario;
-	}
-
-	public function getPassword(){
-		return $this->password;
-	}
-
-	public function setPassword($password){
-		$this->password = $password;
 	}
 
 	public function getTipoUsuario(){
@@ -43,7 +43,7 @@ class Usuario {
 		$this->tipoUsuario = $tipoUsuario;
 	}
 
-	public function getStatus(){
+    public function getStatus(){
 		return $this->status;
 	}
 

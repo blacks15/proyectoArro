@@ -1,7 +1,7 @@
 <?php 
 	require_once('Conexion.php');
 		//FUNCIÓN PARA INSERTAR DATOS
-	function SQL($sql,$datos){
+	function SP($sql,$datos){
 		$log = new Log("log", "../../log/");
 		try {
 			$db = new Conexion();
@@ -14,20 +14,48 @@
 			$stm->execute($datos);
 			$res->datos = $stm->fetchAll(PDO::FETCH_ASSOC);
 			$stm->closeCursor();
-			$res->codRetorno = $db->query('select @codRetorno')->fetch();
+			$res->codRetorno = $db->query('select @CodRetorno')->fetch();
 			$res->numFilas = $db->query('select @numFilas')->fetch();
+				//ESCRIBIMOS ERROR EN EL LOG
+			if ($error[2] != "") {
+				$log->insert('Error SP: '.$error[2], false, true, true);	
+			}
+			$log->insert('codRetorno SP: '.$res->codRetorno[0], false, true, true);	
+				//CERRAMOS LA CONEXIÓN
+			$db = null;
+				//RETORNAMOS LA RESPUESTA
+			return $res;
+		} catch (PDOException $e) {
+			$log->insert('Error SP' .$e->getMessage(), false, true, true);
+		}
+	}	
+		//FUNCIÓN PARA INSERTAR DATOS
+	function SQL($sql,$datos){
+		$log = new Log("log", "../../log/");
+		$log->insert('Entro metodo SQL!', false, true, true);
+		try {
+			$db = new Conexion();
+				//CREAMOS LA TRAMA Y ESCRIBIMOS EN EL LOG
+			$trama = debug($sql,$datos);
+			$log->insert('trama: '.$trama, false, true, true);
+				//SE PREPARA Y SE EJECUTA LA sql
+			$stm = $db->prepare($sql);
+				//SE EJECUTA LA CONSULTA CON EL ARRAY DE LOS DATOS Y SE REGRESA EL ÚLTIMO ID INSERTADO
+			$stm->execute($datos);
+				//SE TRAEN LOS DATOS Y EL ERROR EN CASO DE HABER
+			$error = $stm->errorInfo();
 				//ESCRIBIMOS ERROR EN EL LOG
 			if ($error[2] != "") {
 				$log->insert('Error SQL: '.$error[2], false, true, true);	
 			}
 				//CERRAMOS LA CONEXIÓN
-			$db = null; 
+			$db = null;
 				//RETORNAMOS LA RESPUESTA
-			return $res;
-		} catch (PDOException $e) {
+			return $stm;
+		} catch (Exception $e) {
 			$log->insert('Error SQL' .$e->getMessage(), false, true, true);
 		}
-	}	
+	}
 		//FUNCIÓN PARA CREAR LISTA DE PAGINACIÓN
 	function paginacion($numFilas,$tamañoPagina,$paginaActual){
 			//OBTENEMOS EL TOTAL DE PÁGINAS
@@ -73,5 +101,5 @@
 			$statement
 		);
 		return $statement;
-	}
+	}	
 ?>

@@ -1,10 +1,10 @@
 $(document).ready(function(){
 	 /**************************
-     *	 OOCULTAR CAMPOS	   *
+     *	 LLAMAR FUNCIONESS	   *
      **************************/
 	//global.validaSesion();
 	global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('ControllerAutor',1);
+	global.pagination('ControllerAutor',1,0);
 	$("#btnUpdate").hide('explode');
 		/**************************
 	     *		BOTONOES		  *
@@ -47,21 +47,13 @@ $(document).ready(function(){
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
 		var buscar = $("#buscar").val(); 
+		var codigo = $("#codigoAutor").val();
 
 		if (buscar != "") {
 			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarAutor','buscar': buscar };
+			global.pagination('ControllerAutor',1,codigo);
 
-			var respuesta = global.buscar('autor',parametros);
-			if (respuesta.codRetorno == '000') {
-				$("#table").html("");
-				$("#table").append("<tr><td width='25%'>"+respuesta.id+"</td><td width='50%'>"+respuesta.nombre+
-					"</td><td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
-					<button type='button' class='icon-borrar btn red btnDelete'></button>\
-					</td></tr>"
-				);
-				$('#page-numbers').html("");
-			}
+			$('#pagination').hide();
 			$("#btnSearch").prop('disabled',false);	
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
@@ -86,27 +78,28 @@ $(document).ready(function(){
 	});
 		//EVENTO KEYPRESS DEL CAMPO BUSCAR
 	$("#buscar").on('keypress',function(evt){
-    	var charCode = evt.which || evt.keyCode;
+		var charCode = evt.which || evt.keyCode;
 
-    	if ( $(this).val() != "" && charCode == 13) {
-    		$("#btnSearch").focus();
-    	} else {
+		if ( $(this).val() != "" && charCode == 13) {
+			$("#btnSearch").focus();
+		} else {
 			global.numerosLetras(evt);
 		}
-    });
+	});
 		//EVENTO CHANGE DEL CAMPO BUSCAR
 	$("#buscar").on('change',function(){
-    	if ( $(this).val().length == 0 ) {
-    		global.pagination('php/autor.php',1);
-    	}
-    });
+		if ( $(this).val().length == 0 ) {
+			global.pagination('ControllerAutor',1,0);
+			$('#pagination').show();
+		}
+	});
 		//AUTOCOMPLETE
 	$("#buscar").autocomplete({
      	minLength: 2,
         source: "php/autocomplete.php?opc=autor",
 		autoFocus: true,
 		select: function (event, ui) {
-			$('#codigoLibro').val(ui.item.id);
+			$('#codigoAutor').val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
@@ -117,7 +110,7 @@ $(document).ready(function(){
 		}
      });
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
-	$("#pages").on('click',function(){
+	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");		
 			global.pagination('ControllerAutor',page);
@@ -178,7 +171,7 @@ $(document).ready(function(){
 
 	$('.tooltipped').tooltip({
 		delay: 50,
-		tooltip: "Escriba el Nombre del Autor",
+		tooltip: "Escriba el Nombre Completo del Autor",
 		position: 'right',
 	});
 });
