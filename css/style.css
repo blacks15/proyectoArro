@@ -89,6 +89,10 @@ button {
 	background: url(iconos/empleado.png) no-repeat left transparent;
 }
 
+.icon-searchBook {
+	background: url(iconos/search_book.png) no-repeat center transparent;
+}
+
 .icon-clientes {
 	background: url(iconos/cliente.png) no-repeat left transparent;
 }

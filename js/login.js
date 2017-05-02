@@ -54,11 +54,10 @@ $(document).ready(function(){
 		var usuario = $("#usuario").val();
 		var password = $("#password").val();
 		var cadena = $("#frmLogin").serialize();
-		var parametros = {opc: 'inicio_sesion',cadena };
+		var parametros = {opc: 'login',cadena };
 
 		if (usuario != "" && password != "") {
-			//global.envioAjax('usuario',parametros);
-			window.location.href = "Menu.html";
+			global.envioAjax('ControllerLogin',parametros);
 		} else {
 			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
 			$("#usuario").focus();

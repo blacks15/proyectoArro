@@ -12,14 +12,18 @@
 			$stm = $db->prepare($sql);
 				//SE EJECUTA LA CONSULTA CON EL ARRAY DE LOS DATOS Y SE REGRESA EL ÚLTIMO ID INSERTADO
 			$stm->execute($datos);
+			$error = $stm->errorInfo();
 			$res->datos = $stm->fetchAll(PDO::FETCH_ASSOC);
-			$stm->closeCursor();
-			$res->codRetorno = $db->query('select @CodRetorno')->fetch();
-			$res->numFilas = $db->query('select @numFilas')->fetch();
 				//ESCRIBIMOS ERROR EN EL LOG
 			if ($error[2] != "") {
 				$log->insert('Error SP: '.$error[2], false, true, true);	
 			}
+				//PERMITE EJECUTAR LA SEGUNDA CNSULTA
+			$stm->closeCursor();
+			
+			$res->codRetorno = $db->query('select @CodRetorno')->fetch();
+			$res->Mensaje = $db->query('select @msg')->fetch();
+			$res->numFilas = $db->query('select @numFilas')->fetch();
 			$log->insert('codRetorno SP: '.$res->codRetorno[0], false, true, true);	
 				//CERRAMOS LA CONEXIÓN
 			$db = null;

@@ -2,9 +2,9 @@ $(document).ready(function(){
 	 /**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-    global.validaSesion();
+   // global.validaSesion();
     global.isNotAdminMenu($("#tipoUsuario").val());
-    global.pagination('php/editorial.php',1);
+    global.pagination('ControllerEditorial',1,0);
 	$("#btnUpdate").hide('explode');
 		/**************************
 	     *		BOTONES		  *
@@ -22,7 +22,7 @@ $(document).ready(function(){
 		if (cadena == "") {
 			global.messajes('Error','');
 		} else {
-			global.envioAjax('editorial',parametros);
+			global.envioAjax('ControllerEditorial',parametros);
 		}	
 		$("#btnSave").prop('disabled',false);
 	});
@@ -31,12 +31,12 @@ $(document).ready(function(){
 		e.preventDefault();
 		$("#btnUpdate").prop('disabled',true);
 		var cadena = $("#AgregarEditorial").serialize();
-		var parametros = {opc: 'actualizar',cadena };
+		var parametros = {opc: 'guardar',cadena };
 		
 		if (cadena == "") {
 			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
 		} else {
-			global.envioAjax('editorial',parametros);
+			global.envioAjax('ControllerEditorial',parametros);
 		}	
 		$("#btnUpdate").prop('disabled',false);
 	});
@@ -47,24 +47,12 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$("#btnSearch").prop('disabled',true);
 		var buscar = $("#buscar").val(); 
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarEditorial','buscar': buscar };
-			var url = 'php/editorial.php';	
-
-			var respuesta = global.buscar(url,parametros);
-			if (respuesta.codRetorno == '000') {
-				$("#table").html("");
-				$("#table").append("<tr><td width='25%'>"+respuesta.id+"</td><td width='50%'>"+respuesta.nombre+
-					"</td><td><button type='button' class='btn green btnEditar'><i class='material-icons'>mode_edit</i></button>\
-					<button type='button' class='btn red btnDelete'><i class='material-icons'>delete</i></button>\
-					</td></tr>"
-				);
-				$('#page-numbers').html("");
-			}
-			$("#btnSearch").prop('disabled',false);	
+			global.pagination('ControllerEditorial',1,$("#codigoEditorial").val());
+			$('#pagination').hide();
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
@@ -74,13 +62,13 @@ $(document).ready(function(){
 	     *		EVENTOS			  *
 	     **************************/
 	$("#nombreEditorial").on('keypress',function(evt){
-		var codigo = $("#codigo").val();
+		var codigo = $("#codigoEditorial").val();
 		var nombre = $("#nombreEditorial").val();
 		var charCode = evt.which || evt.keyCode;
 
-		if ( nombre.length > 3 && charCode == 13 && codigo == "") {
+		if ( nombre.length > 0 && charCode == 13 && codigo == "") {
 			$("#btnSave").focus();
-		} else if (codigo != "" && charCode == 13) {
+		} else if (nombre.length > 0 && codigo != "" && charCode == 13) {
 			$("#btnUpdate").focus();
 		} else {
 			global.letras(evt);
@@ -99,7 +87,7 @@ $(document).ready(function(){
 		//EVENTO CHANGE DEL CAMPO BUSCAR
 	$("#buscar").on('change',function(){
     	if ( $(this).val().length == 0 ) {
-    		global.pagination('php/editorial.php',1);
+    		global.pagination('ControllerEditorial',1,0);
     	}
     });
 		//AUTOCOMPLETE
@@ -108,7 +96,7 @@ $(document).ready(function(){
         source: "php/autocomplete.php?opc=editorial",
 		autoFocus: true,
 		select: function (event, ui) {
-			$('#codigo').val(ui.item.id);
+			$('#codigoEditorial').val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
@@ -119,10 +107,10 @@ $(document).ready(function(){
 		}
      });
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
-	$("#pages").on('click',function(){
+	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");		
-			global.pagination('php/editorial.php',page);
+			global.pagination('ControllerEditorial',page,0);
 		});
 	});
 	    //FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -136,7 +124,7 @@ $(document).ready(function(){
 
 			$('#modal').modal('open');
 			
-			$("#codigo").val(array[0]);
+			$("#codigoEditorial").val(array[0]);
 			$("#nombreEditorial").val(array[1]);
 
 			$("#btnSave").hide('explode');
@@ -173,7 +161,7 @@ $(document).ready(function(){
 			$("#nombreEditorial").focus();
 		},
 		complete: function() { 
-			$("#codigo").val("");
+			$("#codigoEditorial").val("");
 			$("#nombreEditorial").val("");
 		} // Callback for Modal close
 	});

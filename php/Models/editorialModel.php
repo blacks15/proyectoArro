@@ -2,17 +2,17 @@
 require_once('../Clases/funciones.php');
 session_start();
 /*
-	Clase: Model Autor
+	Clase: Model Editorial
 	Autor: Felipe Monzón
-	Fecha: 23-ABR-2017
+	Fecha: 29-ABR-2017
 */
-class AutorModel {
-	public function guardarAutor($codigo,$nombreAutor,$status){
+class EditorialModel {
+	public function guardarEditorial($codigo,$nombreEditorial,$status){
 		try {
-			$datos = array($codigo,$nombreAutor,$_SESSION['INGRESO']['nombre'],$status);
-			$consulta = "CALL spInsUpdAutor(?,?,?,?,@codRetorno,@msg)";
+			$datos = array($codigo,$nombreEditorial,$_SESSION['INGRESO']['nombre'],$status);
+			$consulta = "CALL spInsUpdEditorial(?,?,?,?,@codRetorno,@msg)";
 
-			$stm = SP($consulta,$datos);
+			$stm = SP($consulta,$datos); 
 
 			if ($stm->codRetorno[0] == '000') {
 				$retorno->CodRetorno = $stm->codRetorno[0];
@@ -26,52 +26,52 @@ class AutorModel {
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error guardarAutores '.$e->getMessage(), false, true, true);	
+			$log->insert('Error guardarEditorial	 '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
-		//FUNCIÓN PARA LISTAR AUTORES
-	public function cargarAutores($codigo,$inicio,$paginaActual){
+		//FUNCIÓN PARA LISTAR EDITORIALES
+	public function cargarEditoriales($codigo,$inicio,$paginaActual){
 		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo cargarAutores!', false, true, true);	
+		$log->insert('Entro metodo cargarEditorial', false, true, true);	
 		$i = 0;
 		try {
-			$autores = new ArrayObject();
+			$editoriales = new ArrayObject();
 			$datos = array($codigo,$inicio,5);
-			$consulta = "CALL spConsultaAutores(?,?,?,@msg,@CodRetorno,@numFilas)";
+			$consulta = "CALL spConsultaEditoriales(?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
 			$stm = SP ($consulta,$datos);
-
+				//VALIDAR RETORNO DEL SP
 			if ($stm->codRetorno[0] == '000') {
 				foreach ($stm->datos as $key => $value) {
-					$autores[$i] = array('codigo' => $value['codigo_autor'],
-						'nombre' => $value['nombre_autor'],
+					$editoriales[$i] = array('codigo' => $value['codigo_editorial'],
+						'nombre' => $value['nombre_editorial'],
 						'status' => $value['status'],
 					);
 					$i++;
 				}
 					//VALIDAMOS EL NÚMERO DE FILAS
 				if ($stm->numFilas[0] == 0) {
-					$retorno->CodRetorno = "001";
+					$retorno->CodRetorno = $stm->codRetorno;
 					$retorno->Mensaje = 'No Hay Datos Para Mostrar';
 				} else {
 						//CREAMOS LA LISTA DE PAGINACIÓN
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
 						//ASIGNAMOS DATOS AL RETORNO
-					$retorno->CodRetorno = "000";
-					$retorno->autores = $autores;
+					$retorno->CodRetorno = $stm->codRetorno[0];
+					$retorno->editoriales = $editoriales;
 					$retorno->lista = $lista;
 				}
 			} else {
-				$retorno->CodRetorno = "002";
-				$retorno->Mensaje = "Ocurrio Un Error";
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->Mensaje = $stm->Mensaje;
 			} 
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error cargarAutores '.$e->getMessage(), false, true, true);	
+			$log->insert('Error cargarEditorial '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());
 		}
-	}
+	}	
 }
 ?>

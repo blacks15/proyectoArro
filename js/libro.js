@@ -1,9 +1,8 @@
 $(document).ready(function(){
-	global.validaSesion();
-	global.isAdmin();
+	//global.validaSesion();
+	//global.isAdmin();
 	$("#nombreLibro").focus();
-	$('#descripcionLibro').trigger('autoresize');
-	combo();
+	llenarCombo();
 	entrar();
 	/**************************
     *		BOTONOES		  *
@@ -11,25 +10,28 @@ $(document).ready(function(){
     	//BOTÓN NUEVO AUTOR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$("#btnSearch").prop('disabled',true);
 		var buscar = $("#codigoLibro").val(); 
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarLibro','buscar': buscar,id: 1 };
+			$("#codigoLibro").val(''); 
+			$("#buscar").val(''); 
 
-			var respuesta = global.buscar('libro',parametros);
+			var respuesta = global.buscar('ControllerLibro','buscar',buscar);
 			if (respuesta.codRetorno == '000') {
-				console.log(respuesta);	
-				$("#codigoLibro").val(respuesta.id);
-				$("#nombreLibro").val(respuesta.nombre);
-				$("#isbn").val(respuesta.isbn);
-				$("#autor").val(respuesta.idAutor).prop('selected', 'selected');
-				$("#editorial").val(respuesta.idEditorial).prop('selected', 'selected');
-				$("#descripcionLibro").val(respuesta.descripcion);
-					//ELIMINAMOS ESPACIO DEL NOMBRE
-				respuesta.nombre = respuesta.nombre.replace(/\s+/g, '');
-					//VALIDAR SI LA IMAGEN NO ESTA VACIA O NO SE ENCUENTRA
-				cargar_imagen(respuesta.nombre);	
+				$.each(respuesta.datos,function(index,value){
+					$("#codigoLibro").val(value.id);
+					$("#nombreLibro").val(value.nombre);
+					$("#isbn").val(value.isbn);
+					$("#autor").val(value.idAutor).prop('selected', 'selected');
+					$("#editorial").val(value.idEditorial).prop('selected', 'selected');
+					$("#descripcionLibro").val(value.descripcion);
+						//ELIMINAMOS ESPACIO DEL NOMBRE
+					value.nombre = value.nombre.replace(/\s+/g, '');
+						//VALIDAR SI LA IMAGEN NO ESTA VACIA O NO SE ENCUENTRA
+					cargar_imagen(value.nombre);	
+				});
+				
 				$("#btnUpdate").prop('disabled',false);
 			}	
 		} else {
@@ -47,10 +49,24 @@ $(document).ready(function(){
 			global.messajes('Error','!Debe llenar Todos los Campos','warning');
 		} else {
 			var retorno = global.subirimagen(nombre);
-			if (retorno == true) {
-				global.envioAjax('libro',parametros);
+			if (retorno == false) {
+				swal({
+					title: 'Ocurrio un Error al subir la Imágen',
+					text: '¿Desea Continuar?',
+					type: 'warning',
+					allowEscapeKey: false,
+					allowOutsideClick: false,
+					showCancelButton: true,
+					confirmButtonColor: '#3085d6',
+					cancelButtonColor: '#d33',
+					confirmButtonText: 'Si'},
+				function(isConfirm){ 
+					if (isConfirm) {
+						global.envioAjax('ControllerLibro',parametros);
+					}
+				});
 			} else {
-				global.mensajes('','Error al Subir Imagén','warning');
+				global.envioAjax('ControllerLibro',parametros);
 			}
 		}	
 	});
@@ -58,13 +74,13 @@ $(document).ready(function(){
 	$("#btnUpdate").on('click',function(){
 		var nombre = $("#nombreLibro").val();
 		var cadena = $("#frmAgregarLibro").serialize();
-		var parametros = {opc: 'actualizar',cadena };
+		var parametros = {opc: 'guardar',cadena };
 
 		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
+			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning','','','','');
 		} else {
 			global.subirimagen(nombre);
-			global.envioAjax('libro',parametros);
+			global.envioAjax('ControllerLibro',parametros);
 		}	
 	});
 		//BOTÓN CREAR REPORTE
@@ -79,7 +95,12 @@ $(document).ready(function(){
 		//BOTÓN REFRESCAR PÁGINA
 	$("#btnRefresh").on('click',function(e){
 		e.preventDefault();
-		global.cargarPagina('pages/Libro.html');
+		global.cargarPagina('Libro');
+	});
+		//BOTÓN REFRESCAR PÁGINA
+	$("#btnLibros").on('click',function(e){
+		e.preventDefault();
+		global.cargarPagina('BuscarLibro');
 	});
 /////////////////////////////////////////////////////////////////////////////////////	
     $("#nombreLibro").on('keypress',function(evt){
@@ -127,10 +148,10 @@ $(document).ready(function(){
 			global.numerosLetras(evt);
 		}
     });
-	
+		//AUTOCOMPLETE
 	$("#buscar").autocomplete({
-     	minLength: 2,
-        source: "php/autocomplete.php?opc=libro",
+		minLength: 2,
+		source: "php/autocomplete.php?opc=libro",
 		autoFocus: true,
 		select: function (event, ui) {
 			$('#codigoLibro').val(ui.item.id);
@@ -142,7 +163,7 @@ $(document).ready(function(){
 				ui.content.push(noResult);
 			} 
 		}
-     });
+	});
     	//FUNCIÓN PARA HABILITAR BOTÓN ACEPTAR 
     function habilitaBoton(){
     	var codigo = $("#codigoLibro").val();
@@ -191,23 +212,13 @@ $(document).ready(function(){
 		}
 	}	
     	//FUNCIÓN PARA LLENAR LOS SELECT DE LA VISTA	
-	function combo(){
-		$.ajax({
-			cache: false,
-			type: "POST",
-			datatype: "json",
-			url: "php/combo.php",
-			data: {opc:"combo_libro"},
-			success: function(opciones){
-				$("#editorial").html(opciones.opcion_editorial);
-				$("#autor").html(opciones.opcion_autor);
-			},
-			error: function(xhr,ajaxOptions,throwError){
-				if (xhr.status == 404) {
-					global.mensajesError('Error','Ocurrio un error');
-				}
-			} 
-		});
+	function llenarCombo(){
+		var respuesta = global.buscar('ControllerLibro','filtro');
+
+		if (respuesta.codRetorno = '000') {
+			$("#editorial").html(respuesta.editoriales);
+			$("#autor").html(respuesta.autores);
+		}
 	}
 		 //FUNCIÓN CARGAR IMAGEN
     function cargar_imagen(nombre){

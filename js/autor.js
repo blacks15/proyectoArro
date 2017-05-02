@@ -18,10 +18,11 @@ $(document).ready(function(){
 		$("#btnSave").prop('disabled',true);
 		var cadena = $("#frmAgregarAutor").serialize();
 		var parametros = {opc: 'guardar',cadena };
+		
 		if (cadena == "") {
 			global.messajes('Error','');
 		} else {
-			global.envioAjax('autor',parametros);
+			global.envioAjax('ControllerAutor',parametros);
 		}	
 		$("#btnSave").prop('disabled',false);
 	});
@@ -30,12 +31,12 @@ $(document).ready(function(){
 		e.preventDefault();
 		$("#btnUpdate").prop('disabled',true);
 		var cadena = $("#frmAgregarAutor").serialize();
-		var parametros = {opc: 'actualizar',cadena };
+		var parametros = {opc: 'guardar',cadena };
 		
 		if (cadena == "") {
 			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
 		} else {
-			global.envioAjax('autor',parametros);
+			global.envioAjax('ControllerAutor',parametros);
 		}	
 		$("#btnUpdate").prop('disabled',false);
 	});
@@ -46,25 +47,24 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$("#btnSearch").prop('disabled',true);
 		var buscar = $("#buscar").val(); 
 		var codigo = $("#codigoAutor").val();
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
 			global.pagination('ControllerAutor',1,codigo);
-
 			$('#pagination').hide();
-			$("#btnSearch").prop('disabled',false);	
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
+		$("#btnSearch").prop('disabled',false);	
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
 	     *		  EVENTOS		  *
 	     **************************/
 	$("#nombre").on('keypress',function(evt){
-		var codigo = $("#codigo").val();
+		var codigo = $("#codigoAutor").val();
 		var nombre = $("#nombre").val();
 		var charCode = evt.which || evt.keyCode;
 
@@ -113,7 +113,7 @@ $(document).ready(function(){
 	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");		
-			global.pagination('ControllerAutor',page);
+			global.pagination('ControllerAutor',page,0);
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -127,7 +127,7 @@ $(document).ready(function(){
 
 			$('#modal').modal('open');
 			
-			$("#codigo").val(array[0]);
+			$("#codigoAutor").val(array[0]);
 			$("#nombre").val(array[1]);
 
 			$("#btnSave").hide('explode');
@@ -158,8 +158,8 @@ $(document).ready(function(){
 		opacity: .5, // Opacity of modal background
 		in_duration: 300, // Transition in duration
 		out_duration: 200, // Transition out duration
-		starting_top: '4%', // Starting top style attribute
-		ending_top: '10%', // Ending top style attribute
+		starting_top: '25%', // Starting top style attribute
+		ending_top: '25%', // Ending top style attribute
 		ready: function(modal, trigger) { // Callback for Modal open. Modal and trigger parameters available.
 			$("#nombre").focus();
 		},

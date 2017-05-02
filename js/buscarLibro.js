@@ -2,11 +2,10 @@ $(document).ready(function(){
 	 /**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
+	//global.validaSesion();
 	global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('php/libro.php',1);
+	global.pagination('ControllerLibro',1,0,0);
 	$("#busqueda").focus();
-	$('#descripcionLibro').trigger('autoresize');
 	$("#busquedas").hide();
 //////////////////////////////////////////////////////
 	/**************************
@@ -14,11 +13,11 @@ $(document).ready(function(){
     **************************/
     	//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/BuscarLibro.html');
+		global.cargarPagina('BuscarLibro');
 	});
 	     //BOTÓN NUEVO LIBRO
 	$("#btnNuevo").on('click',function(){
-		global.cargarPagina("pages/Libro.html");
+		global.cargarPagina("Libro");
 	});
 		//BOTÓN CREAR REPORTE
 	$("#btnReporte").on('click',function(){
@@ -31,14 +30,15 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		var parametros = "";
+		$("#btnSearch").prop('disabled',true);
 		var buscar = $("#codigoLibro").val(); 
 		var opc =  $("#busqueda").val();
 			//VALIDAMOS EL CMAPO BUSCAR
 		if (buscar != "") {
-			global.pagination('php/libro.php',1,buscar,opc);
+			global.pagination('ControllerLibro',1,buscar,opc);
+			$('#pagination').hide();
 		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','');
 		}
 		$("#btnSearch").prop('disabled',false);	
 	});
@@ -78,9 +78,10 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO CHANGE DEL CAMPO BUSCAR
-	$("#buscarN").on('keyup',function(){
-		if ( $(this).val().length == 0 && $(this).val() == "") {
-			global.pagination('php/libro.php',1);
+	$("#buscarN").on('change',function(evt){
+		if ( $(this).val().length == 0) {
+			global.pagination('ControllerLibro',1,0);
+			$('#pagination').show();
 		}
 	});
 		//EVENTO KEYPRESS DEL CAMPO BUSCAR
@@ -94,9 +95,10 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO CHANGE DEL CAMPO BUSCAR
-	$("#buscarE").on('keyup',function(){
-		if ( $(this).val().length == 0 && $(this).val() == "") {
-			global.pagination('php/libro.php',1);
+	$("#buscarE").on('change',function(evt){
+		if ( $(this).val().length == 0) {
+			global.pagination('ControllerLibro',1,0);
+			$('#pagination').show();
 		}
 	});
 //////////////////////////////////////////////
@@ -144,10 +146,10 @@ $(document).ready(function(){
 		}
 	});
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
-	$("#pages").on('click',function(){
+	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");		
-			global.pagination('php/libro.php',page);
+			global.pagination('ControllerLibro',page,0);
 		});
 	});
 	    //FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -176,7 +178,7 @@ $(document).ready(function(){
 			localStorage.clear();
 	        	//CONVERTIMOS A JSON 
 			localStorage.libros = JSON.stringify(array);
-			global.cargarPagina('pages/Libro.html');
+			global.cargarPagina('Libro');
 			array.clear;
 		});
 	});
@@ -215,18 +217,18 @@ $(document).ready(function(){
 	        	],
 		    });
     	}
-    }
-    	//NECESARIO PARA CREAR LA MODAL
+	}
+		//NECESARIO PARA CREAR LA MODAL
 	$('.modal').modal({
 		dismissible: true, // Modal can be dismissed by clicking outside of the modal
 		opacity: .5, // Opacity of modal background
 		in_duration: 300, // Transition in duration
 		out_duration: 200, // Transition out duration
-		starting_top: '10%', // Starting top style attribute
-		ending_top: '10%', // Ending top style attribute
+		starting_top: '15%', // Starting top style attribute
+		ending_top: '25%', // Ending top style attribute
 		complete: function() { 
 			$("#descripcionLibro").val("");
-		} // Callback for Modal close
+		}
 	});
 		//INICIALIZAR EL PLUGIN DE FILE-INPUT
 	$("#imagen").fileinput({
@@ -236,11 +238,11 @@ $(document).ready(function(){
 		previewFileType: "image",
 		allowedFileExtensions: ["jpg"],
 		elErrorContainer: "#errorBlock",
-	    browseClass: "btn green",
-	    browseLabel: "",
-	    browseIcon: "<i class=\"material-icons\">image</i> ",
-	    removeClass: "btn red",
-	    removeLabel: "",
-	    removeIcon: "<i class=\"material-icons\">delete</i> ",
+		browseClass: "btn green",
+		browseLabel: "",
+		browseIcon: "<i class=\"material-icons\">image</i> ",
+		removeClass: "btn red",
+		removeLabel: "",
+		removeIcon: "<i class=\"material-icons\">delete</i> ",
 	});
 });

@@ -3,9 +3,10 @@
 //phpinfo();
 
 	$db = new Conexion();
-	$datos = array(0,0,5);
+	$p = '';
+	$datos = array($p);
 	$result = array();
-	$consulta = "CALL spConsultaAutores(?,?,?,@msg,@codRetorno)";
+	$consulta = "CALL spTest(?,@msg)";
 		//CREAMOS LA TRAMA Y ESCRIBIMOS EN EL LOG
 
 		//SE PREPARA Y SE EJECUTA LA CONSULTA
@@ -14,7 +15,7 @@
 	$stm->execute($datos);
 	$result = $stm->fetchAll(PDO::FETCH_ASSOC);
 	$stm->closeCursor();
-	$res = $db->query('select @msg,@codRetorno')->fetch();
+	$res = $db->query('select @msg')->fetch();
  	var_dump($res);
 	
 	//$result = $stm->fetchAll(PDO::FETCH_ASSOC);

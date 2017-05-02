@@ -45,7 +45,7 @@ var global = {
 			type: "POST",
 			dataType: "json",
 			data: parametros,
-			url: 'php/Controller/'+url+'.php',
+			url: 'php/Controllers/'+url+'.php',
 			beforeSend: function () {
 				$("#loader").fadeIn(1000);
 			},
@@ -66,14 +66,16 @@ var global = {
 							$('#modal').modal('close');
 							$('#modal2').modal('close');
 						}
-						global.mensajes(response.mensaje,response.usuario,'success',response.url,response.codRetorno,response.form,response.tipo);
+						global.mensajes(response.Titulo,response.Mensaje,'success',response.url,response.codRetorno,response.form,response.tipo);
 					} else if (response.codRetorno == '001') {
-						global.mensajes('Advertencia',response.mensaje,'warning',response.url,'','','');
+						global.mensajes('Advertencia',response.Mensaje,'warning',response.url,'','','');
 					} else if (response.codRetorno == '002') {
-						global.mensajes('Error',response.mensaje,'error','','','','');
+						global.mensajes('Error',response.Mensaje,'error','','','','');
 					} else if (response.codRetorno == '003') {
-						global.cerrarSesion(response.mensaje);
-					} alert(response.codRetorno);
+						global.cerrarSesion(response.Mensaje);
+					} else if (response.codRetorno == '004') {
+						global.mensajes(response.Titulo,response.Mensaje,'warning','','','','');
+					}
 				} else {
 					global.mensajesError('Error','Contacte con el Administrador');
 				}
@@ -138,7 +140,7 @@ var global = {
 			dataType: "json",
 			data: {opc:"buscar",parametros},
 			url: 'php/Controllers/'+url+'.php',
-			success:function(data){ console.log(data);
+			success:function(data){
 				if (data.codRetorno == "001") {
 					global.mensajesError('Error',data.mensaje,data.form);
 				} else if (data.codRetorno == '002') {
@@ -263,7 +265,7 @@ var global = {
 						});
 						$("#page-numbers").html(data.link);
 						return;
-					} else if (data.form == 'Editorial' || data.form == 'Autor') {}{
+					} else if (data.form == 'Editorial' || data.form == 'Autor') {
 						$("#table").html("");
 						$.each(data.datos,function(index,value){
 							$("#table").append("<tr><td width='25%'>"+value.codigo+"</td><td width='50%'>"+value.nombre+
@@ -346,7 +348,7 @@ var global = {
 			showLoaderOnConfirm: true,
 		}).then(function() {
 			sessionStorage.clear();
-			window.open('php/cerrarSesion.php','_top');
+			window.open('index.html','_top');
 		});
 	},
 		//FUNCIÓN PARA ACEPTAR SOLO LETRAS
@@ -468,15 +470,17 @@ var global = {
 		return cadena;
 	},
 		//FUNCIÓN PARA BUSCRA DATOS
-	buscar: function(url,parametros){
+	buscar: function(url,opc,buscar){
 		var retorno = {};
+		var parametros = 'partida='+1+'&codigo='+buscar;
+
 		$.ajax({
 			cache: false,
 			type: "POST",
 			dataType: "json",
 			async: false,
-			data: parametros,
-			url: 'php/'+url+'.php',
+			data: {opc: opc,parametros},
+			url: 'php/Controllers/'+url+'.php',
 			timeout: 200,
 			success: function(response) {
 				if(response.codRetorno == '000') {

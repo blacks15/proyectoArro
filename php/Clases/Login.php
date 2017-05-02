@@ -9,75 +9,91 @@ session_start();
 */
 class Login {
 	public function loginUs($nombreUsuario,$password){
-		$objUsuario = new Usuario();
-		if ($this->validaUsuario($nombreUsuario) == false ) {
-			$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
-		} else if ($this->validaPassword($nombreUsuario,$password) == false) {
-			$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
-		} else {
-			$objUsuario->setClave($_SESSION['INGRESO']['id']);
-			$objUsuario->setUsuario($_SESSION['INGRESO']['nombre']);
-			$objUsuario->setTipoUsuario($_SESSION['INGRESO']['tipo']);
-			
-			$res->Mensaje = 'EXITO';
-			$res->datos = $objUsuario;	
-			var_dump($objUsuario);
-		}
+		try {
+			$objUsuario = new Usuario();
+			if ($this->validaUsuario($nombreUsuario) == false ) {
+				$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
+			} else if ($this->validaPassword($nombreUsuario,$password) == false) {
+				$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
+			} else {
+				$objUsuario->setClave($_SESSION['INGRESO']['id']);
+				$objUsuario->setUsuario($_SESSION['INGRESO']['nombre']);
+				$objUsuario->setTipoUsuario($_SESSION['INGRESO']['tipo']);
+				$objUsuario->setStatus($_SESSION['INGRESO']['status']);
+				
+				$res->Mensaje = 'EXITO';
+				$res->datos = $objUsuario;	
+			}
 
-		return $res;
+			return $res;
+		} catch (Exception $e) {
+			$log->insert('Error Login '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());					
+		}
 	}
 		//FUNCIÓN PARA VALIDAR EL USUARIO
 	private function validaUsuario($usuario){
-		$res = false;
-		$datos = array($usuario);
-
-		$sql = "SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario= ?";
-
-		$stm = SQL($sql,$datos); 
-
-		if ($stm->rowCount() > 0) {
-			$res = true;
-		} else {
+		try {
 			$res = false;
-		}
+			$datos = array($usuario);
 
-		return $res;
-	}
-		//FUNCIÓN PARA VALIDAR EL PASSWORD
-	private function validaPassword($usuario,$password){
-		$res = false;
-		$password   = filter_var($password, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
-		$datos = array($usuario);
+			$sql = "SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario= ?";
 
-		if (empty($password)) {
-			$res = false;
-		} else {
-			$sql = "SELECT nombre_usuario,tipo_usuario,matricula_empleado,password FROM usuarios WHERE nombre_usuario = ?";
-
-			$stm = SQL($sql,$datos);
+			$stm = SQL($sql,$datos); 
 
 			if ($stm->rowCount() > 0) {
-				$row = $stm->fetch(PDO::FETCH_ASSOC);
-
-				if ( crypt($password,$row['password']) == $row['password'] ) {
-					$ip = $this->IPuser();
-					$hora = time();
-
-					$_SESSION['INGRESO'] = array(
-						'Id' => $row['matricula_empleado'],
-						'tipo' => $row['tipo_usuario'],
-						'Nombre' => $row['nombre_usuario'],
-						'hora' => $hora,
-						'ip' => $ip,
-					); 
-
-					$res = true;
-				}
+				$res = true;
 			} else {
 				$res = false;
 			}
+
+			return $res;
+		} catch (Exception $e) {
+			$log->insert('Error validaUsu '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());		
 		}
-		return $res;
+	}
+		//FUNCIÓN PARA VALIDAR EL PASSWORD
+	private function validaPassword($usuario,$password){
+		try {
+			$res = false;
+			$password   = filter_var($password, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
+			$datos = array($usuario);
+
+			if (empty($password)) {
+				$res = false;
+			} else {
+				$sql = "SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status FROM usuarios WHERE nombre_usuario = ?";
+
+				$stm = SQL($sql,$datos);
+
+				if ($stm->rowCount() > 0) {
+					$row = $stm->fetch(PDO::FETCH_ASSOC);
+
+					if ( crypt($password,$row['password']) == $row['password'] ) {
+						$ip = $this->IPuser();
+						$hora = time();
+
+						$_SESSION['INGRESO'] = array(
+							'id' => $row['matricula_empleado'],
+							'tipo' => $row['tipo_usuario'],
+							'nombre' => $row['nombre_usuario'],
+							'status' => $row['status'],
+							'hora' => $hora,
+							'ip' => $ip,
+						); 
+
+						$res = true;
+					}
+				} else {
+					$res = false;
+				}
+			}
+			return $res;
+		} catch (Exception $e) {
+			$log->insert('Error validaUsu '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
 	}
 /*
  * Retorna el IP de usuario

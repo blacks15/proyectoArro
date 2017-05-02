@@ -2,7 +2,7 @@ $(document).ready(function(){
 	$("#user-name").html(sessionStorage.usuario);
 	$("#tipoUsuario").val(sessionStorage.tipo);
 	//global.cargarPagina("pages/Venta.html");
-	global.cargarPagina("Autor");
+	global.cargarPagina("BuscarLibro");
 	global.isNotAdminMenu($("#tipoUsuario").val());
 
 	$('.button-collapse').sideNav({});
@@ -21,128 +21,128 @@ $(document).ready(function(){
     **************************/
 
 	$("#CerrarSesion").on('click',function(){
-		global.cerrarSesion('Auf Wiedersehen');
+		global.envioAjax('ControllerLogin',{opc:'cerrarSession'});
 	});
 
 	$("#inicio").on('click',function(){
-		global.cargarPagina("pages/Inicio.html");
+		global.cargarPagina("Inicio");
 	});
 		//////////////////////////
 		//		MODULO VENTAS	//
 		//////////////////////////
 
 	$("#ventas").on('click',function(){
-		global.cargarPagina("pages/Venta.html");
+		global.cargarPagina("Venta");
 	});
 
 	$("#buscarVenta").on('click',function(){
-		global.cargarPagina("pages/BuscarVenta.html");
+		global.cargarPagina("BuscarVenta");
 	});
 		//////////////////////////
 		//		MODULO LIRBOS	//
 		//////////////////////////
 
 	$("#libros").on('click',function(){
-		global.cargarPagina("pages/Libro.html");
+		global.cargarPagina("Libro");
 	});
 
 	$("#buscarLibro").on('click',function(){
-		global.cargarPagina("pages/BuscarLibro.html");
+		global.cargarPagina("BuscarLibro");
 	});
 
 	$("#autores").on('click',function(){
-		global.cargarPagina("pages/Autor.html");
+		global.cargarPagina("Autor");
 	});
 
 	$("#editoriales").on('click',function(){
-		global.cargarPagina("pages/Editorial.html");
+		global.cargarPagina("Editorial");
 	});
 		//////////////////////////////////
 		//		MODULO PROVEEDORES		//
 		//////////////////////////////////
 
 	$("#provedores").on('click',function(){
-		global.cargarPagina("pages/Proveedor.html");
+		global.cargarPagina("Proveedor");
 	});
 
 	$("#buscarProveedor").on('click',function(){
-		global.cargarPagina("pages/BuscarProveedor.html");
+		global.cargarPagina("BuscarProveedor");
 	});
 
 	$("#productos").on('click',function(){
-		global.cargarPagina("pages/Producto.html");
+		global.cargarPagina("Producto");
 	});
 
 	$("#buscarProductos").on('click',function(){
-		global.cargarPagina("pages/BuscarProducto.html");
+		global.cargarPagina("BuscarProducto");
 	});
 
 	$("#modificarInventario").on('click',function(){
-		global.cargarPagina("pages/Stock.html");
+		global.cargarPagina("Stock");
 	});
 		//////////////////////////////////
 		//		MODULO EMPLEADOS		//
 		//////////////////////////////////
 
 	$("#empleados").on('click',function(){
-		global.cargarPagina("pages/Empleado.html");
+		global.cargarPagina("Empleado");
 	});
 
 	$("#buscarEmpleado").on('click',function(){
-		global.cargarPagina("pages/BuscarEmpleado.html");
+		global.cargarPagina("BuscarEmpleado");
 	});
 
 	$("#usuarios").on('click',function(){
-		global.cargarPagina("pages/Usuario.html");
+		global.cargarPagina("Usuario");
 	});
 
 	$("#buscarUsuario").on('click',function(){
-		global.cargarPagina("pages/BuscarUsuario.html");
+		global.cargarPagina("BuscarUsuario");
 	});
 		//////////////////////////////////
 		//		MODULO CLIENTES			//
 		//////////////////////////////////
 
 	$("#clientes").on('click',function(){
-		global.cargarPagina("pages/Cliente.html");
+		global.cargarPagina("Cliente");
 	});
 
 	$("#buscarClientes").on('click',function(){
-		global.cargarPagina("pages/BuscarCliente.html");
+		global.cargarPagina("BuscarCliente");
 	});
 	/*
 	$("#deudas").on('click',function(){
-		global.cargarPagina("pages/Deuda.html");
+		global.cargarPagina("Deuda");
 	});
 
 	$("#buscarDeudas").on('click',function(){
-		global.cargarPagina("pages/BuscarDeuda.html");
+		global.cargarPagina("BuscarDeuda");
 	});
 
 	$("#abonos").on('click',function(){
-		global.cargarPagina("pages/Abono.html");
+		global.cargarPagina("Abono");
 	});
 
 	$("#buscarAbonos").on('click',function(){
-		global.cargarPagina("pages/BuscarAbono.html");
+		global.cargarPagina("BuscarAbono");
 	}); */
 		//////////////////////////////////
 		//		MODULO RETROS			//
 		//////////////////////////////////
 
 	$("#retiros").on('click',function(){
-		global.cargarPagina("pages/Retiro.html");
+		global.cargarPagina("Retiro");
 	});
 
 	$("#buscarRetiros").on('click',function(){
-		global.cargarPagina("pages/BuscarRetiro.html");
+		global.cargarPagina("BuscarRetiro");
 	});
 
 	$("#corteCaja").on('click',function(){
-		global.cargarPagina("pages/CorteCaja.html");
+		global.cargarPagina("CorteCaja");
 	});
 
 	$("#buscarCorteCaja").on('click',function(){
-		global.cargarPagina("pages/BuscarCorteCaja.html");
+		global.cargarPagina("BuscarCorteCaja");
 	});
 });
