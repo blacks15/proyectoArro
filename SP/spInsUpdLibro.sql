@@ -41,10 +41,10 @@ BEGIN
 		
 	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
 		IF EXISTS(SELECT * FROM libros WHERE codigo_libro = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
+			IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
 					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,fechaModificacion = NOW()
-					 WHERE codigo_libro = pCodigo;
+					WHERE codigo_libro = pCodigo;
 					SET CodRetorno = '000';
 					SET msg = 'Libro Actualizado con Exito';
 				COMMIT; 

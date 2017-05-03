@@ -89,10 +89,6 @@ button {
 	background: url(iconos/empleado.png) no-repeat left transparent;
 }
 
-.icon-searchBook {
-	background: url(iconos/search_book.png) no-repeat center transparent;
-}
-
 .icon-clientes {
 	background: url(iconos/cliente.png) no-repeat left transparent;
 }
@@ -175,6 +171,14 @@ button {
 
 .icon-box-search {
 	background: url(iconos/box_search-32.png) no-repeat center transparent;
+}
+
+.icon-searchPeople {
+	background: url(iconos/buscarPersona.png) no-repeat center transparent;
+}
+
+.icon-pagos {
+	background: url(iconos/pagos.png) no-repeat center transparent;
 }
 
 .slogan {

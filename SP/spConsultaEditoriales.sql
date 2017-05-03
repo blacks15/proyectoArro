@@ -11,7 +11,7 @@ CREATE PROCEDURE spConsultaEditoriales (
 )
 -- =============================================
 -- Author:       	Felipe Monzón
--- Create date: 	02/Feb/2017
+-- Create date: 	02/Abr/2017
 -- Description:   	Procedimiento para Consultar Editoriales 
 -- =============================================
 BEGIN

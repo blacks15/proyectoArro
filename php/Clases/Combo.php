@@ -1,15 +1,17 @@
 <?php 
-require_once('Conexion.php');
+require_once('funciones.php');
+	
+	$status = 'DISPONIBLE';	
 
 	function mostrar_autor(){
-		$db = new Conexion();
-
+		global $status;
 		$opcion_autor = '<option value="0">SELECCIONE</option>';
-		$consulta = "SELECT nombre_autor,codigo_autor FROM autores GROUP BY nombre_autor";
-			//SE PREPARA Y SE EJECUTA LA CONSULTA
-		$stm = $db->prepare($consulta);
-		$stm->execute();
-			//SE TRAEN LOS DATOS Y EL ERROR EN CASO DE HABER
+
+		$consulta = "SELECT nombre_autor,codigo_autor FROM autores WHERE status = ?";
+		$datos = array($status);
+			//SE EJECUTA LA CONSULTA
+		$stm = SQL($consulta,$datos);
+			//SE TRAEN LOS DATOS
 		$rows = $stm->fetchAll();
 			//CICLO PARA LLENAR EL COMBOBOX
 		foreach ($rows as $row) {
@@ -20,14 +22,14 @@ require_once('Conexion.php');
 	}
 
 	function mostrar_editorial(){
-		$db = new Conexion();
-
+		global $status;
 		$opcion_editorial = '<option value="0">SELECCIONE</option>';
-		$consulta = "SELECT codigo_editorial,nombre_editorial FROM editoriales GROUP BY nombre_editorial";
-			//SE PREPARA Y SE EJECUTA LA CONSULTA
-		$stm = $db->prepare($consulta);
-		$stm->execute();
-			//SE TRAEN LOS DATOS Y EL ERROR EN CASO DE HABER
+
+		$consulta = "SELECT codigo_editorial,nombre_editorial FROM editoriales WHERE status = ?";
+		$datos = array($status);
+			//SE EJECUTA LA CONSULTA
+		$stm = SQL($consulta,$datos);
+			//SE TRAEN LOS DATOS
 		$rows = $stm->fetchAll();
 			//CICLO PARA LLENAR EL COMBOBOX
 		foreach ($rows as $row) {
@@ -37,59 +39,39 @@ require_once('Conexion.php');
 		return $opcion_editorial;
 	}
 
-	function mostrar_genero(){
-		global $opciones;
-		$db = new Conexion();
-
-		$opcion_genero = '<option value="0">SELECCIONE</option>';
-		$consulta = "select codigo_genero,nombre_genero from generos";
-					//SE PREPARA Y SE EJECUTA LA CONSULTA
-		$stm = $db->prepare($consulta);
-		$stm->execute();
-			//SE TRAEN LOS DATOS Y EL ERROR EN CASO DE HABER
-		$rows = $stm->fetchAll();
-		$error = $stm->errorInfo();
-			//CICLO PARA LLENAR EL COMBOBOX
-		foreach ($rows as $row) {
-			$opcion_genero.=  '<option value="'.$row['codigo_genero'].'">'.$row['nombre_genero'].'</option>';
-		}
-		 $opciones->opcion_genero = $opcion_genero;
-		 print($error[2]);
-	}
 	function mostrar_proveedor(){
-			global $opciones;
-			$db = new Conexion();
+		global $status;
+		$opcion_proveedor = '<option value="0">SELECCIONE </option>';
+		
+		$consulta = "SELECT codigo_proveedor,nombre_proveedor FROM proveedores WHERE status = ? ";
+		$datos = array($status);
+			//SE EJECUTA LA CONSULTA
+		$stm = SQL($consulta,$datos);
+			//SE TRAEN LOS DATOS
+		$rows = $stm->fetchAll();
+		 	//CICLO PARA LLENAR EL COMBOBOX
+		foreach ($rows as $row) {
+			$opcion_proveedor.=  '<option value="'.$row['codigo_proveedor'].'">'.$row['nombre_proveedor'].'</option>';
+		}
 
-			$opcion_proveedor = '<option value="0">SELECCIONE </option>';
-			$consulta = "SELECT codigo_proveedor,nombre_proveedor FROM proveedores WHERE status = 'DISPONIBLE' ";
-				//SE PREPARA Y SE EJECUTA LA CONSULTA
-			$stm = $db->prepare($consulta);
-			$stm->execute();
-				//SE TRAEN LOS DATOS Y EL ERROR EN CASO DE HABER
-			$rows = $stm->fetchAll();
-			$error = $stm->errorInfo();
-			 	//CICLO PARA LLENAR EL COMBOBOX
-			foreach ($rows as $row) {
-				$opcion_proveedor.=  '<option value="'.$row['codigo_proveedor'].'">'.$row['nombre_proveedor'].'</option>';
-			}
-			$opciones->opcion_proveedor = $opcion_proveedor;
+		return $opcion_proveedor;
 	}	
+
 	function mostrar_categoria(){
-		global $opciones;
 		$db = new Conexion();
 
 		$opcion_categoria = '<option value="0">SELECCIONE </option>';
 		$consulta = "SELECT codigo_catpro,nombre_categoria FROM categorias_producto ";
-			//SE PREPARA Y SE EJECUTA LA CONSULTA
-		$stm = $db->prepare($consulta);
-		$stm->execute();
-			//SE TRAEN LOS DATOS Y EL ERROR EN CASO DE HABER
+		$datos = array();
+			//SE EJECUTA LA CONSULTA
+		$stm = SQL($consulta,$datos);
+			//SE TRAEN LOS DATOS
 		$rows = $stm->fetchAll();
-		$error = $stm->errorInfo();
 		 	//CICLO PARA LLENAR EL COMBOBOX
 		foreach ($rows as $row) {
 			$opcion_categoria.=  '<option value="'.$row['codigo_catpro'].'">'.$row['nombre_categoria'].'</option>';
 		}
-		$opciones->opcion_categoria = $opcion_categoria;
+
+		return $opcion_categoria;
 	}		
 ?>

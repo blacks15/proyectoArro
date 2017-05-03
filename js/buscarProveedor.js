@@ -2,9 +2,9 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('php/proveedor.php',1);
+	//global.validaSesion();
+	//global.isNotAdminMenu($("#tipoUsuario").val());
+	global.pagination('ControllerProveedor',1,0);
 	$("#buscar").focus();
 //////////////////////////////////////////////////////
 	/**************************
@@ -12,7 +12,7 @@ $(document).ready(function(){
      **************************/
 		//BOTÓN NUEVO LIBRO
 	$("#btnNuevo").on('click',function(){
-		global.cargarPagina("pages/Proveedor.html");
+		global.cargarPagina("Proveedor");
 	});
 		//BOTÓN CREAR REPORTE
 	$("#btnReporte").on('click',function(){
@@ -25,32 +25,18 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$("#btnSearch").prop('disabled',true);
 		var buscar = $("#buscar").val(); 
+		var codigo = $("#codigo").val();
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarProveedor','buscar': buscar };
-
-			var respuesta = global.buscar('proveedor',parametros);
-			if (respuesta.codRetorno == '000') {
-				$("#table").html("");
-				$("#table").append("<tr><td style='display: none' width='5%'>"+respuesta.id+
-					"</td><td width='30%'>"+respuesta.nombreProveedor+"</td><td width='10%'>"+respuesta.contacto+
-					"</td><td width='25%'>"+respuesta.direccion+"</td><td width='8%'>"+respuesta.ciudad+
-					"</td><td width='8%'>"+respuesta.estado+"</td><td width='5%'>"+respuesta.telefono+
-					"</td><td width='5%'>"+respuesta.celular+"</td><td style='display: none' width='10%'>"+respuesta.email+
-					"</td><td style='display: none' width='5%'>"+respuesta.web+"</td><td style='display: none' width='5%'>"+respuesta.colonia+
-					"</td><td style='display: none' width='5%'>"+respuesta.calle+"</td><td style='display: none' width='5%'>"+respuesta.numero+
-					"</td><td><td><button type='button' class='icon-info btn blue btnMostrar'></button>\
-					<button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
-					</td></tr>"
-				);
-				$('#page-numbers').html("");
-			}
-			$("#btnSearch").prop('disabled',false);	
+			global.pagination('ControllerProveedor',1,codigo);
+			$('#pagination').hide();
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
+			
+		$("#btnSearch").prop('disabled',false);	
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
@@ -60,16 +46,15 @@ $(document).ready(function(){
 	$("#buscar").on('keypress',function(evt){
     	var charCode = evt.which || evt.keyCode;
 
-    	if ( $(this).val().length == 0 && charCode == 13) {
-    		//$("#btnSearch").focus();
-    	} else {
+    	if ( $(this).val().length != 0 && charCode != 13) {
 			global.numerosLetras(evt);
-		}
+    	}
     });
 		//EVENTO CHANGE DEL CAMPO BUSCAR
-	$("#buscar").on('keyup',function(){
-    	if ( $(this).val().length == 0 && $(this).val() == "") {
-    		global.pagination('php/proveedor.php',1);
+	$("#buscar").on('change',function(){
+    	if ( $(this).val().length == 0) {
+    		global.pagination('ControllerProveedor',1,0);
+    		$('#pagination').show();
     	}
     });
 		//AUTOCOMPLETE
@@ -78,6 +63,7 @@ $(document).ready(function(){
         source: "php/autocomplete.php?opc=proveedor",
 		autoFocus: true,
 		select: function (event, ui) {
+			$("#codigo").val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
@@ -88,10 +74,10 @@ $(document).ready(function(){
 		}
      });
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
-	$("#pages").on('click',function(){
+	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");	
-			global.pagination('php/proveedor.php',page);
+			global.pagination('ControllerProveedor',page,0);
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -130,7 +116,7 @@ $(document).ready(function(){
 			localStorage.clear();
 	        	//CONVERTIMOS A JSON 
 			localStorage.proveedor = JSON.stringify(array);
-			global.cargarPagina('pages/Proveedor.html');
+			global.cargarPagina('Proveedor');
 			array.clear;
 		});
 	});
@@ -140,8 +126,8 @@ $(document).ready(function(){
 		opacity: .5, // Opacity of modal background
 		in_duration: 300, // Transition in duration
 		out_duration: 200, // Transition out duration
-		starting_top: '4%', // Starting top style attribute
-		ending_top: '10%', // Ending top style attribute
+		starting_top: '15%', // Starting top style attribute
+		ending_top: '15%', // Ending top style attribute
 		complete: function() { 		
 			$("#codigo").html("");
 			$("#proveedor").html("");
@@ -153,6 +139,6 @@ $(document).ready(function(){
 			$("#celular").html("");
 			$("#email").html("");
 			$("#web").html("");
-		} // Callback for Modal close
+		}
 	});
 });

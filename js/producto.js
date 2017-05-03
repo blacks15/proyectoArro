@@ -2,65 +2,55 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.isAdmin();
+	//global.validaSesion();
+	//global.isAdmin();
 	$('ul.tabs').tabs();
 	$("#nombreProducto").focus();
-	disable();
-	combo();
+	deshabilitar();
+	llenarCombo();
 	actualizarProducto();
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/Producto.html');
+		global.cargarPagina('Producto');
+	});
+		//BOTÓN PRODUCTOS
+	$("#btnProductos").on('click',function(){
+		global.cargarPagina('BuscarProducto');
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		var cadena = $("#frmAgregarPoducto").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('producto',parametros);
-		}
+		enviarDatos();
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
-		var cadena = $("#frmAgregarPoducto").serialize();
-		var parametros = {opc: 'actualizar',cadena };
-
-		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('producto',parametros);
-		}	
+		enviarDatos();
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$("#btnSearch").prop('disabled',true);
 		var buscar = $("#codigo").val(); 
 
-		$("#btnSearch").prop('disabled',true);
 		if (buscar != "") {		
-			var parametros = {opc: 'buscarProducto','buscar': buscar,'tipoBusqueda':2};
-
-			var respuesta = global.buscar('producto',parametros);
+			var respuesta = global.buscar('ControllerProducto','buscar',buscar,1);
+			
 			if (respuesta.codRetorno == '000') {
-				//console.log(respuesta);	
 				habilitar();
-				$("#codigoProducto").val(respuesta.id);
-				$("#nombreProducto").val(respuesta.nombreProducto);
-				$("#codigoBarras").val(respuesta.codigoBarras);
-				$("#proveedor").val(respuesta.proveedor).prop('selected','selected');
-				$("#stMin").val(respuesta.stMin);
-				$("#stMax").val(respuesta.stMax);
-				$("#stActual").val(respuesta.stActual);
-				$("#compra").val(respuesta.compra);
-				$("#venta").val(respuesta.venta);
-				$("#categoria").val(respuesta.categoria).prop('selected','selected');
+				$.each(respuesta.datos,function(index,value){
+					$("#codigoProducto").val(value.id);
+					$("#nombreProducto").val(value.nombreProducto);
+					$("#codigoBarras").val(value.codigoBarras);
+					$("#proveedor").val(value.proveedor).prop('selected','selected');
+					$("#stMin").val(value.stMin);
+					$("#stMax").val(value.stMax);
+					$("#stActual").val(value.stActual);
+					$("#compra").val(value.compra);
+					$("#venta").val(value.venta);
+					$("#categoria").val(value.categoria).prop('selected','selected');
+				});
 				
 				$("#buscar").val("");
 				$("#btnUpdate").prop('disabled',false);
@@ -119,7 +109,7 @@ $(document).ready(function(){
 	$("#nombreProducto").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 2 && charCode == 13) {
 			$("#codigoBarras").focus();
 		} else {
 			global.letras(evt);
@@ -164,12 +154,8 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO KEYUP
-	$("#stMin").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 0 && charCode == 13) {
-			validarDatos();
-		}
+	$("#stMin").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS
 	$("#stMax").on('keypress',function(evt){
@@ -182,12 +168,8 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO KEYUP
-	$("#stMax").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 0 && charCode == 13) {
-			validarDatos();
-		}
+	$("#stMax").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS
 	$("#stActual").on('keypress',function(evt){
@@ -200,12 +182,8 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO KEYUP
-	$("#stActual").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 0 && charCode == 13) {
-			validarDatos();
-		}
+	$("#stActual").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS
 	$("#compra").on('keypress',function(evt){
@@ -218,12 +196,8 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO KEYUP
-	$("#compra").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 0 && charCode == 13) {
-			validarDatos();
-		}
+	$("#compra").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS
 	$("#venta").on('keypress',function(evt){
@@ -330,27 +304,28 @@ $(document).ready(function(){
     		}
 		}
 	}
+
+	function enviarDatos(){
+		var cadena = $("#frmAgregarPoducto").serialize();
+		var parametros = {opc: 'guardar',cadena };
+
+		if (cadena == "") {
+			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
+		} else {
+			global.envioAjax('ControllerProducto',parametros);
+		}	
+	}
     	//FUNCIÓN PARA LLENAR LOS SELECT DE LA VISTA	
-	function combo(){
-		$.ajax({
-			cache: false,
-			type: "POST",
-			datatype: "json",
-			url: "php/combo.php",
-			data: {opc:"combo_libro"},
-			success: function(opciones){
-				$("#proveedor").html(opciones.opcion_proveedor);
-				$("#categoria").html(opciones.opcion_categoria);
-			},
-			error: function(xhr,ajaxOptions,throwError){
-				if (xhr.status == 404) {
-					global.mensajesError('Error','Ocurrio un error');
-				}
-			} 
-		});
+	function llenarCombo(){
+		var respuesta = global.buscar('ControllerProducto','filtro','','');
+
+		if (respuesta.codRetorno = '000') {
+			$("#proveedor").html(respuesta.proveedores);
+			$("#categoria").html(respuesta.categorias);
+		}
 	}
 		//FUNCIÓN PARA DESHABILITAR CAMPOS
-	function disable(){
+	function deshabilitar(){
 		$("#nombreProducto").prop('disabled', true);
 		$("#codigoBarras").prop('disabled', true);
 		$("#proveedor").prop('disabled', true);

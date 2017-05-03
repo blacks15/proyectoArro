@@ -9,6 +9,8 @@ session_start();
 */
 class Login {
 	public function loginUs($nombreUsuario,$password){
+		$nombreUsuario = limpiarCadena($nombreUsuario);
+		$password = limpiarCadena($password);
 		try {
 			$objUsuario = new Usuario();
 			if ($this->validaUsuario($nombreUsuario) == false ) {
@@ -33,11 +35,12 @@ class Login {
 	}
 		//FUNCIÓN PARA VALIDAR EL USUARIO
 	private function validaUsuario($usuario){
-		try {
+		try {			
 			$res = false;
+			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
 			$datos = array($usuario);
 
-			$sql = "SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario= ?";
+			$sql = "SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = ?";
 
 			$stm = SQL($sql,$datos); 
 
@@ -57,7 +60,8 @@ class Login {
 	private function validaPassword($usuario,$password){
 		try {
 			$res = false;
-			$password   = filter_var($password, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
+			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
+			$password = filter_var($password,FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
 			$datos = array($usuario);
 
 			if (empty($password)) {

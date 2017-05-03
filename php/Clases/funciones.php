@@ -94,6 +94,11 @@
 
 		return $hash;
 	}
+		//LIMPIA LA CADENA DE CARACTERES ESPECIALES
+	function limpiarCadena($texto){
+		$textoLimpio = preg_replace('([^A-Za-z0-9\.\-\_])', '', $texto);	     					
+		return $textoLimpio;
+	}
 		//FUNCIÓN DEBUG
 	function debug ($statement, array $params = []) {
 		$statement = preg_replace_callback (

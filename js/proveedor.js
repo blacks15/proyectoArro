@@ -2,17 +2,21 @@ $(document).ready(function(){
 	 /**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.isAdmin();
+	//global.validaSesion();
+	//global.isAdmin();
 	$('ul.tabs').tabs();
 	$("#nombreEmpresa").focus();
-	entrar();
+	actualizar();
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/Proveedor.html');
+		global.cargarPagina('Proveedor');
+	});
+			//BOTÓN BUSCAR PROVEEDORES
+	$("#btnProveedores").on('click',function(){
+		global.cargarPagina('BuscarProveedor');
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
@@ -22,18 +26,18 @@ $(document).ready(function(){
 		if (cadena == "") {
 			global.messajes('Error','!Debe llenar Todos los Campos','warning');
 		} else {
-			global.envioAjax('proveedor',parametros);
+			global.envioAjax('ControllerProveedor',parametros);
 		}
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
 		var cadena = $("#frmAgregarProveedor").serialize();
-		var parametros = {opc: 'actualizar',cadena };
+		var parametros = {opc: 'guardar',cadena };
 
 		if (cadena == "") {
 			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
 		} else {
-			global.envioAjax('proveedor',parametros);
+			global.envioAjax('ControllerProveedor',parametros);
 		}	
 	});
 		//BOTÓN REPORTE
@@ -43,30 +47,32 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		var buscar = $("#buscar").val(); 
+		$("#btnSearch").prop('disabled',true);
+		var buscar = $("#codigoEmpresa").val();
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarProveedor','buscar': buscar };
+			$("#codigoEmpresa").val(''); 
+			$("#buscar").val(''); 
 
-			var respuesta = global.buscar('proveedor',parametros);
+			var respuesta = global.buscar('ControllerProveedor','buscar',buscar);
+
 			if (respuesta.codRetorno == '000') {
-				numero = respuesta.numero.split(" ",2);
-				$("#codigoEmpresa").val(respuesta.id);
-				$("#nombreEmpresa").val(respuesta.nombreProveedor);
-				$("#nombreContacto").val(respuesta.contacto);
-				$("#telefono").val(respuesta.telefono);
-				$("#celular").val(respuesta.celular);
-				$("#email").val(respuesta.email);
-				$("#web").val(respuesta.web);
-				$("#calle").val(respuesta.calle);
-				$("#numExt").val(numero[0]);
-				$("#numInt").val(numero[1]);
-				$("#ciudad").val(respuesta.ciudad);
-				$("#estado").val(respuesta.estado);
-				$("#colonia").val(respuesta.colonia);
+				$.each(respuesta.datos,function(index,value){
+					$("#codigoEmpresa").val(value.id);
+					$("#nombreEmpresa").val(value.nombreProveedor);
+					$("#nombreContacto").val(value.contacto);
+					$("#telefono").val(value.telefono);
+					$("#celular").val(value.celular);
+					$("#email").val(value.email);
+					$("#web").val(value.web);
+					$("#calle").val(value.calle);
+					$("#numExt").val(value.numExt);
+					$("#numInt").val(value.numInt);
+					$("#ciudad").val(value.ciudad);
+					$("#estado").val(value.estado);
+					$("#colonia").val(value.colonia);
+				});
 
-				$("#buscar").val("");
 				$("#btnUpdate").prop('disabled',false);
 			}	
 		} else {
@@ -91,7 +97,7 @@ $(document).ready(function(){
 	$("#nombreEmpresa").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 3 && charCode == 13) {
 			$("#nombreContacto").focus();
 		} else {
 			global.letras(evt);
@@ -99,11 +105,7 @@ $(document).ready(function(){
 	});
 		//EVENTO KEYUP
 	$("#nombreEmpresa").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS NOMBRE CONTACTO
 	$("#nombreContacto").on('keypress',function(evt){
@@ -117,17 +119,13 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#nombreContacto").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS E-MAIL
 	$("#email").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 10 && charCode == 13) {
+		if ( $(this).val().length > 5 && charCode == 13) {
 			if (global.validarEmail( $(this).val() ) ) {
 				$("#web").focus();
 			}
@@ -145,7 +143,6 @@ $(document).ready(function(){
 	});
     	//EVENTO KEYPRESS PÁGINA WEB
 	$("#web").on('keypress',function(evt){
-		var web = $("#web").val();
 		var charCode = evt.which || evt.keyCode;
 
 		if (charCode == 13) {
@@ -168,7 +165,7 @@ $(document).ready(function(){
 	$("#telefono").on('keyup',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length == 10 && charCode == 13) {
+		if ( $(this).val().length == 10) {
 			validarDatos();
 		}
 	});
@@ -186,7 +183,7 @@ $(document).ready(function(){
 	$("#celular").on('keyup',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length == 10 && charCode == 13) {
+		if ( $(this).val().length == 10) {
 			validarDatos();
 		}
 	});
@@ -194,7 +191,7 @@ $(document).ready(function(){
 	$("#calle").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 2 && charCode == 13) {
 			$("#numExt").focus();
 		} else {
 			global.numerosLetras(evt);
@@ -202,11 +199,7 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#calle").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS NÚM. EXT.
 	$("#numExt").on('keypress',function(evt){
@@ -226,7 +219,7 @@ $(document).ready(function(){
 	$("#numInt").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 0 && charCode == 13) {
+		if (charCode == 13) {
 			$("#colonia").focus();
 		} else {
 			global.numerosLetras(evt);
@@ -240,7 +233,7 @@ $(document).ready(function(){
 	$("#colonia").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 3 && charCode == 13) {
 			$("#ciudad").focus();
 		} else {
 			global.numerosLetras(evt);
@@ -254,7 +247,7 @@ $(document).ready(function(){
 	$("#ciudad").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 3 && charCode == 13) {
 			$("#estado").focus();
 		} else {
 			global.letras(evt);
@@ -262,11 +255,7 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#ciudad").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 3 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
    		//EVENTO KEYPRESS ESTADO
 	$("#estado").on('keypress',function(evt){
@@ -280,11 +269,7 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#estado").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//AUTOCOMPLETE
 	$("#buscar").autocomplete({
@@ -292,6 +277,7 @@ $(document).ready(function(){
         source: "php/autocomplete.php?opc=proveedor",
 		autoFocus: true,
 		select: function (event, ui) {
+			$("#codigoEmpresa").val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
@@ -326,7 +312,7 @@ $(document).ready(function(){
     	}
     }
 		//FUNCIÓN PARA ENTRAR DESDE BUSCARPROVEEDOR Y MODIFICAR EL PROVEEDOR	
-	function entrar(){
+	function actualizar(){
 		var res = "";
 		var resJson = "";
 
@@ -336,7 +322,6 @@ $(document).ready(function(){
 				//CONVERTIMOS EL JSON A UN OBJETO
 			resJson = JSON.parse(res);
 			setTimeout(function() {
-				numero = resJson[12].split(" ",2);
 					//ASGINAMOS VALORES A LOS INPUTS
 				$("#codigoEmpresa").val(resJson[0]);
 				$("#nombreEmpresa").val(resJson[1]);
@@ -349,8 +334,8 @@ $(document).ready(function(){
 				$("#web").val(resJson[9]);
 				$("#colonia").val(resJson[10]);
 				$("#calle").val(resJson[11]);
-				$("#numExt").val(numero[0]);
-				$("#numInt").val(numero[1]);
+				$("#numExt").val(resJson[12]);
+				$("#numInt").val(resJson[13]);
 					//OCULTAMOS BOTON GUARDAR Y MOSTRAMOS MODIFICAR
 				$("#btnUpdate").prop('disabled',false);
 					//VACIAMOS LA SESSION

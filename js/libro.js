@@ -213,7 +213,7 @@ $(document).ready(function(){
 	}	
     	//FUNCIÓN PARA LLENAR LOS SELECT DE LA VISTA	
 	function llenarCombo(){
-		var respuesta = global.buscar('ControllerLibro','filtro');
+		var respuesta = global.buscar('ControllerLibro','filtro','','');
 
 		if (respuesta.codRetorno = '000') {
 			$("#editorial").html(respuesta.editoriales);

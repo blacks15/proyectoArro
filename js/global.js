@@ -12,7 +12,7 @@ var global = {
 			if (form != '' && form != undefined) {
 				global.cargarPagina(form);
 			} else if (logOut == 1) {
-				window.open('php/cerrarSesion.php','_top');
+				window.open('index.html','_top');
 			}
 		});
 	},
@@ -26,14 +26,14 @@ var global = {
 			url: 'php/isAdmin.php',
 			success: function(response) {
 				if (response.codRetorno == '001') {
-					global.mensajesError('Usuario No autorizado!',response.mensaje,response.form);
+					global.mensajesError('Usuario No autorizado!',response.mensaje,response.form,'');
 				} else if (response.codRetorno == '003') {
 					global.cerrarSesion(response.mensaje);
 				}
 			},
 			error: function(xhr,ajaxOptions,throwError){
 				if (xhr.status == 404) {
-					global.mensajesError('Error','Ocurrio un error');
+					global.mensajesError('Error','Ocurrio un error','','');
 				}
 			}
 		});
@@ -52,7 +52,7 @@ var global = {
 			complete: function () {
 				$("#loader").fadeOut(1000);
 			},
-			success: function(response) { console.log(response);
+			success: function(response) {
 				if (response == "" || response == null) {
 					global.mensajes('Error','Ocurrio un error','error','','','','');
 					return;
@@ -110,7 +110,6 @@ var global = {
 			} else if (codRetorno == '000') {
 				$("#pages").load('pages/'+form+'.html');
 			} else if (bus == '1') {
-				alert(form);
 				global.cargarPagina(form);
 			}
 		});
@@ -142,9 +141,9 @@ var global = {
 			url: 'php/Controllers/'+url+'.php',
 			success:function(data){
 				if (data.codRetorno == "001") {
-					global.mensajesError('Error',data.mensaje,data.form);
+					global.mensajesError('Error',data.Mensaje,data.form);
 				} else if (data.codRetorno == '002') {
-					global.mensajes('Error',data.mensaje,'error','','',data.form,'1');
+					global.mensajes('Error',data.Mensaje,'error','','',data.form,'1');
 				} else {
 					if (data.form == 'Libro') {
 						$("#table").html("");
@@ -167,11 +166,11 @@ var global = {
 						$.each(data.datos,function(index,value){
 							$("#table").append("<tr><td style='display: none' width='5%'>"+value.id+
 								"</td><td width='30%'>"+value.nombreProveedor+"</td><td width='10%'>"+value.contacto+
-								"</td><td width='25%'>"+value.direccion+"</td><td width='8%'>"+value.ciudad+
-								"</td><td width='8%'>"+value.estado+"</td><td width='5%'>"+value.telefono+
-								"</td><td width='5%'>"+value.celular+"</td><td style='display: none' width='10%'>"+value.email+
-								"</td><td style='display: none' width='5%'>"+value.web+"</td><td style='display: none' width='5%'>"+value.colonia+
-								"</td><td style='display: none' width='5%'>"+value.calle+"</td><td style='display: none' width='5%'>"+value.numero+
+								"</td><td width='25%'>"+value.direccion+"</td><td width='8%'>"+value.ciudad+"</td><td width='8%'>"+value.estado+
+								"</td><td width='5%'>"+value.telefono+"</td><td width='5%'>"+value.celular+
+								"</td><td style='display: none' width='10%'>"+value.email+"</td><td style='display: none'>"+value.web+
+								"</td><td style='display: none'>"+value.colonia+"</td><td style='display: none'>"+value.calle+
+								"</td><td style='display: none'>"+value.numExt+"</td><td style='display: none'>"+value.numInt+
 								"</td><td><button type='button' class='icon-info btn blue btnMostrar'></button></td>\
 								<td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
@@ -470,9 +469,9 @@ var global = {
 		return cadena;
 	},
 		//FUNCIÓN PARA BUSCRA DATOS
-	buscar: function(url,opc,buscar){
+	buscar: function(url,opc,buscar,tipo){
 		var retorno = {};
-		var parametros = 'partida='+1+'&codigo='+buscar;
+		var parametros = 'partida='+1+'&codigo='+buscar+'&busqueda='+tipo;
 
 		$.ajax({
 			cache: false,

@@ -12,7 +12,7 @@ CREATE PROCEDURE spConsultaLibros (
 )
 -- =============================================
 -- Author:       	Felipe Monzón
--- Create date: 	02/Feb/2017
+-- Create date: 	29/Abr/2017
 -- Description:   	Procedimiento para Consultar Libros 
 -- =============================================
 BEGIN

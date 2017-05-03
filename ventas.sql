@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-05-2017 a las 22:45:45
+-- Tiempo de generación: 03-05-2017 a las 02:10:25
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -239,6 +239,65 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIG
 	END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE		
+		IF (pCodigo = 0 ) THEN
+			 IF EXISTS (SELECT * FROM proveedores WHERE status = 'DISPONIBLE') THEN
+			 	SELECT COUNT(*) INTO numFilas FROM proveedores WHERE status = 'DISPONIBLE';
+
+				SELECT codigo_proveedor,nombre_proveedor,contacto,calle,num_ext,num_int,colonia,ciudad,estado,
+					telefono,celular,email,web,usuario,status,CONCAT(calle,' ',num_ext,' ',num_int) AS direccion
+				FROM proveedores
+				WHERE status = 'DISPONIBLE' 
+				ORDER BY nombre_libro ASC
+				LIMIT pInicio, pTamanio;
+				SET msg = 'SP Ejecutado Correctamente';
+				SET CodRetorno = '000'; 
+			ELSE
+				SET CodRetorno = '001'; 
+				SET msg = 'No Hay Datos Para Mostrar';
+			END IF;
+		ELSE
+			IF EXISTS (SELECT * FROM proveedores WHERE status = 'DISPONIBLE' AND codigo_proveedor = pCodigo) THEN
+				SELECT COUNT(*) INTO numFilas FROM proveedores WHERE status = 'DISPONIBLE' AND codigo_proveedor = pCodigo;
+
+				SELECT codigo_proveedor,nombre_proveedor,contacto,calle,num_ext,num_int,colonia,ciudad,estado,
+					telefono,celular,email,web,usuario,status,CONCAT(calle,' ',num_ext,' ',num_int) AS direccion
+				FROM proveedores
+				WHERE status = 'DISPONIBLE' AND codigo_proveedor = pCodigo
+				ORDER BY nombre_proveedor ASC;
+				SET msg = 'SP Ejecutado Correctamente';
+				SET CodRetorno = '000'; 
+			ELSE
+				SET CodRetorno = '001'; 
+				SET msg = 'No Hay Datos Para Mostrar';
+			END IF;
+		END IF;
+	END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdAutor` (IN `pCodigo` BIGINT, IN `pNombreAutor` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
@@ -406,6 +465,65 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT
 		ELSE
 			SET CodRetorno = '001';
 			SET msg = 'El Libro ya Existe';
+			ROLLBACK;
+		END IF; 
+	END IF; 
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BIGINT, IN `pNombreProveedor` VARCHAR(50), IN `pContacto` VARCHAR(50), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pEmail` VARCHAR(40), IN `pWeb` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+		
+	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
+		IF EXISTS(SELECT * FROM proveedores WHERE codigo_proveedor = pCodigo) THEN
+			IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
+				START TRANSACTION;
+					UPDATE proveedores SET nombre_proveedor = pNombreProveedor, contacto = pContacto, calle = pCalle,
+						num_ext = pNumExt, num_int = pNumInt, colonia = pColonia, ciudad = pCiudad, estado = pEstado,
+						telefono = pTelefono, celular = pCelular, email = pEmail, web = pWeb, fechaModificacion = NOW()
+					WHERE codigo_proveedor = pCodigo;
+					SET CodRetorno = '000';
+					SET msg = 'Proveedor Actualizado con Exito';
+				COMMIT; 
+			ELSE
+				SET CodRetorno = '001';
+				SET msg = 'El Nombre del Proveedor ya fue Registrado';
+				ROLLBACK;
+			END IF;
+		ELSE
+			SET CodRetorno = '001';
+			SET msg = 'El Proveedor no Éxiste';
+		END IF;
+	ELSE 
+		IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
+			START TRANSACTION;
+				INSERT INTO proveedores(nombre_proveedor,contacto,calle,num_ext,num_int,colonia,
+					ciudad,estado,telefono,celular,email,web,usuario,status,fechaCreacion,fechaModificacion)
+				VALUES (pNombreProveedor, pContacto, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
+					pCelular, pEmail, pWeb, pUsuario, pStatus,NOW(), NOW() );
+				SET CodRetorno = '000';
+				SET msg = 'Proveedor Guardado con Exito';
+			COMMIT;
+		ELSE
+			SET CodRetorno = '001';
+			SET msg = 'El Proveedor ya Éxiste';
 			ROLLBACK;
 		END IF; 
 	END IF; 
@@ -902,7 +1020,8 @@ INSERT INTO `proveedores` (`codigo_proveedor`, `nombre_proveedor`, `contacto`, `
 (2, 'librerÃ­a mÃ©xico', 'luis lopez sanchez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'luis_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-01-16 05:55:00'),
 (3, 'materiales didacticos roggers', 'maria lopez', 'av obregon', 7852, '52', 'centro', 'tlaquepalque', 'guadalajara', '5555750186', '6674568266', 'malo@hotmail.com', '', 'felipe', 'DISPONIBLE', '2017-01-17 05:36:00', '2017-01-17 05:36:00'),
 (4, 'editorial OcÃ©ano de MÃ©xico SA de CV', 'lorena montes', 'eugenio sue', 5500, '0', 'miguel hidalgo', 'polanco chapultepec', 'CDMX', '5591785100', '', 'lorena.montes@editorialoceano.com', 'www.oceano.com.mx', 'felipe', 'DISPONIBLE', '2017-03-13 03:37:00', '2017-03-13 03:37:00'),
-(5, 'grupo editorial panini', 'juan panini', 'benito juarez', 61, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-04-09 12:05:00');
+(5, 'grupo editorial panini', 'juan panini', 'benito juarez', 61, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-04-09 12:05:00'),
+(6, 'mas libros s A de C v', 'silvia Rodriguez', 'av siempre viva', 6666, '', 'las vegas', 'springfield', 'chico', '6781457828', '2758152433', 'silvi@maslibros.com', '', 'felipe', 'DISPONIBLE', '2017-05-02 16:53:03', '2017-05-02 16:53:03');
 
 -- --------------------------------------------------------
 
@@ -1238,7 +1357,7 @@ ALTER TABLE `productos`
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
-  MODIFY `codigo_proveedor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `codigo_proveedor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
 -- AUTO_INCREMENT de la tabla `retiros`
 --

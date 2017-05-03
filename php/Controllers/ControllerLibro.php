@@ -24,7 +24,7 @@
 		$log = new Log("log", "../../log/");
 		$log->insert('Entro metodo libroFiltro', false, true, true);	
 		try {
-			$sql = new LibroNodel();
+			$sql = new LibroModel();
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
 				$salidaJSON = array('codRetorno' => '003',
@@ -36,7 +36,7 @@
 				exit();
 			}
 
-			$datosCombo = $sql->LibroFiltro();
+			$datosCombo = $sql->libroFiltro();
 
 			if ($datosCombo != "") {
 				$salidaJSON = array('codRetorno' => '000',
@@ -62,7 +62,7 @@
 		$log = new Log("log", "../../log/");
 		$log->insert('Entro metodo guardarLibro!', false, true, true);		
 		try {
-			$sql = new LibroNodel();
+			$sql = new LibroModel();
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
 			parse_str($_POST["cadena"], $_POST);
 			 	//DECLARACION Y ASIGNACIÓN DE VARIABLES
@@ -130,7 +130,7 @@
 		try { 
 			$codigoLibro = trim($_POST['codigo']);
 			$tipoBusqueda = trim($_POST['tipoBusqueda']);
-			$sql = new LibroNodel();
+			$sql = new LibroModel();
 
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {

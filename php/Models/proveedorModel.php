@@ -1,26 +1,14 @@
 <?php 
 require_once('../Clases/funciones.php');
-require_once('../Clases/Combo.php');
+
 session_start();
 /*	
-	Clase: Model Autor
+	Clase: Model Proveedor
 	Autor: Felipe Monzón
-	Fecha: 30-ABR-2017
+	Fecha: 02-MAY-2017
 */
-class LibroModel {
-	public function libroFiltro(){
-		try {
-			$res->autores = mostrar_autor();
-			$res->editoriales = mostrar_editorial();
-
-			return $res; 
-		} catch (Exception $e) {
-			$log->insert('Error libroFiltro '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
-		}
-	}
-
-	public function guardarLibro($datos){
+class ProveedorModel {
+	public function guardarProveedor($datos){
 		try {
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
 			if (empty($datos) ) {
@@ -30,7 +18,7 @@ class LibroModel {
 				return $retorno;
 			}
 
-			$consulta = "CALL spInsUpdLibro(?,?,?,?,?,?,?,?,@codRetorno,@msg)";
+			$consulta = "CALL spInsUpdProveedor(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
 
 			$stm = SP($consulta,$datos);
 
@@ -47,17 +35,17 @@ class LibroModel {
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error guardarLibro '.$e->getMessage(), false, true, true);	
+			$log->insert('Error guardarProveedor '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
 
-	public function cargarLibros($codigo,$inicio,$paginaActual,$tipobusqueda){
-		$libros = new ArrayObject();
+	public function cargarProveedores($codigo,$inicio,$paginaActual){
+		$proveedores = new ArrayObject();
 		$i = 0;
 		try {
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if ($codigo == "" || $paginaActual == "" || $tipobusqueda == "") {
+			if ($codigo == "" || $paginaActual == "") {
 				$retorno->CodRetorno = '004';
 				$retorno->Mensaje = 'Parametros Vacios';
 
@@ -65,21 +53,27 @@ class LibroModel {
 				exit();
 			}
 
-			$datos = array($codigo,$inicio,5,$tipobusqueda);
-			$consulta = "CALL spConsultaLibros(?,?,?,?,@CodRetorno,@msg,@numFilas)";
+			$datos = array($codigo,$inicio,5);
+			$consulta = "CALL spConsultaProveedores(?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
 			$stm = SP ($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
 				foreach ($stm->datos as $key => $value) {
-					$libros[$i] = array('id' => $value['codigo_libro'],
-						'nombre' => $value['nombre_libro'],
-						'isbn' => $value['isbn'],
-						'autor' => $value['nombre_autor'],
-						'idAutor' => $value['autor'],
-						'idEditorial' => $value['editorial'],
-						'editorial' => $value['nombre_editorial'],
-						'descripcion' => $value['descripcion']
+					$proveedores[$i] = array('id' => $value['codigo_proveedor'],
+						'nombreProveedor' => $value['nombre_proveedor'],
+						'contacto' => $value['contacto'],
+						'direccion' => $value['direccion'],
+						'ciudad' => $value['ciudad'],
+						'estado' => $value['estado'],
+						'telefono' => $value['telefono'],
+						'celular' => $value['celular'],
+						'email' => $value['email'],
+						'web' => $value['web'],
+						'calle' => $value['calle'],
+						'numExt' => $value['num_ext'],
+						'numInt' => $value['num_int'],
+						'colonia' => $value['colonia'],
 					);
 					$i++;
 				}
@@ -92,7 +86,7 @@ class LibroModel {
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
 						//ASIGNAMOS DATOS AL RETORNO
 					$retorno->CodRetorno = "000";
-					$retorno->libros = $libros;
+					$retorno->proveedores = $proveedores;
 					$retorno->lista = $lista;
 				}
 			} else {
@@ -102,10 +96,9 @@ class LibroModel {
 
 			return $retorno;
 		} catch (Exception $e) {
-			$log->insert('Error cargarLibro '.$e->getMessage(), false, true, true);	
+			$log->insert('Error cargarProveedores '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
 }
-
 ?>

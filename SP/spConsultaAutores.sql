@@ -11,7 +11,7 @@ CREATE PROCEDURE spConsultaAutores (
 )
 -- =============================================
 -- Author:       	Felipe Monzón Mendoza
--- Create date: 	02/Feb/2017
+-- Create date: 	02/Abr/2017
 -- Description:   	Procedimiento para Consultar Autores 
 -- =============================================
 BEGIN
