@@ -354,7 +354,7 @@ var global = {
 	letras: function(evt){
 		var charCode = evt.which || evt.keyCode;
         var str = String.fromCharCode(charCode);
-		var expreg = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
+		var expreg = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\.\s]*$/;
 
 		if(!str.match(expreg) && charCode != 13){
 			sweetAlert(
@@ -471,7 +471,7 @@ var global = {
 		//FUNCIÓN PARA BUSCRA DATOS
 	buscar: function(url,opc,buscar,tipo){
 		var retorno = {};
-		var parametros = 'partida='+1+'&codigo='+buscar+'&busqueda='+tipo;
+		var parametros = 'partida='+1+'&codigo='+buscar+'&tipoBusqueda='+tipo;
 
 		$.ajax({
 			cache: false,
@@ -485,11 +485,13 @@ var global = {
 				if(response.codRetorno == '000') {
 					retorno = response;
 				} else if (response.codRetorno == '001') {
-					global.mensajes('Advertencia',response.mensaje,'warning',response.url);
+					global.mensajes('Advertencia',response.Mensaje,'warning',response.url,'','','');
 				} else if (response.codRetorno == '002') {
-					global.mensajes('Error',response.mensaje,'warning');
+					global.mensajes('Error',response.Mensaje,'warning','','','','');
 				} else if (response.codRetorno == '003') {
-					global.cerrarSesion(response.mensaje);
+					global.cerrarSesion(response.Mensaje);
+				} else if (response.codRetorno == '004') {
+					global.mensajes('Error',response.Mensaje,'warning','','','','');
 				}
 			},
 			error: function(xhr,ajaxOptions,throwError){

@@ -1,26 +1,14 @@
 <?php 
 require_once('../Clases/funciones.php');
-require_once('../Clases/Combo.php');
+
 session_start();
 /*	
 	Clase: Model Proveedor
 	Autor: Felipe Monzón
 	Fecha: 02-MAY-2017
 */
-class ProductoModel {
-	public function productoFiltro(){
-		try {
-			$res->proveedores = mostrar_proveedor();
-			$res->categorias = mostrar_categoria();
-
-			return $res; 
-		} catch (Exception $e) {
-			$log->insert('Error ProductoFiltro '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
-		}
-	}
-
-	public function guardarProducto($datos){
+class ProveedorModel {
+	public function guardarProveedor($datos){
 		try {
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
 			if (empty($datos) ) {
@@ -30,7 +18,7 @@ class ProductoModel {
 				return $retorno;
 			}
 
-			$consulta = "CALL spInsUpdProducto(?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
+			$consulta = "CALL spInsUpdProveedor(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
 
 			$stm = SP($consulta,$datos);
 
@@ -47,13 +35,13 @@ class ProductoModel {
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error guardarProducto '.$e->getMessage(), false, true, true);	
+			$log->insert('Error guardarProveedor '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
 
-	public function cargarProductos($codigo,$inicio,$paginaActual){
-		$productos = new ArrayObject();
+	public function cargarProveedores($codigo,$inicio,$paginaActual){
+		$proveedores = new ArrayObject();
 		$i = 0;
 		try {
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
@@ -66,38 +54,39 @@ class ProductoModel {
 			}
 
 			$datos = array($codigo,$inicio,5);
-			$consulta = "CALL spConsultaProductos(?,?,?,@CodRetorno,@msg,@numFilas)";
+			$consulta = "CALL spConsultaProveedores(?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
 			$stm = SP ($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
+				foreach ($stm->datos as $key => $value) {
+					$proveedores[$i] = array('id' => $value['codigo_proveedor'],
+						'nombreProveedor' => $value['nombre_proveedor'],
+						'contacto' => $value['contacto'],
+						'direccion' => $value['direccion'],
+						'ciudad' => $value['ciudad'],
+						'estado' => $value['estado'],
+						'telefono' => $value['telefono'],
+						'celular' => $value['celular'],
+						'email' => $value['email'],
+						'web' => $value['web'],
+						'calle' => $value['calle'],
+						'numExt' => $value['num_ext'],
+						'numInt' => $value['num_int'],
+						'colonia' => $value['colonia'],
+					);
+					$i++;
+				}
 					//VALIDAMOS EL NÚMERO DE FILAS
 				if ($stm->numFilas[0] == 0) {
 					$retorno->CodRetorno = "001";
 					$retorno->Mensaje = 'No Hay Datos Para Mostrar';
 				} else {
-					foreach ($stm->datos as $key => $value) {
-						$productos[$i] = array('id' => $value['codigo_productos'],
-							'codigoBarras' => $value['codigoBarras'],
-							'nombre_producto' => $value['nombre_producto'],
-							'proveedor' => $value['proveedor'],
-							'stockActual' => $value['stockActual'],
-							'stockMin' => $value['stockMin'],
-							'stockMax' => $value['stockMax'],
-							'compra' => $value['compra'],
-							'venta' => $value['venta'],
-							'categoria' => $value['categoria'],
-							'status' => $value['status'],
-							'nombreCategoria' => $value['nombreCategoria'],
-							'nombreProveedor' => $value['nombreProveedor'],
-						);
-						$i++;
-					}
 						//CREAMOS LA LISTA DE PAGINACIÓN
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
 						//ASIGNAMOS DATOS AL RETORNO
 					$retorno->CodRetorno = "000";
-					$retorno->Productos = $productos;
+					$retorno->proveedores = $proveedores;
 					$retorno->lista = $lista;
 				}
 			} else {

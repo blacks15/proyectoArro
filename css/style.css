@@ -177,6 +177,10 @@ button {
 	background: url(iconos/buscarPersona.png) no-repeat center transparent;
 }
 
+.icon-searchBook  {
+	background: url(iconos/search_book.png) no-repeat center transparent;
+}
+
 .icon-pagos {
 	background: url(iconos/pagos.png) no-repeat center transparent;
 }

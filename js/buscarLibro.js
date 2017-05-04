@@ -50,25 +50,19 @@ $(document).ready(function(){
 	$("#busqueda").change(function(){
 			//OBTENEMOS EL VALOR DEL SELECT Y LIMPIAMOS LOS CAMPOS
 		var opc =  $(this).val();
-		$("#buscarE").val("");
-		$("#buscarN").val("");
+		$("#buscar").val("");
+		$("#codigoLibro").val(''); 
 			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = EMPRESA
 		if (opc == 0) {
 			$("#busquedas").hide('explode');
 		} else if (opc == 1) {
-			$("#buscarE").hide();
-			$("#buscarN").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarN").focus();
+			llamarAutocmpletar('libro');
 		} else {
-			$("#buscarN").hide();
-			$("#buscarE").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarE").focus();
+			llamarAutocmpletar('autor');
 		}
 	});
 		//EVENTO KEYPRESS DEL CAMPO BUSCAR
-	$("#buscarN").on('keypress',function(evt){
+	$("#buscar").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
 		if (charCode == 13) {
@@ -78,71 +72,10 @@ $(document).ready(function(){
 		}
 	});
 		//EVENTO CHANGE DEL CAMPO BUSCAR
-	$("#buscarN").on('change',function(evt){
+	$("#buscar").on('change',function(evt){
 		if ( $(this).val().length == 0) {
 			global.pagination('ControllerLibro',1,0);
 			$('#pagination').show();
-		}
-	});
-		//EVENTO KEYPRESS DEL CAMPO BUSCAR
-	$("#buscarE").on('keypress',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if (charCode == 13) {
-			$("#btnSearch").focus();
-		} else {
-			global.numerosLetras(evt);
-		}
-	});
-		//EVENTO CHANGE DEL CAMPO BUSCAR
-	$("#buscarE").on('change',function(evt){
-		if ( $(this).val().length == 0) {
-			global.pagination('ControllerLibro',1,0);
-			$('#pagination').show();
-		}
-	});
-//////////////////////////////////////////////
-		/**************************
-	    *		AUTOCOMPLETE	  *
-	    **************************/
-		//AUTOCOMPLETAR CAMPO NOMBRE
-	$("#buscarN").autocomplete({
-		minLength: 2,
-		source: "php/autocomplete.php?opc=libro",
-		autoFocus: true,
-		select: function (event, ui) {
-			if (ui.item.id == 0) {
-				$("#buscarN").val("");
-				$("#buscarN").empty();
-			}
-			$('#codigoLibro').val(ui.item.id);
-			return ui.item.label;
-		},
-		response: function(event, ui) {
-			if (ui.content[0].label == null) {
-				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
-				ui.content.push(noResult);
-			} 
-		}
-	});
-		//AUTOCOMPLETAR CAMPO BUQUEDA POR AUTOR
-	$("#buscarE").autocomplete({
-		minLength: 2,
-		source: "php/autocomplete.php?opc=autor",
-		autoFocus: true,
-		select: function (event, ui) {
-			if (ui.item.id == 0) {
-				$("#buscarE").val("");
-				$("#buscarE").empty();
-			}
-			$('#codigoLibro').val(ui.item.id);
-			return ui.item.label;
-		},
-		response: function(event, ui) {
-			if (ui.content[0].label == null) {
-				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
-				ui.content.push(noResult);
-			} 
 		}
 	});
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
@@ -182,6 +115,32 @@ $(document).ready(function(){
 			array.clear;
 		});
 	});
+ 		//LLAMAR FUNCIÓN AUTOCOMPLETAR
+	function llamarAutocmpletar(opc){
+		//$("#buscar").show('explode');
+		$("#busquedas").show("explode");
+		autocompletar(opc);
+	}
+		//FUNCIÓN AUTOCOMPLETAR
+ 	function autocompletar(opc){
+ 		$("#buscar").autocomplete({
+			minLength: 2,
+			source: "php/autocomplete.php?opc="+opc,
+			autoFocus: true,
+			select: function (event, ui) {
+				console.log(ui.item);
+				$('#codigoLibro').val(ui.item.id);
+				return ui.item.label;
+			},
+			response: function(event, ui) {
+				if (ui.content[0].label == null) {
+					var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
+					ui.content.push(noResult);
+				} 
+			}
+		});
+ 	}
+
 		 //FUNCIÓN CARGAR IMAGEN
     function cargar_imagen(nombre){
     		//SE REEMPLAZA EL ESPACIO EN BLANCO 

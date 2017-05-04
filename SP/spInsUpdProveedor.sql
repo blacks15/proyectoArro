@@ -64,7 +64,7 @@ BEGIN
 			END IF;
 		ELSE
 			SET CodRetorno = '001';
-			SET msg = 'El Proveedor no Éxiste';
+			SET msg = 'El Proveedor no Existe';
 		END IF;
 	ELSE 
 		IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
@@ -78,7 +78,7 @@ BEGIN
 			COMMIT;
 		ELSE
 			SET CodRetorno = '001';
-			SET msg = 'El Proveedor ya Éxiste';
+			SET msg = 'El Proveedor ya Existe';
 			ROLLBACK;
 		END IF; 
 	END IF; 

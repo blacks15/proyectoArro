@@ -143,9 +143,9 @@
 				exit();
 			}
 				//VALIDAMOS SI LA BUSQUEDA ESTA VACIA
-			if ($tipoBusqueda == "" ) {
-				$tipoBusqueda = 0;
-			}
+			if ($tipoBusqueda == "" || $tipoBusqueda == undefined) {
+				$tipoBusqueda = "0";
+			} 
 				//VALIDAMOS LA PÁGINA ACTUAL
 			if (isset($_POST['partida'])) {
 				$paginaActual = $_POST['partida'];	
@@ -160,7 +160,6 @@
 			$libros = $sql->cargarLibros($codigoLibro,$inicio,$paginaActual,$tipoBusqueda);	
 
 			if ($libros->CodRetorno == "000") {
-					//CREAMOS LA RESPUESTA 
 				$salidaJSON = array ('codRetorno' => $libros->CodRetorno ,
 					'datos' => $libros->libros,
 					'link' => $libros->lista,

@@ -6,7 +6,7 @@ $(document).ready(function(){
 	//global.isAdmin();
 	$('ul.tabs').tabs();
 	$("#nombreEmpresa").focus();
-	actualizar();
+	actualizarProveedor();
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
@@ -20,25 +20,11 @@ $(document).ready(function(){
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		var cadena = $("#frmAgregarProveedor").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('ControllerProveedor',parametros);
-		}
+		enviarDatos();
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
-		var cadena = $("#frmAgregarProveedor").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('ControllerProveedor',parametros);
-		}	
+		enviarDatos();	
 	});
 		//BOTÓN REPORTE
 	$("#btnReporte").on('click',function(){
@@ -287,32 +273,47 @@ $(document).ready(function(){
 			} 
 		}
     });
+		//FUNCIÓN PARA VALIDAR LOS CAMPOS
+	function validarDatos(){
+		var nombreEmpresa = $("#nombreEmpresa").val();
+		var nombreContacto = $("#nombreContacto").val();
+		var email = $("#email").val();
+		var telefono = $("#telefono").val();
+		var celular = $("#celular").val();
+		var calle = $("#calle").val();
+		var numExt = $("#numExt").val();
+		var colonia = $("#colonia").val();
+		var ciudad = $("#ciudad").val();
+		var estado = $("#estado").val();
 
-    function validarDatos(){
-    	var nombreEmpresa = $("#nombreEmpresa").val();
-    	var nombreContacto = $("#nombreContacto").val();
-    	var email = $("#email").val();
-    	var telefono = $("#telefono").val();
-    	var celular = $("#celular").val();
-    	var calle = $("#calle").val();
-    	var numExt = $("#numExt").val();
-    	var colonia = $("#colonia").val();
-    	var ciudad = $("#ciudad").val();
-    	var estado = $("#estado").val();
+		if (nombreEmpresa == "" && nombreContacto == ""  &&  email == "" && telefono == "" && celular == "" && calle == "" &&
+			numExt == "" && colonia == "" && ciudad == "" && estado == "") {
+			$("#btnSave").prop('disabled',true);
+		} else {
+			if (telefono.length != 10 || celular.length != 10) {
+				global.mensajes('Advertencia',"Teléfono o Celular deben ser mayor a 10 dígitos",'','','','')
+			} else {
+				if ( $("#codigoEmpresa").val() == "") {
+					$("#btnSave").prop('disabled',false);
+				} else {
+					$("#btnUpdate").prop('disabled',false);
+				}
+			}
+		}
+	}
+    	//FUNCIÓN PARA ENVIAR DATOS AL CONTROLADOR
+    function enviarDatos(){
+    	var cadena = $("#frmAgregarProveedor").serialize();
+		var parametros = {opc: 'guardar',cadena };
 
-    	if (nombreEmpresa == "" && nombreContacto == ""  &&  email == "" && telefono == "" && celular == "" && 
-    		calle == "" && numExt == "" && colonia == "" && ciudad == "" && estado == "") {
-    		$("#btnSave").prop('disabled',true);
-    	} else {
-    		if ( $("#codigoEmpresa").val() == "") {
-    			$("#btnSave").prop('disabled',false);
-    		} else {
-    			$("#btnUpdate").prop('disabled',false);
-    		}
-    	}
+		if (cadena == "") {
+			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
+		} else {
+			global.envioAjax('ControllerProveedor',parametros);
+		}
     }
 		//FUNCIÓN PARA ENTRAR DESDE BUSCARPROVEEDOR Y MODIFICAR EL PROVEEDOR	
-	function actualizar(){
+	function actualizarProveedor(){
 		var res = "";
 		var resJson = "";
 

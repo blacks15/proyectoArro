@@ -3,7 +3,7 @@ $(document).ready(function(){
 	//global.isAdmin();
 	$("#nombreLibro").focus();
 	llenarCombo();
-	entrar();
+	actualizarLibro();
 	/**************************
     *		BOTONOES		  *
     **************************/
@@ -17,7 +17,7 @@ $(document).ready(function(){
 			$("#codigoLibro").val(''); 
 			$("#buscar").val(''); 
 
-			var respuesta = global.buscar('ControllerLibro','buscar',buscar);
+			var respuesta = global.buscar('ControllerLibro','buscar',buscar,'');
 			if (respuesta.codRetorno == '000') {
 				$.each(respuesta.datos,function(index,value){
 					$("#codigoLibro").val(value.id);
@@ -132,7 +132,7 @@ $(document).ready(function(){
     });
 
 	$("#autor").on('change',function(){
-	  		habilitaBoton();
+	  	habilitaBoton();
     });
 
     $("#editorial").on('change',function(){
@@ -185,7 +185,7 @@ $(document).ready(function(){
     	}
     }
 		//FUNCIÓN PARA ENTRAR DESDE BUSCAReMPELADOS Y MODIFICAR EL EMPLEADO	
-	function entrar(){
+	function actualizarLibro(){
 		var res = "";
 		var resJson = "";
 

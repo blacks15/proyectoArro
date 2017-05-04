@@ -224,9 +224,14 @@ $(document).ready(function(){
 		validarDatos();
 	});
 
-	$("#buscar").on('keypress',function(){
+	$("#buscar").on('keypress',function(event){
 		if (((document.all) ? event.keyCode : event.which) == 13 && $(this).val() != "") {
 			$("#btnSearch").focus();
+		}
+	});
+	$("#buscar").on('keypress',function(){
+		if ($(this).val() == "") {
+			$("#codigo").val('')
 		}
 	});
 		//AAUTOCOMPLETAR CAMPO LIBRO
