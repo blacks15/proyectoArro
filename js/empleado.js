@@ -2,17 +2,18 @@ $(document).ready(function(){
 	 /**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.isAdmin();
+	//global.validaSesion();
+	//global.isAdmin();
+	global.isNotAdminMenu($("#tipoUsuario").val());
 	$('ul.tabs').tabs();
 	$("#nombreEmpleado").focus();
-	entrar();
+	actualizarEmpleado();
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/Empleado.html');
+		global.cargarPagina('Empleado');
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
@@ -22,47 +23,48 @@ $(document).ready(function(){
 		if (cadena == "") {
 			global.messajes('Error','!Debe llenar Todos los Campos','warning');
 		} else {
-			global.envioAjax('empleado',parametros);
+			global.envioAjax('ControllerEmpleado',parametros);
 		}
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
 		var cadena = $("#frmAgregarEmpleado").serialize();
-		var parametros = {opc: 'actualizar',cadena };
+		var parametros = {opc: 'guardar',cadena };
 		
 		if (cadena == "") {
 			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
 		} else {
-			global.envioAjax('empleado',parametros);
+			global.envioAjax('ControllerEmpleado',parametros);
 		}	
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
 		var buscar = $("#codigoEmpleado").val(); 
+		$(this).prop('disabled',true);
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
 			var parametros = {opc: 'buscarEmpleado','buscar': buscar };
-			var url = 'php/empleado.php';	
 
-			var respuesta = global.buscar(url,parametros);
+			var respuesta = global.buscar('ControllerEmpleado',parametros);
 			if (respuesta.codRetorno == '000') {
 				console.log(respuesta);	
-				$("#codigoEmpleado").val(respuesta.id);
-				$("#nombreEmpleado").val(respuesta.nombreEmpleado);
-				$("#apellidoPaterno").val(respuesta.apellidoPaterno);
-				$("#apellidoMaterno").val(respuesta.apellidoMaterno);
-				$("#telefono").val(respuesta.telefono);
-				$("#celular").val(respuesta.celular);
-				$("#sueldo").val(respuesta.sueldo);
-				$("#puesto").val(respuesta.puesto);
-				$("#calle").val(respuesta.calle);
-				$("#numExt").val(respuesta.numExt);
-				$("#numInt").val(respuesta.numInt);
-				$("#colonia").val(respuesta.colonia);
-				$("#ciudad").val(respuesta.ciudad);
-				$("#estado").val(respuesta.estado);
+				$.each(respuesta.datos,function(index,value){
+					$("#codigoEmpleado").val(value.id);
+					$("#nombreEmpleado").val(value.nombreEmpleado);
+					$("#apellidoPaterno").val(value.apellidoPaterno);
+					$("#apellidoMaterno").val(value.apellidoMaterno);
+					$("#telefono").val(value.telefono);
+					$("#celular").val(value.celular);
+					$("#sueldo").val(value.sueldo);
+					$("#puesto").val(value.puesto);
+					$("#calle").val(value.calle);
+					$("#numExt").val(value.numExt);
+					$("#numInt").val(value.numInt);
+					$("#colonia").val(value.colonia);
+					$("#ciudad").val(value.ciudad);
+					$("#estado").val(value.estado);
+				});
 				
 				$("#buscar").val("");
 				$("#btnUpdate").prop('disabled',false);
@@ -71,7 +73,8 @@ $(document).ready(function(){
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
-		$("#btnSearch").prop('disabled',false);
+
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN SIGUIENTE TAB
 	$("#btnSig").click(function() {
@@ -98,11 +101,7 @@ $(document).ready(function(){
 	});
 		//EVENTO KEYUP
 	$("#nombreEmpleado").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 3 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS NOMBRE CONTACTO
 	$("#apellidoPaterno").on('keypress',function(evt){
@@ -115,12 +114,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#apellidoPaterno").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+	$("#apellidoPaterno").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS NOMBRE CONTACTO
 	$("#apellidoMaterno").on('keypress',function(evt){
@@ -133,12 +128,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#apellidoMaterno").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+	$("#apellidoMaterno").on('keyup',function(){
+		validarDatos();
 	});
     	//EVENTO KEYPRESS TELÉFONO
 	$("#telefono").on('keypress',function(evt){
@@ -152,11 +143,7 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#telefono").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length == 10 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS CELULAR
 	$("#celular").on('keypress',function(evt){
@@ -169,12 +156,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#celular").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length == 10 && charCode == 13) {
-			validarDatos();
-		}
+	$("#celular").on('keyup',function(){
+		validarDatos();
 	});
     	//EVENTO KEYPRESS
 	$("#puesto").on('keypress',function(evt){
@@ -187,12 +170,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#puesto").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 4 && charCode == 13) {
-			validarDatos();
-		}
+	$("#puesto").on('keyup',function(evt){			
+		validarDatos();
 	});
     	//EVENTO KEYPRESS
 	$("#sueldo").on('keypress',function(evt){
@@ -206,11 +185,7 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#sueldo").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val() > 0 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS CALLE
 	$("#calle").on('keypress',function(evt){
@@ -223,12 +198,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#calle").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+	$("#calle").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS NÚM. EXT.
 	$("#numExt").on('keypress',function(evt){
@@ -241,12 +212,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#numExt").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length == 4 && charCode == 13) {
-			validarDatos();
-		}
+	$("#numExt").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS NÚM. INT.
 	$("#numInt").on('keypress',function(evt){
@@ -259,12 +226,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#numInt").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 0 && charCode == 13) {
-			validarDatos();
-		}
+	$("#numInt").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS COLONIA
 	$("#colonia").on('keypress',function(evt){
@@ -278,11 +241,7 @@ $(document).ready(function(){
     });
 		//EVENTO KEYUP
 	$("#colonia").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 5 && charCode == 13) {
-			validarDatos();
-		}
+		validarDatos();
 	});
 		//EVENTO KEYPRESS CIUDAD
 	$("#ciudad").on('keypress',function(evt){
@@ -295,12 +254,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#ciudad").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 3 && charCode == 13) {
-			validarDatos();
-		}
+	$("#ciudad").on('keyup',function(){
+		validarDatos();
 	});
    		//EVENTO KEYPRESS ESTADO
 	$("#estado").on('keypress',function(evt){
@@ -313,12 +268,8 @@ $(document).ready(function(){
 		}
     });
 		//EVENTO KEYUP
-	$("#estado").on('keyup',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if ( $(this).val().length > 3 && charCode == 13) {
-			validarDatos();
-		}
+	$("#estado").on('keyup',function(){
+		validarDatos();
 	});
 		//EVENTO KEYPRESS
 	$("#buscar").on('keypress',function(){
@@ -332,7 +283,7 @@ $(document).ready(function(){
 		source: "php/autocomplete.php?opc=empleado",
 		autoFocus: true,
 		select: function (event, ui) {
-			if (ui.item.id == 0) {
+			if (ui.item.id == undefined || ui.item.label == "") {
 				$("#buscar").val("");
 				console.log(ui.item.id);
 			}
@@ -373,7 +324,7 @@ $(document).ready(function(){
     	}
     }
 		//FUNCIÓN PARA ENTRAR DESDE BUSCAREMPLEADO Y MODIFICAR EL EMPLEADO	
-	function entrar(){
+	function actualizarEmpleado(){
 		var res = "";
 		var resJson = "";
 

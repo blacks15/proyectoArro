@@ -2,7 +2,7 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
+	//global.validaSesion();
 	global.isNotAdminMenu($("#tipoUsuario").val());
 	$("#busquedas").hide();
 	$("#filaBusqueda").hide();
@@ -13,15 +13,15 @@ $(document).ready(function(){
      **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/ActualizarInventario.html');
+		global.cargarPagina('Stock');
 	});
 		//BOTÓN NUEVO LIBRO
 	$("#btnNuevo").on('click',function(){
-		global.cargarPagina("pages/Producto.html");
+		global.cargarPagina("Producto");
 	});
 		//BOTÓN CREAR REPORTE
 	$("#btnBuscarProducto").on('click',function(){
-		global.cargarPagina("pages/BuscarProducto.html");
+		global.cargarPagina("BuscarProducto");
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
@@ -30,42 +30,45 @@ $(document).ready(function(){
 		var buscar = $("#codigo").val();
 		var opc  = $("#busqueda").val();
 
-		$("#btnSearch").prop('disabled',true);
+		$(this).prop('disabled',true);
 			//VALIDAMOS LA BUSQUEDA
 		if (buscar == "") {
-			buscar = $("#buscarE").val();
+			buscar = $("#buscar").val();
 		}
 			//VALIDAMOS SI LA VARIABLE BUSCRA ESTA VACIA
 		if (buscar != "") {
-			var parametros = {opc: 'buscarProducto','buscar': buscar,'tipoBusqueda':opc};
 
-			var respuesta = global.buscar('producto',parametros);
+			var respuesta = global.buscar('ControllerProducto','buscar',buscar,opc);
 			if (respuesta.codRetorno == '000') {
-				$("#codigoProducto").val(respuesta.codigoBarras);
-				$("#producto").val(respuesta.nombreProducto);
-				$("#stockActual").val(respuesta.stActual);
+				$.each(respuesta.datos,function(index,value){
+					$("#codigoProducto").val(value.codigoBarras);
+					$("#producto").val(value.nombreProducto);
+					$("#stockActual").val(value.stActual);
+				});
+					//
 				$("#stock").show();
-				$("#buscarE").val('');
-				$("#buscarN").val('');
+				$("#buscar").val('');
 				$("#nuevoStock").focus();
 			}
 		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
-		$("#btnSearch").prop('disabled',false);
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		$("#btnSave").prop('disabled',true);
-		var cadena = $("#updateStock").serialize();
-		var parametros = {opc: 'stock',cadena };
+		$(this).prop('disabled',true);
+		var parametros = $("#Stock").serialize();
+		var cadena = {opc: 'stock',parametros };
 		var st = $("#nuevoStock").val();
-console.log(parametros);
+
 		if (st == 0) {
 			global.mensajes('Advertencia','El Stock debe ser mayor a 0','info','','','Producto','');
 		} else {
-			global.envioAjax('producto',parametros);
+			global.envioAjax('ControllerProducto',cadena);
 		}
+
+		$(this).prop('disabled',false);
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
@@ -89,38 +92,26 @@ console.log(parametros);
 	$("#busqueda").change(function(){
 			//OBTENEMOS EL VALOR DEL SELECT Y LIMPIAMOS LOS CAMPOS
 		var opc =  $(this).val();
-		$("#buscarE").val("");
-		$("#buscarN").val("");
+		$("#buscar").val("");
 		$("#codigo").val("");
 			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = EMPRESA
 		if (opc == 0) {
 			$("#stock").hide();
 			$("#codigoProducto").val('');
-			$("#busquedas").hide('explode');
-		} else if (opc == 1) {
-			ocultarBusquedas('buscarN','buscarE','busquedas','buscarE');
+			$("#busquedas").hide('');
 		} else {
-			ocultarBusquedas('buscarE','buscarN','busquedas','buscarN');
+			$("#busquedas").show();
+			$("#buscar").show();
 		}
 	});
 		//EVENTO KEYPRESS DEL CAMPO BUSCAR POR NOMBRE
-	$("#buscarN").on('keypress',function(evt){
+	$("#buscar").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
 		if (charCode == 13) {
 			$("#btnSearch").focus();
 		} else {
 			global.numerosLetras(evt);
-		}
-	});
-		//EVENTO KEYPRESS DEL CAMPO BUSCAR POR CÓDIGO
-	$("#buscarE").on('keypress',function(evt){
-		var charCode = evt.which || evt.keyCode;
-
-		if (charCode == 13) {
-			$("#btnSearch").focus();
-		} else {
-			global.numeros(evt);
 		}
 	});
 		//EVENTO KEYUP
@@ -160,28 +151,18 @@ console.log(parametros);
 		$("#lblAgDev").html(titulo);
 		$("#bandera").val(bandera);
 	}
-
-	function ocultarBusquedas(bNombre,bCodigo,busquedas,foco,titulo){
-		setTimeout(function() {
-			$("#"+bNombre).hide();
-			$("#"+bCodigo).show('explode');
-			$("#"+busquedas).show("explode");
-			$("#"+foco).focus();
-		},300);
-	}
 //////////////////////////////////////////////
 		/**************************
 	    *		AUTOCOMPLETE	  *
 	    **************************/
 		//AUTOCOMPLETAR CAMPO NOMBRE
-	$("#buscarN").autocomplete({
+	$("#buscar").autocomplete({
 		minLength: 2,
 		source: "php/autocomplete.php?opc=producto",
 		autoFocus: true,
 		select: function (event, ui) {
-			if (ui.item.id == 0) {
-				$("#buscarN").val("");
-				$("#buscarN").empty();
+			if (ui.item.id == undefined) {
+				$("#buscar").val("");
 			}
 			$("#stockMax").val(ui.item.stockMax);
 			$('#codigo').val(ui.item.id);

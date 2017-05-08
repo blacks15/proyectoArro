@@ -2,9 +2,9 @@ $(document).ready(function(){
 	 /**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-   // global.validaSesion();
-    global.isNotAdminMenu($("#tipoUsuario").val());
-    global.pagination('ControllerEditorial',1,0);
+	// global.validaSesion();
+	global.isNotAdminMenu($("#tipoUsuario").val());
+	global.pagination('ControllerEditorial',1,0);
 	$("#btnUpdate").hide('explode');
 		/**************************
 	     *		BOTONES		  *

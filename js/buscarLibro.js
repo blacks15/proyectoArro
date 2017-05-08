@@ -50,16 +50,20 @@ $(document).ready(function(){
 	$("#busqueda").change(function(){
 			//OBTENEMOS EL VALOR DEL SELECT Y LIMPIAMOS LOS CAMPOS
 		var opc =  $(this).val();
+		var nombre = "";
+
 		$("#buscar").val("");
 		$("#codigoLibro").val(''); 
 			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = EMPRESA
 		if (opc == 0) {
 			$("#busquedas").hide('explode');
 		} else if (opc == 1) {
-			llamarAutocmpletar('libro');
+			nombre = "libro";
 		} else {
-			llamarAutocmpletar('autor');
+			nombre = "autor";
 		}
+
+		llamarAutocompletar(nombre);
 	});
 		//EVENTO KEYPRESS DEL CAMPO BUSCAR
 	$("#buscar").on('keypress',function(evt){
@@ -116,8 +120,7 @@ $(document).ready(function(){
 		});
 	});
  		//LLAMAR FUNCIÓN AUTOCOMPLETAR
-	function llamarAutocmpletar(opc){
-		//$("#buscar").show('explode');
+	function llamarAutocompletar(opc){
 		$("#busquedas").show("explode");
 		autocompletar(opc);
 	}

@@ -64,7 +64,7 @@
 					'form' => 'Proveedor',
 					'Titulo' => 'Éxito',
 					'Mensaje' => $res->Mensaje,
-				);
+				);	
 			} else {
 				$salidaJSON = array('codRetorno' => $res->CodRetorno,
 					'form' => 'Proveedor',

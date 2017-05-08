@@ -4,7 +4,7 @@ $(document).ready(function(){
      **************************/
 	//global.validaSesion();
 	global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('ControllerAutor',1,0);
+	global.pagination('ControllerAutor',1,0,'');
 	$("#btnUpdate").hide('explode');
 		/**************************
 	     *		BOTONOES		  *

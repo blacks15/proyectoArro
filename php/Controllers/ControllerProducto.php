@@ -17,7 +17,11 @@
 
 		case 'buscar':
 			buscarProductos();
-		break;
+		break;	
+
+		case 'stock':
+			acutalizarStock();
+		break;	
 	}
 		//FUNCIÓN FILTRO
 	function productoFiltro(){
@@ -73,7 +77,7 @@
 			if ($codigoProducto == "") {
 				$codigoProducto = 0;
 			}
-				//CCALUCLAMOS EL STATUS
+				//CALUCLAMOS EL STATUS
 			$status = calculaStatus($stActual,$stMax);
 			$nombreProducto = strtolower($nombreProducto);
 				//VALIDAMOS LA SESSION
@@ -129,9 +133,11 @@
 		$log->insert('Entro metodo buscarProductos', false, true, true);
 		
 		try {
+			sleep(0.5);
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
 			parse_str($_POST["parametros"], $_POST);
 			$codigo = trim($_POST['codigo']);
+			$tipoBusqueda = trim($_POST['tipoBusqueda']);
 			$sql = new ProductoModel();
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
@@ -142,8 +148,12 @@
 				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
 				print json_encode($salidaJSON);
 				exit();
-			}
-			
+			} 
+				//VALIDAMOS SI LA BUSQUEDA ESTA VACIA
+			if ($tipoBusqueda == "" || $tipoBusqueda == undefined) {
+				$tipoBusqueda = "0";
+			} 
+
 			if (isset($_POST['partida'])) {
 				$paginaActual = $_POST['partida'];	
 			}
@@ -154,7 +164,7 @@
 				$inicio = ($paginaActual - 1) * 5;
 			}
 				//CARGAMOS LOS DATOS
-			$Productos = $sql->cargarProductos($codigo,$inicio,$paginaActual);	
+			$productos = $sql->cargarProductos($codigo,$inicio,$paginaActual,$tipoBusqueda);	
 
 			if ($productos->CodRetorno == "000") {
 				$salidaJSON = array ('codRetorno' => $productos->CodRetorno,
@@ -168,7 +178,8 @@
 					'bus' => '1',
 					'Mensaje' => $productos->Mensaje,
 				);
-			}			
+			}
+
 			$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
@@ -176,6 +187,60 @@
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}
+		//FUNCIÓN PARA ACTUALIZAR EL STOCK DE LOS PRODUCTOS
+	function acutalizarStock(){
+		$log = new Log("log", "../../log/");
+		$log->insert('Entro metodo stock', false, true, true);	
+		try {
+			$sql = new ProductoModel();
+			parse_str($_POST["parametros"], $_POST);
+			 	//CICLO PARA LLENAR VARIABLES POR POST
+			foreach ($_POST as $clave => $valor) {
+				${$clave} = trim($_POST[$clave]);
+			}
+				//VALIDAMOS LA SESSION
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
+				$salidaJSON = array('codRetorno' => '003',
+					'form' => 'Producto',
+					'Mensaje' => 'Sesión Caducada'
+				);
+				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//VALIDAMOS EL ESTADO ACTUAL DEL PRODUCTO PARA DEFINIR EL STATUS
+			if ($bandera == 1) {
+				$stockActual = $stockActual+$nuevoStock;
+			} else if ($bandera == 2) {
+				$stockActual = $stockActual-$nuevoStock;
+			}
+
+				//CALUCLAMOS EL STATUS
+			$status = calculaStatus($stockActual,$stockMax);
+				//LLAMAMOS EL MÉTODO
+			$stock = $sql->stock($codigo,$stockActual,$status);
+				//VALIDAMOS EL CODIGO DE RETORNO
+			if ($stock->CodRetorno == "000") {
+				$salidaJSON = array('codRetorno' => $stock->CodRetorno,
+					'Titulo' => 'Exito',
+					'form' => 'Stock',
+					'Mensaje' => $stock->Mensaje,
+				);	
+			} else {
+				$salidaJSON = array('codRetorno' => $stock->CodRetorno,
+					'form' => 'Stock',
+					'Titulo' => 'Advertencia',
+					'Mensaje' => $stock->Mensaje,
+				);
+			}
+
+			$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+			print json_encode($salidaJSON);
+		} catch (Exception $e) {
+			$log->insert('Error stcok '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}	
 		//FUNCIÓN PARA CALCULAR STATUS
 	function calculaStatus($stActual,$stMax){
 		if ($stActual <= 0) {
@@ -187,15 +252,4 @@
 		}
 		return $status;
 	}
-
-
-
-
-
-
-
-
-
-
-
 ?>

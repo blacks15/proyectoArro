@@ -16,7 +16,10 @@
 			$res->datos = $stm->fetchAll(PDO::FETCH_ASSOC);
 				//ESCRIBIMOS ERROR EN EL LOG
 			if ($error[2] != "") {
+				$res->codRetorno[0] = '002';
+				$res->Mensaje[0] = 'Ocurrio un Error';
 				$log->insert('Error SP: '.$error[2], false, true, true);	
+				return $res;
 			}
 				//PERMITE EJECUTAR LA SEGUNDA CNSULTA
 			$stm->closeCursor();

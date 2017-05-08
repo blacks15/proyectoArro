@@ -127,11 +127,7 @@ var global = {
 		//FUNCIÓN PARA PAGINACIÓN
 	pagination: function (url,page,dato,opc) {
 		var parametros;
-		if (page == "") {
-			parametros = 'partida='+1+'&codigo='+dato+'&tipoBusqueda='+opc;
-		} else {
-			parametros = 'partida='+page+'&codigo='+dato+'&tipoBusqueda='+opc;
-		}
+		parametros = 'partida='+page+'&codigo='+dato+'&tipoBusqueda='+opc;
 
 		$.ajax({
 			cache: false,
@@ -157,7 +153,7 @@ var global = {
 								"</td><td><button type='button' class='icon-imagen btn blue btnImage'></button>\
 								<button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 						return;
@@ -174,7 +170,7 @@ var global = {
 								"</td><td><button type='button' class='icon-info btn blue btnMostrar'></button></td>\
 								<td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 						return;
@@ -193,7 +189,7 @@ var global = {
 								"</td><td><button type='button' class='icon-info btn blue btnMostrar'></button></td>\
 								<td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 						return;
@@ -216,7 +212,7 @@ var global = {
 								"</td><td width='5%'>"+value.status+
 								"</td><td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 						return;
@@ -235,7 +231,7 @@ var global = {
 								"</td><td><button type='button' class='icon-info btn blue btnMostrar'></button></td>\
 								<td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 						return;
@@ -260,7 +256,7 @@ var global = {
 								"</td><td width='35%'>"+value.nombre+"</td><td width='10%'>"+value.cantidad+
 								"</td><td width='15%'>"+value.precio+"</td><td width='20%'>"+value.subtotal+
 								"</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 						return;
@@ -271,7 +267,7 @@ var global = {
 								"</td><td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								<button type='button' class='icon-borrar btn red btnDelete'></button>\
 								</td></tr>"
-							).show('fold',1000);
+							);
 						});
 						$("#page-numbers").html(data.link);
 					}

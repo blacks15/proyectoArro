@@ -52,12 +52,12 @@ class ProductoModel {
 		}
 	}
 
-	public function cargarProductos($codigo,$inicio,$paginaActual){
+	public function cargarProductos($codigo,$inicio,$paginaActual,$tipoBusqueda){
 		$productos = new ArrayObject();
 		$i = 0;
 		try {
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if ($codigo == "" || $paginaActual == "") {
+			if ($codigo == "" || $paginaActual == "" || $tipoBusqueda == "") {
 				$retorno->CodRetorno = '004';
 				$retorno->Mensaje = 'Parametros Vacios';
 
@@ -65,49 +65,80 @@ class ProductoModel {
 				exit();
 			}
 
-			$datos = array($codigo,$inicio,5);
-			$consulta = "CALL spConsultaProductos(?,?,?,@CodRetorno,@msg,@numFilas)";
+			$datos = array($codigo,$inicio,5,$tipoBusqueda);
+			$consulta = "CALL spConsultaProductos(?,?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
 			$stm = SP ($consulta,$datos);
 
-			if ($stm->codRetorno[0] == '000') {
-					//VALIDAMOS EL NÚMERO DE FILAS
-				if ($stm->numFilas[0] == 0) {
-					$retorno->CodRetorno = "001";
-					$retorno->Mensaje = 'No Hay Datos Para Mostrar';
-				} else {
-					foreach ($stm->datos as $key => $value) {
-						$productos[$i] = array('id' => $value['codigo_productos'],
-							'codigoBarras' => $value['codigoBarras'],
-							'nombre_producto' => $value['nombre_producto'],
-							'proveedor' => $value['proveedor'],
-							'stockActual' => $value['stockActual'],
-							'stockMin' => $value['stockMin'],
-							'stockMax' => $value['stockMax'],
-							'compra' => $value['compra'],
-							'venta' => $value['venta'],
-							'categoria' => $value['categoria'],
-							'status' => $value['status'],
-							'nombreCategoria' => $value['nombreCategoria'],
-							'nombreProveedor' => $value['nombreProveedor'],
-						);
-						$i++;
-					}
-						//CREAMOS LA LISTA DE PAGINACIÓN
-					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
-						//ASIGNAMOS DATOS AL RETORNO
-					$retorno->CodRetorno = "000";
-					$retorno->Productos = $productos;
-					$retorno->lista = $lista;
+			if ($stm->codRetorno[0] == '000') { 
+				foreach ($stm->datos as $key => $value) {
+					$productos[$i] = array('id' => $value['codigo_producto'],
+						'codigoBarras' => $value['codigoBarras'],
+						'nombreProducto' => $value['nombre_producto'],
+						'proveedor' => $value['proveedor'],
+						'stActual' => $value['stockActual'],
+						'stMin' => $value['stockMin'],
+						'stMax' => $value['stockMax'],
+						'compra' => $value['compra'],
+						'venta' => $value['venta'],
+						'categoria' => $value['categoria'],
+						'status' => $value['status'],
+						'nombreCategoria' => $value['nombreCategoria'],
+						'nombreProveedor' => $value['nombreProveedor'],
+					);
+					$i++;
 				}
+					//CREAMOS LA LISTA DE PAGINACIÓN
+				if ($stm->numFilas[0] > 0) {
+					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
+				} else {
+					$lista = "";
+				}
+					//ASIGNAMOS DATOS AL RETORNO
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->Productos = $productos;
+				$retorno->lista = $lista;
 			} else {
-				$retorno->CodRetorno = "002";
-				$retorno->Mensaje = "Ocurrio Un Error";
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->Mensaje = $stm->Mensaje[0];
 			} 
 
 			return $retorno;
 		} catch (Exception $e) {
 			$log->insert('Error cargarProveedores '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());
+		}
+	}
+
+	public function stock($codigo,$stockActual,$status){
+		$productos = new ArrayObject();
+		$i = 0;
+		try {
+				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
+			if ($codigo == "" || $stockActual == "" || $status == "") {
+				$retorno->CodRetorno = '004';
+				$retorno->Mensaje = 'Parametros Vacios';
+
+				return $retorno;
+				exit();
+			}
+
+			$datos = array($codigo,$stockActual,$status);
+			$consulta = "CALL spUpdStock(?,?,?,@CodRetorno,@msg)";
+				//EJECUTAMOS LA CONSULTA
+			$stm = SP ($consulta,$datos);
+
+			if ($stm->codRetorno[0] == '000') { 
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->Mensaje = $stm->Mensaje[0];
+			} else {
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->Mensaje = $stm->Mensaje[0];
+			} 
+
+			return $retorno;
+		} catch (Exception $e) {
+			$log->insert('Error stock '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}

@@ -2,9 +2,9 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('php/producto.php',1,'','');
+	//global.validaSesion();
+	//global.isNotAdminMenu($("#tipoUsuario").val());
+	global.pagination('ControllerProducto',1,0,'');
 	$("#busqueda").focus();
 	$("#busquedas").hide();
 //////////////////////////////////////////////////////
@@ -13,29 +13,29 @@ $(document).ready(function(){
      **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/BuscarProducto.html');
+		global.cargarPagina('BuscarProducto');
 	});
 		//BOTÓN NUEVO LIBRO
 	$("#btnNuevo").on('click',function(){
-		global.cargarPagina("pages/Producto.html");
+		global.cargarPagina("Producto");
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		var parametros = "";
+		$(this).prop('disabled',false);	
 		var buscar = $("#codigoProducto").val(); 
 		var opc =  $("#busqueda").val();
 			//VALIDAMOS LA BUSQUEDA
 		if (buscar == "") {
-			buscar = $("#buscarC").val();
+			buscar = $("#buscar").val();
 		}
 			//VALIDAMOS EL CMAPO BUSCAR
 		if (buscar != "") {
-			global.pagination('php/producto.php',1,buscar,opc);
+			global.pagination('ControllerProducto',1,buscar,opc);
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
-		$("#btnSearch").prop('disabled',false);	
+		$(this).prop('disabled',false);	
 		$("#codigoProducto").val(''); 
 	});
 		//BOTÓN CREAR REPORTE
@@ -50,51 +50,40 @@ $(document).ready(function(){
 	$("#busqueda").change(function(){
 			//OBTENEMOS EL VALOR DEL SELECT Y LIMPIAMOS LOS CAMPOS
 		var opc =  $(this).val();
-		$("#buscarC").val("");
-		$("#buscarN").val("");
-		$("#buscarP").val("");
+		var nombre = "";
+
+		$("#buscar").val("");
+		$("#codigoProducto").val(''); 
 			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = EMPRESA
 		if (opc == 0) {
 			$("#busquedas").hide('explode');
-		} else if (opc == 1) {
-			$("#buscarN").hide();
-			$("#buscarP").hide();
-			$("#buscarC").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarC").focus();
 		} else if (opc == 2) {
-			$("#buscarC").hide();
-			$("#buscarP").hide();
-			$("#buscarN").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarN").focus();
+			nombre = "producto";
 		} else if (opc == 3) {
-			$("#buscarC").hide();
-			$("#buscarN").hide();
-			$("#buscarP").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarP").focus();
+			nombre = "proveedor";
 		}
+
+		llamarAutocompletar(nombre);
 	});
-		//EVENTO KEYPRESS DEL CAMPO BUSCAR
-	$("#buscarC").on('keypress',function(evt){
-		global.numeros(evt);
-	});
-		//EVENTO KEYPRESS DEL CAMPO BUSCAR
-	$("#buscarN").on('keypress',function(evt){
-		global.numerosLetras(evt);
-	});
-		//EVENTO KEYPRESS DEL CAMPO BUSCAR
-	$("#buscarP").on('keypress',function(evt){
+		//EVENTO KEYPRESS
+	$("#buscar").on('keypress',function(evt){
 		global.numerosLetras(evt);
 	});
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
-	$("#pages").on('click',function(){
+	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
+			$(this).prop('disabled',true);
 			var page = $(this).attr("data");	
 			var buscar = $("#codigoProducto").val(); 
 			var opc =  $("#busqueda").val();
-			global.pagination('php/producto.php',page,buscar,opc);
+
+			if (buscar == "") {
+				buscar = 0;
+			}
+
+			setTimeout(function(){
+				global.pagination('ControllerProducto',page,buscar,opc);
+			},200);
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -108,44 +97,36 @@ $(document).ready(function(){
 			localStorage.clear();
 				//CONVERTIMOS A JSON 
 			localStorage.producto = JSON.stringify(array);
-			global.cargarPagina('pages/Producto.html');
+			global.cargarPagina('Producto');
 			array.clear;
 		});
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
-	    *		AUTOCOMPLETE	  *
+	    *		FUNCIONES		  *
 	    **************************/
-		//PRODUCTO
-	$("#buscarN").autocomplete({
-     	minLength: 2,
-        source: "php/autocomplete.php?opc=producto",
-		autoFocus: true,
-		select: function (event, ui) {
-			$("#codigoProducto").val(ui.item.id);
-			return ui.item.label;
-		},
-		response: function(event, ui) {
-			if (ui.content[0].label == null) {
-				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
-				ui.content.push(noResult);
-			} 
-		}
-	});
-		//PROVEEDOR
-	$("#buscarP").autocomplete({
-		minLength: 2,
-		source: "php/autocomplete.php?opc=proveedor",
-		autoFocus: true,
-		select: function (event, ui) {
-			$("#codigoProducto").val(ui.item.id);
-			return ui.item.label;
-		},
-		response: function(event, ui) {
-			if (ui.content[0].label == null) {
-				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
-				ui.content.push(noResult);
-			} 
-		}
-     });
+	function llamarAutocompletar(opc){
+		$("#buscar").show('explode');
+		$("#busquedas").show("explode");
+		$("#buscar").focus();
+		autocompletar(opc);
+	}
+		//FUNCIÓN PARA AUTOMPLETAR
+	function autocompletar(opc){
+		$("#buscar").autocomplete({
+			minLength: 2,
+			source: "php/autocomplete.php?opc="+opc,
+			autoFocus: true,
+			select: function (event, ui) {
+				$("#codigoProducto").val(ui.item.id);
+				return ui.item.label;
+			},
+			response: function(event, ui) {
+				if (ui.content[0].label == null) {
+					var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
+					ui.content.push(noResult);
+				} 
+			}
+    	});
+	}
 });

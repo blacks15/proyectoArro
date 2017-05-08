@@ -4,7 +4,7 @@ $(document).ready(function(){
      **************************/
 	//global.validaSesion();
 	//global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('ControllerProveedor',1,0);
+	global.pagination('ControllerProveedor',1,0,'');
 	$("#buscar").focus();
 //////////////////////////////////////////////////////
 	/**************************

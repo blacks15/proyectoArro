@@ -40,13 +40,15 @@ BEGIN
 		IF EXISTS (SELECT * FROM productos) THEN
 		 	SELECT COUNT(*) INTO numFilas FROM productos;
 
-			SELECT codigo_producto,nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,venta,categoria,
-				p.status,prv.nombre_proveedor AS nombreProveedor,cp.nombre_categoria AS nombreCategoria
+			SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
+				p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+				cp.nombre_categoria AS nombreCategoria
 			FROM productos p
 			INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
 			INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
 			ORDER BY nombre_producto ASC
 			LIMIT pInicio, pTamanio;
+
 			SET msg = 'SP Ejecutado Correctamente';
 			SET CodRetorno = '000'; 
 		ELSE
@@ -55,11 +57,12 @@ BEGIN
 		END IF;
 	ELSE								
 		IF (pBusqueda = 1) THEN			/* 1.-CODIGO BARRAS*/
-			IF EXISTS (SELECT * FROM productos WHERE codigoBarras = pCodigo) THEN
 				SELECT COUNT(*) INTO numFilas FROM productos WHERE codigoBarras = pCodigo;
+			IF EXISTS (SELECT * FROM productos WHERE codigoBarras = pCodigo) THEN
 
-				SELECT codigo_producto,nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,venta,categoria,
-					p.status,prv.nombre_proveedor AS nombreProveedor,cp.nombre_categoria AS nombreCategoria
+				SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
+					p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+					cp.nombre_categoria AS nombreCategoria
 				FROM productos p
 				INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
 				INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
@@ -73,12 +76,13 @@ BEGIN
 				SET CodRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF; 
-		ELSE IF (pBusqueda = 2) THEN  /*2.-NOMBRE PORDUCTO*/
-			IF EXISTS (SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
+		ELSEIF (pBusqueda = 2) THEN
 				SELECT COUNT(*) INTO numFilas FROM productos WHERE codigo_producto = pCodigo;
+			IF EXISTS (SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
 
-				SELECT codigo_producto,nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,venta,categoria,
-					p.status,prv.nombre_proveedor AS nombreProveedor,cp.nombre_categoria AS nombreCategoria
+				SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
+					p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+					cp.nombre_categoria AS nombreCategoria
 				FROM productos p
 				INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
 				INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
@@ -91,27 +95,28 @@ BEGIN
 			ELSE
 				SET CodRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
-			END IF;
-		ELSE IF (pBusqueda = 3) THEN	/*3.-PROVEEDOR*/	
-			IF EXISTS (SELECT * FROM productos WHERE proveedor = pCodigo) THEN
+			END IF; 
+		ELSEIF (pBusqueda = 3) THEN
 				SELECT COUNT(*) INTO numFilas FROM productos WHERE proveedor = pCodigo;
+			IF EXISTS (SELECT * FROM productos WHERE proveedor = pCodigo) THEN
 
-				SELECT codigo_producto,nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,venta,categoria,
-					p.status,prv.nombre_proveedor AS nombreProveedor,cp.nombre_categoria AS nombreCategoria
+				SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
+					p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+					cp.nombre_categoria AS nombreCategoria
 				FROM productos p
 				INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
 				INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
 				WHERE proveedor = pCodigo
 				ORDER BY nombre_producto ASC
 				LIMIT pInicio, pTamanio;
-			
+
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000';
+				SET CodRetorno = '000'; 
 			ELSE
 				SET CodRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
-			END IF;
-		END IF; /*FIN BUSQUEDAS*/
+			END IF; 
+		END IF;	/*FIN BUSQUEDA*/
 	END IF;	/*FIN CODIGO*/
 END$$
 DELIMITER ;

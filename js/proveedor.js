@@ -287,17 +287,13 @@ $(document).ready(function(){
 		var estado = $("#estado").val();
 
 		if (nombreEmpresa == "" && nombreContacto == ""  &&  email == "" && telefono == "" && celular == "" && calle == "" &&
-			numExt == "" && colonia == "" && ciudad == "" && estado == "") {
+			numExt == "" && colonia == "" && ciudad == "" && estado == "" || telefono.length != 10 || celular.length != 10) {
 			$("#btnSave").prop('disabled',true);
 		} else {
-			if (telefono.length != 10 || celular.length != 10) {
-				global.mensajes('Advertencia',"Teléfono o Celular deben ser mayor a 10 dígitos",'','','','')
+			if ( $("#codigoEmpresa").val() == "") {
+				$("#btnSave").prop('disabled',false);
 			} else {
-				if ( $("#codigoEmpresa").val() == "") {
-					$("#btnSave").prop('disabled',false);
-				} else {
-					$("#btnUpdate").prop('disabled',false);
-				}
+				$("#btnUpdate").prop('disabled',false);
 			}
 		}
 	}

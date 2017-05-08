@@ -31,11 +31,13 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		$("#btnSearch").prop('disabled',true);
-		var buscar = $("#codigo").val(); 
+		$(this).prop('disabled',true);
+		var buscar = $("#codigoProducto").val(); 
 
 		if (buscar != "") {		
-			var respuesta = global.buscar('ControllerProducto','buscar',buscar,1);
+			var respuesta = global.buscar('ControllerProducto','buscar',buscar,2);
+			$("#codigoProducto").val("");
+			$("#buscar").val("");
 			
 			if (respuesta.codRetorno == '000') {
 				habilitar();
@@ -52,14 +54,13 @@ $(document).ready(function(){
 					$("#categoria").val(value.categoria).prop('selected','selected');
 				});
 				
-				$("#buscar").val("");
 				$("#btnUpdate").prop('disabled',false);
 				$("input[name=tipo]").prop('disabled',true);
 			}	
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
-		$("#btnSearch").prop('disabled',false);
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN REPORTE
 	$("#btnReporte").on('click',function(){
@@ -240,7 +241,7 @@ $(document).ready(function(){
 		source: "php/autocomplete.php?opc=producto",
 		autoFocus: true,
 		select: function (event, ui) {
-			$('#codigo').val(ui.item.id);
+			$('#codigoProducto').val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
@@ -309,7 +310,7 @@ $(document).ready(function(){
     		}
 		}
 	}
-
+		//FUNCIÓN PARA ENVIAR DATOS
 	function enviarDatos(){
 		var cadena = $("#frmAgregarPoducto").serialize();
 		var parametros = {opc: 'guardar',cadena };
