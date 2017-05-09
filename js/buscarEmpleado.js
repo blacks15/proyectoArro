@@ -2,8 +2,9 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.pagination('php/empleado.php',1);
+	//global.validaSesion();
+	global.isNotAdminMenu($("#tipoUsuario").val());
+	global.pagination('ControllerEmpleado',1,0,'');
 	$("#buscar").focus();
 //////////////////////////////////////////////////////
 	/**************************
@@ -11,7 +12,7 @@ $(document).ready(function(){
      **************************/
 		//BOTÓN NUEVO LIBRO
 	$("#btnNuevo").on('click',function(){
-		global.cargarPagina("pages/Empleado.html");
+		global.cargarPagina("Empleado");
 	});
 		//BOTÓN CREAR REPORTE
 	$("#btnReporte").on('click',function(){
@@ -24,34 +25,15 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$(this).prop('disabled',true);
 		var buscar = $("#codigoEmpelado").val(); 
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarEmpleado','buscar': buscar };
-
-			var respuesta = global.buscar('empleado',parametros);
-			if (respuesta.codRetorno == '000') {
-				direccion = respuesta.calle+' '+respuesta.numExt+' '+respuesta.numInt+' '+respuesta.colonia;
-				numero = respuesta.numExt+' '+respuesta.numInt;
-				$("#table").html("");
-				$("#table").append("<tr><td style='display: none' width='5%'>"+respuesta.id+
-					"</td><td width='30%'>"+respuesta.nombreEmpleado+"</td><td width='10%'>"+respuesta.apellidoPaterno+' '+respuesta.apellidoMaterno+
-					"</td><td width='25%'>"+direccion+"</td><td width='8%'>"+respuesta.ciudad+"</td><td width='8%'>"+respuesta.estado+
-					"</td><td width='5%'>"+respuesta.telefono+"</td><td width='5%'>"+respuesta.celular+"</td><td width='10%'>"+respuesta.sueldo+
-					"</td><td width='5%'>"+respuesta.puesto+"</td><td style='display: none' width='5%'>"+respuesta.colonia+
-					"</td><td style='display: none' width='5%'>"+respuesta.calle+"</td><td style='display: none' width='5%'>"+numero+
-					"</td><td style='display: none' width='5%'>"+respuesta.apellidoPaterno+"</td><td style='display: none' width='5%'>"+respuesta.apellidoMaterno+
-					"</td><td><td><button type='button' class='icon-info btn blue btnMostrar'></button>\
-					<button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
-					</td></tr>"
-				);
-				$('#page-numbers').html("");
-			}
-			$("#btnSearch").prop('disabled',false);	
+			global.pagination('ControllerEmpleado',1,buscar,'');
 		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
+		$(this).prop('disabled',false);	
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
@@ -70,7 +52,7 @@ $(document).ready(function(){
 		//EVENTO CHANGE DEL CAMPO BUSCAR
 	$("#buscar").on('keyup',function(){
 		if ( $(this).val().length == 0 || $(this).val() == "") {
-			global.pagination('php/empleado.php',1);
+			global.pagination('ControllerEmpleado',1,0,'');
 		}
 	});
 		//AUTOCOMPLETE
@@ -79,15 +61,14 @@ $(document).ready(function(){
 	    source: "php/autocomplete.php?opc=empleado",
 		autoFocus: true,
 		select: function (event, ui) {
-			if (ui.item.id == "") {
+			if (ui.item.label == "") {
 				$("#buscar").val("");
-				$("#buscar").empty();
 			}
 			$("#codigoEmpelado").val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
-			if (ui.content[0].label == null) {
+			if (ui.content[0].label == null || ui.content[0].label == "" ) {
 				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
 				ui.content.push(noResult);
 			} 
@@ -97,7 +78,7 @@ $(document).ready(function(){
 	$("#pages").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");	
-			global.pagination('php/empleado.php',page);
+			global.pagination('ControllerProducto',page,'','');
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -111,16 +92,16 @@ $(document).ready(function(){
 				console.log(array);
 			$('#modal').modal('open');
 			
-			$("#codigo").html("Código Empleado: " +array[0]);
-			$("#nombreEmpleado").html("Nombre Empleado: "+array[1]);
-			$("#apellidos").html("Apellidos: "+array[2]);
-			$("#domicilio").html("Domicilio: "+array[3]);
-			$("#ciudad").html("Ciudad: " +array[4]);
-			$("#estado").html("Estado: " +array[5]);
-			$("#telefono").html("Teléfono: "+array[6]);
-			$("#celular").html("Celular: "+array[7]);
-			$("#sueldo").html("Sueldo: "+array[8]);
-			$("#puesto").html("Puesto: "+array[9]);
+			$("#codigo").html("<b>Código Empleado:</b>" +array[0]);
+			$("#nombreEmpleado").html("<b>Nombre Empleado:</b> "+array[1]);
+			$("#apellidos").html("<b>Apellidos:</b> "+array[2]);
+			$("#domicilio").html("<b>Domicilio:</b> "+array[3]);
+			$("#ciudad").html("<b>Ciudad:</b> " +array[4]);
+			$("#estado").html("<b>Estado:</b> " +array[5]);
+			$("#telefono").html("<b>Teléfono:</b> "+array[6]);
+			$("#celular").html("<b>Celular:</b> "+array[7]);
+			$("#sueldo").html("<b>Sueldo:</b> $"+array[8]);
+			$("#puesto").html("<b>Puesto:</b> "+array[9]);
 
 			array.clear;
 		});
@@ -136,7 +117,7 @@ $(document).ready(function(){
 			localStorage.clear();
 	        	//CONVERTIMOS A JSON 
 			localStorage.empleado = JSON.stringify(array);
-			global.cargarPagina('pages/Empleado.html');
+			global.cargarPagina('Empleado');
 			array.clear;
 		});
 	});
@@ -146,8 +127,8 @@ $(document).ready(function(){
 		opacity: .5, // Opacity of modal background
 		in_duration: 300, // Transition in duration
 		out_duration: 200, // Transition out duration
-		starting_top: '4%', // Starting top style attribute
-		ending_top: '10%', // Ending top style attribute
+		starting_top: '20%', // Starting top style attribute
+		ending_top: '20%', // Ending top style attribute
 		complete: function() { 		
 			$("#codigo").html("");
 			$("#proveedor").html("");
@@ -159,6 +140,6 @@ $(document).ready(function(){
 			$("#celular").html("");
 			$("#email").html("");
 			$("#web").html("");
-		} // Callback for Modal close
+		} 
 	});
 });

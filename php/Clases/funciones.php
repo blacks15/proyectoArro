@@ -1,7 +1,7 @@
 <?php 
 	require_once('Conexion.php');
 		//FUNCIÓN PARA INSERTAR DATOS
-	function SP($sql,$datos){
+	function executeSP($sql,$datos){
 		$log = new Log("log", "../../log/");
 		try {
 			$db = new Conexion();

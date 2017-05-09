@@ -2,54 +2,59 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
-	global.isAdmin();
+	//global.validaSesion();
+	//global.isAdmin();
+	global.isNotAdminMenu($("#tipoUsuario").val());
 	$('ul.tabs').tabs();
 	$("#nombreCliente").focus();
 	$("#busquedas").hide();
-	entrar();
+	actualizarCliente();
 ////////////////////////////////////////////////////
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/Cliente.html');
+		global.cargarPagina('Cliente');
+	});
+		//BOTÓN BUSCAR CLIENTES
+	$("#btnClientes").on('click',function(){
+		global.cargarPagina('BuscarCliente');
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		$("#btnSave").prop('disabled',true);
+		$(this).prop('disabled',true);
 		var cadena = $("#frmAgregarCliente").serialize();
 		var parametros = {opc: 'guardar',cadena };
 
 		if (cadena == "") {
-			global.messajes('Advertencia','!Debe llenar Todos los Campos','warning');
+			global.messajes('Advertencia','!Debe llenar Todos los Campos','warning','','','','');
 		} else {
 			if ( validarCampos() ) {  //prueba rfc = CUPU800825569
-				global.envioAjax('cliente',parametros);
+				global.envioAjax('ControllerCliente',parametros);
 			}
 		}
-		$("#btnSearch").prop('disabled',false);
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
-		$("#btnUpdate").prop('disabled',true);
+		$(this).prop('disabled',true);
 		var cadena = $("#frmAgregarCliente").serialize();
-		var parametros = {opc: 'actualizar',cadena };
+		var parametros = {opc: 'guardar',cadena };
 
 		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
+			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning','','','','');
 		} else {
 			if ( validarCampos() ) {  //prueba rfc = CUPU800825569
-				global.envioAjax('cliente',parametros);
+				global.envioAjax('ControllerCliente',parametros);
 			}
 		}	
-		$("#btnUpdate").prop('disabled',false);
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		$("#btnSearch").prop('disabled',true);
+		$(this).prop('disabled',true);
 		var buscar = $("#codigoCliente").val(); 
 
 		if (buscar != "") {
@@ -57,31 +62,32 @@ $(document).ready(function(){
 
 			var respuesta = global.buscar('cliente',parametros);
 			if (respuesta.codRetorno == '000') {
-				$("#codigoCliente").val(respuesta.id);
-				$("#nombreCliente").val(respuesta.nombreCliente);
-				$("#apellidoPaterno").val(respuesta.apellidoPaterno);
-				$("#apellidoMaterno").val(respuesta.apellidoMaterno);
-				$("#rfc").val(respuesta.rfc);
-				$("#nombreEmpresa").val(respuesta.nombreEmpresa);
-				$("#email").val(respuesta.email);
-				$("#telefono").val(respuesta.telefono);
-				$("#celular").val(respuesta.celular);
-				$("#calle").val(respuesta.calle);
-				$("#numExt").val(respuesta.numExt);
-				$("#numInt").val(respuesta.numInt);
-				$("#colonia").val(respuesta.colonia);
-				$("#ciudad").val(respuesta.ciudad);
-				$("#estado").val(respuesta.estado);
+				$.each(respuesta.datos,function(index,value){
+					$("#codigoCliente").val(value.id);
+					$("#nombreCliente").val(value.nombreCliente);
+					$("#apellidoPaterno").val(value.apellidoPaterno);
+					$("#apellidoMaterno").val(value.apellidoMaterno);
+					$("#rfc").val(value.rfc);
+					$("#nombreEmpresa").val(value.nombreEmpresa);
+					$("#email").val(value.email);
+					$("#telefono").val(value.telefono);
+					$("#celular").val(value.celular);
+					$("#calle").val(value.calle);
+					$("#numExt").val(value.numExt);
+					$("#numInt").val(value.numInt);
+					$("#colonia").val(value.colonia);
+					$("#ciudad").val(value.ciudad);
+					$("#estado").val(value.estado);
+				});
 				
-				$("#buscarN").val("");
-				$("#buscarE").val("");
+				$("#buscar").val("");
 				$("#btnUpdate").prop('disabled',false);
-				$("#btnSearch").prop('disabled',false);
 			}	
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
-		$("#btnSearch").prop('disabled',false);
+
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN REPORTE
 	$("#btnReporte").on('click',function(){
@@ -103,24 +109,19 @@ $(document).ready(function(){
 	     **************************/
 		//OCULTA O MUESTRA CAMPOS PARA BUSQUEDA
 	$("#busqueda").change(function(){
-			//OBTENEMOS EL VALOR DEL SELECT Y LIMPIAMOS LOS CAMPOS
+		var id = "";
 		var opc =  $(this).val();
-		$("#buscarE").val("");
-		$("#buscarN").val("");
+		$("#buscar").val("");
 			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = EMPRESA
 		if (opc == 0) {
 			$("#busquedas").hide('explode');
+			return;
 		} else if (opc == 1) {
-			$("#buscarE").hide();
-			$("#buscarN").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarN").focus();
+			id = 1;
 		} else {
-			$("#buscarN").hide();
-			$("#buscarE").show('explode');
-			$("#busquedas").show("explode");
-			$("#buscarE").focus();
+			id = 2;
 		}
+		llamarAutocompletar(id);
 	});
 		//EVENTO KEYPRESS
 	$("#nombreCliente").on('keypress',function(evt){
@@ -326,6 +327,8 @@ $(document).ready(function(){
 	function validarCampos(){
 		var rfc = $("#rfc").val();
 		var email = $("#email").val();
+		var telefono = $("#telefono").val();
+		var celular = $("#celular").val();
 
 		if (!global.validaRFC(rfc) ) {
 			$("#rfc").focus();
@@ -334,6 +337,10 @@ $(document).ready(function(){
 		} else if ( !global.validarEmail(email) ) {
 			$("#email").focus();
 			global.mensajes('Advertencia','Formato de E-mail Incorrecto','info','','','','');
+			return false;
+		} else if (telefono.length != 10 || celular.length != 10) {
+			$("#celular").focus();
+			global.mensajes('Advertencia','El Télefono o Celular deben Contener 10 Dígitos','info','','','','');
 			return false;
 		} else {
 			return true;
@@ -367,8 +374,8 @@ $(document).ready(function(){
 			$("#btnUpdate").prop('disabled',true);
 		}
     }
-		//FUNCIÓN PARA ENTRAR DESDE BUSCARPROVEEDOR Y MODIFICAR EL PROVEEDOR	
-	function entrar(){
+		//FUNCIÓN PARA ENTRAR DESDE BUSCARCLIENTES Y MODIFICAR EL CLIENTE	
+	function actualizarCliente(){
 		var res = "";
 		var resJson = "";
 
@@ -404,48 +411,31 @@ $(document).ready(function(){
 			}, 300);	
 		}
 	}
-//////////////////////////////////////////////
-		/**************************
-	    *		AUTOCOMPLETE	  *
-	    **************************/
-		//AUTOCOMPLETAR CAMPO NOMBRE
-	$("#buscarN").autocomplete({
-		minLength: 2,
-		source: "php/autocomplete.php?opc=cliente&id=1",
-		autoFocus: true,
-		select: function (event, ui) {
-			if (ui.item.id == 0) {
-				$("#buscarN").val("");
-				$("#buscarN").empty();
+		//FUNCIÓN LLAMA AUTOCOMPLETAR
+	function llamarAutocompletar(opc){
+		$("#buscar").show('explode');
+		$("#busquedas").show("explode");
+		$("#buscar").focus();
+		autocompletar(opc);
+	}
+	 	//1.-NOMBRE 	2.-EMPRESA	
+	function autocompletar(opc){
+		$("#buscar").autocomplete({
+			minLength: 2,
+			source: "php/autocomplete.php?opc=cliente&id="+opc,
+			autoFocus: true,
+			select: function (event, ui) {
+				if (ui.item.id != 0 || ui.item.id != "") {
+					$('#codigoCliente').val(ui.item.id);
+					return ui.item.label;
+				}
+			},
+			response: function(event, ui) {
+				if (ui.content[0].label == null || ui.content[0].label == "") {
+					var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
+					ui.content.push(noResult);
+				} 
 			}
-			$('#codigoCliente').val(ui.item.id);
-			return ui.item.label;
-		},
-		response: function(event, ui) {
-			if (ui.content[0].label == null) {
-				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
-				ui.content.push(noResult);
-			} 
-		}
-	});
-	//AUTOCOMPLETAR CAMPO BUQUEDA POR EMPRESA
-	$("#buscarE").autocomplete({
-		minLength: 2,
-		source: "php/autocomplete.php?opc=cliente&id=2",
-		autoFocus: true,
-		select: function (event, ui) {
-			if (ui.item.id == 0) {
-				$("#buscarE").val("");
-				$("#buscarE").empty();
-			}
-			$('#codigoCliente').val(ui.item.id);
-			return ui.item.label;
-		},
-		response: function(event, ui) {
-			if (ui.content[0].label == null) {
-				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
-				ui.content.push(noResult);
-			} 
-		}
-	});
+		});
+	}
 });

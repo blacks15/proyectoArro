@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 07-05-2017 a las 22:16:11
+-- Tiempo de generación: 08-05-2017 a las 22:47:23
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -113,6 +113,67 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEditoriales` (IN `pCodigo
 				END IF;
 			END IF;
 		END IF;	
+	END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEmpleados` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE		
+		IF (pCodigo = 0 ) THEN
+			 IF EXISTS (SELECT * FROM empleados WHERE status = 'DISPONIBLE') THEN
+			 	SELECT COUNT(*) INTO numFilas FROM empleados WHERE status = 'DISPONIBLE';
+
+				SELECT matricula,nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,puesto,
+					colonia,ciudad,estado,telefono,celular,sueldo,CONCAT(calle,' ',numExt,' ',numInt) AS direccion,
+					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos,isUsu
+				FROM empleados
+				WHERE status = 'DISPONIBLE' 
+				ORDER BY apellidos ASC
+				LIMIT pInicio, pTamanio;
+				SET msg = 'SP Ejecutado Correctamente';
+				SET CodRetorno = '000'; 
+			ELSE
+				SET CodRetorno = '001'; 
+				SET msg = 'No Hay Datos Para Mostrar';
+			END IF;
+		ELSE
+			IF EXISTS (SELECT * FROM empleados WHERE status = 'DISPONIBLE' AND matricula = pCodigo) THEN
+				SELECT COUNT(*) INTO numFilas FROM empleados WHERE status = 'DISPONIBLE' AND matricula = pCodigo;
+
+				SELECT matricula,nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,puesto,
+					colonia,ciudad,estado,telefono,celular,sueldo,CONCAT(calle,' ',numExt,' ',numInt) AS direccion,
+					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos,isUsu
+				FROM empleados
+				WHERE status = 'DISPONIBLE' AND matricula = pCodigo
+				ORDER BY apellidos ASC;
+				SET msg = 'SP Ejecutado Correctamente';
+				SET CodRetorno = '000'; 
+			ELSE
+				SET CodRetorno = '001'; 
+				SET msg = 'No Hay Datos Para Mostrar';
+			END IF;
+		END IF;
 	END IF;
 END$$
 
@@ -423,6 +484,78 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdAutor` (IN `pCodigo` BIGINT
 	END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdCliente` (IN `pCodigo` BIGINT, IN `pRFC` CHAR(13), IN `pEmpresa` VARCHAR(30), IN `pNombreContacto` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pEmail` VARCHAR(30), IN `pStatus` VARCHAR(10), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+		
+	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
+		IF EXISTS(SELECT * FROM clientes WHERE matricula = pCodigo) THEN
+			IF NOT EXISTS(SELECT * FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci ) THEN
+				IF NOT EXISTS(SELECT * FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) THEN
+					START TRANSACTION;
+						UPDATE clientes SET rfc = pRFC, empresa = pEmpresa, nombre_contacto = pNombreContacto, 
+							apellido_paterno = pAPaterno, apellido_materno = pAMaterno, calle = pCalle, numExt = pNumExt,
+							numInt = pNumInt, colonia = pColonia, ciudad = pCiudad, estado = pEstado, telefono = pTelefono,
+							celular = pCelular, email = pEmail, fechaModificacion = NOW()
+						WHERE matricula = pCodigo;
+						SET CodRetorno = '000';
+						SET msg = 'Cliente Actualizado con Exito';
+					COMMIT; 
+				ELSE
+					SET CodRetorno = '001';
+					SET msg = 'El RFC del Cliente ya fue Registrado';
+					ROLLBACK;
+				END IF;
+			ELSE
+				SET CodRetorno = '001';
+				SET msg = 'El Nombre del Cliente ya fue Registrado';
+				ROLLBACK;
+			END IF;
+		ELSE
+			SET CodRetorno = '001';
+			SET msg = 'El Cliente no Existe';
+		END IF;
+	ELSE 
+		IF NOT EXISTS(SELECT * FROM clientes WHERE empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci ) THEN
+			IF NOT EXISTS (SELECT * FROM clientes WHERE rfc = pRFC) THEN
+				START TRANSACTION;
+					INSERT INTO clientes(rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
+						colonia,ciudad,estado,telefono,celular,email,status,usuario,fechaCreacion,fechaModificacion)
+					VALUES (pRFC, pEmpresa, pNombreContacto, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia,
+						pCiudad, pEstado, pTelefono, pCelular, pEmail, pStatus, pUsuario, NOW(), NOW() );
+					SET CodRetorno = '000';
+					SET msg = 'Cliente Guardado con Exito';
+				COMMIT;
+			ELSE
+				SET CodRetorno = '001';
+				SET msg = 'El RFC del Cliente ya fue Registrado';
+				ROLLBACK;
+			END IF;
+		ELSE
+			SET CodRetorno = '001';
+			SET msg = 'El Client ya fue Registrado';
+			ROLLBACK;
+		END IF; 
+	END IF; 
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BIGINT, IN `pNombreEditorial` VARCHAR(50) COLLATE utf8_spanish2_ci, IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
@@ -481,7 +614,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BI
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIGINT, IN `pNombreEmpleado` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pSueldo` DECIMAL, IN `pPuesto` VARCHAR(30), IN `pUsuario` VARCHAR(15), IN `pISUsu` INT, IN `pStatus` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIGINT, IN `pNombreEmpleado` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pSueldo` DECIMAL, IN `pPuesto` VARCHAR(30), IN `pStatus` VARCHAR(10), IN `pISUsu` INT, IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
@@ -526,9 +659,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIG
 		IF NOT EXISTS(SELECT * FROM empleados WHERE nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
 				INSERT INTO empleados(nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,colonia,ciudad,estado,
-					telefono,celular,sueldo,puesto,status,usuario,fechaCreacion,fechaModificacion)
+					telefono,celular,sueldo,puesto,status,isUsu,usuario,fechaCreacion,fechaModificacion)
 				VALUES (pNombreEmpleado, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
-					pCelular, pSueldo, pPuesto, pStatus, pUsuario,NOW(), NOW() );
+					pCelular, pSueldo, pPuesto, pStatus, pISUsu, pUsuario,NOW(), NOW() );
 				SET CodRetorno = '000';
 				SET msg = 'Empleado Guardado con Exito';
 			COMMIT;
@@ -826,7 +959,7 @@ CREATE TABLE `clientes` (
   `nombre_contacto` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `apellido_paterno` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `apellido_materno` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `calle` varchar(15) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `calle` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `numExt` int(11) NOT NULL,
   `numInt` varchar(5) COLLATE utf8_spanish_ci DEFAULT NULL,
   `colonia` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
@@ -1075,7 +1208,7 @@ INSERT INTO `empleados` (`matricula`, `nombre_empleado`, `apellido_paterno`, `ap
 (4, 'josÃ©', 'lopez', 'lopez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinalos', '', '6673031398', '400.00', 'vendedor', 'DISPONIBLE', 1, 'felipe', '2016-08-27 03:19:00', '2016-08-27 03:19:00'),
 (5, 'juan', 'perez', 'lopez', 'corta', 4452, 'A', 'peligrosa', 'culiacan', 'sinaloa', '7106788', '6673031398', '400.00', 'vendedor', 'DISPONIBLE', 0, 'felipe', '2016-09-01 10:05:00', '2016-09-01 10:05:00'),
 (6, 'felipe de jesus', 'monzon', 'mendoza', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677606060', '6673031398', '0.00', 'cajero', 'DISPONIBLE', 1, 'felipe', '2017-01-19 05:09:00', '2017-01-21 12:24:00'),
-(7, 'paola', 'aispuro', 'mendoza', 'sin nombre', 4815, '15', 'el ranchillo', 'culiacan', 'sinaloa', '667605556', '6673021548', '200.00', 'cajera', 'felipe', 0, 'DISPONIBLE', '2017-05-07 21:59:20', '2017-05-07 21:59:20');
+(7, 'paola', 'aispuro', 'mendoza', 'sin nombre', 4815, '15', 'el ranchillo', 'culiacan', 'sinaloa', '667605556', '6673021548', '200.00', 'cajera', 'DISPONIBLE', 0, 'felipe', '2017-05-07 21:59:20', '2017-05-07 21:59:20');
 
 -- --------------------------------------------------------
 

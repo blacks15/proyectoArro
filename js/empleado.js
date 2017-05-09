@@ -15,6 +15,10 @@ $(document).ready(function(){
 	$("#btnRefresh").on('click',function(){
 		global.cargarPagina('Empleado');
 	});
+		//BOTÓN BUSCAR EMPLEADOS
+	$("#btnEmpleados").on('click',function(){
+		global.cargarPagina('BuscarEmpleado');
+	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
 		var cadena = $("#frmAgregarEmpleado").serialize();
@@ -44,11 +48,8 @@ $(document).ready(function(){
 		$(this).prop('disabled',true);
 
 		if (buscar != "") {
-			var parametros = {opc: 'buscarEmpleado','buscar': buscar };
-
-			var respuesta = global.buscar('ControllerEmpleado',parametros);
+			var respuesta = global.buscar('ControllerEmpleado','buscar',buscar); console.log(respuesta);
 			if (respuesta.codRetorno == '000') {
-				console.log(respuesta);	
 				$.each(respuesta.datos,function(index,value){
 					$("#codigoEmpleado").val(value.id);
 					$("#nombreEmpleado").val(value.nombreEmpleado);
@@ -64,6 +65,7 @@ $(document).ready(function(){
 					$("#colonia").val(value.colonia);
 					$("#ciudad").val(value.ciudad);
 					$("#estado").val(value.estado);
+					$("#isUsu").val(value.isUsu);
 				});
 				
 				$("#buscar").val("");
@@ -283,15 +285,14 @@ $(document).ready(function(){
 		source: "php/autocomplete.php?opc=empleado",
 		autoFocus: true,
 		select: function (event, ui) {
-			if (ui.item.id == undefined || ui.item.label == "") {
+			if (ui.item.label == undefined || ui.item.label == "") {
 				$("#buscar").val("");
-				console.log(ui.item.id);
 			}
 			$("#codigoEmpleado").val(ui.item.id);
 			return ui.item.label;
 		},
 		response: function(event, ui) {
-			if (ui.content[0].label == null) {
+			if (ui.content[0].label == null || ui.content[0].label == undefined) {
 				var noResult = { value: "" ,label: "No Se Encontrarón Resultados" };
 				ui.content.push(noResult);
 			} 
@@ -312,7 +313,7 @@ $(document).ready(function(){
     	var estado = $("#estado").val();
 
     	if (nombreEmpresa == "" && nombreContacto == ""  &&  email == "" && telefono == "" && celular == "" && 
-    		puesto == "" && calle == "" && numExt == "" && colonia == "" && ciudad == "" && estado == "") {
+    	puesto == "" && calle == "" && numExt == "" && colonia == "" && ciudad == "" && estado == "") {
     		$("#btnSave").prop('disabled',true);
     		$("#btnUpdate").prop('disabled',true);
     	} else {
@@ -350,6 +351,7 @@ $(document).ready(function(){
 				$("#calle").val(resJson[11]);
 				$("#numExt").val(numero[0]);
 				$("#numInt").val(numero[1]);
+				$("#isUsu").val(resJson[15]);
 					//OCULTAMOS BOTON GUARDAR Y MOSTRAMOS MODIFICAR
 				$("#btnUpdate").prop('disabled',false);
 					//VACIAMOS LA SESSION

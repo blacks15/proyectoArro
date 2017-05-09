@@ -3,7 +3,7 @@ $(document).ready(function(){
      *	 OOCULTAR CAMPOS	   *
      **************************/
 	//global.validaSesion();
-	//global.isNotAdminMenu($("#tipoUsuario").val());
+	global.isNotAdminMenu($("#tipoUsuario").val());
 	global.pagination('ControllerProducto',1,0,'');
 	$("#busqueda").focus();
 	$("#busquedas").hide();
@@ -33,7 +33,7 @@ $(document).ready(function(){
 		if (buscar != "") {
 			global.pagination('ControllerProducto',1,buscar,opc);
 		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
 		$(this).prop('disabled',false);	
 		$("#codigoProducto").val(''); 

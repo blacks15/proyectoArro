@@ -38,8 +38,12 @@
 				print json_encode($salidaJSON);
 				exit();
 			}
+
+			if ($isUsu == "") {
+				$isUsu = 0;
+			}
 				//VALIDAMOS LOS PARAMETROS
-			if (!isset($codigoEmpleado,$nombreEmpleado,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$colonia,$ciudad,$estado,$celular,$sueldo,$puesto,$status,$_SESSION['INGRESO']['nombre']) ) {
+			if (!isset($codigoEmpleado,$nombreEmpleado,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$colonia,$ciudad,$estado,$celular,$sueldo,$puesto,$status,$_SESSION['INGRESO']['nombre'],$isUsu )) {
 				$salidaJSON = array('codRetorno' => '004',
 					'form' => 'Empleado',
 					'Titulo' => 'Advertencia',
@@ -50,7 +54,7 @@
 				exit();
 			}
 				//CREAMOS EL ARRAY CON LOS DATOS
-			$datos = array($codigoEmpleado,$nombreEmpleado,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$sueldo,$puesto,$status,0,$_SESSION['INGRESO']['nombre']);
+			$datos = array($codigoEmpleado,$nombreEmpleado,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$sueldo,$puesto,$status,$isUsu,$_SESSION['INGRESO']['nombre']);
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
 			$res = $sql->guardarEmpleado($datos);
 				//SE VALIDA EL RETORNO DEL MÉTODO
@@ -72,6 +76,59 @@
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
 			$log->insert('Error guardarEmpleado: '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}
+		//FUNCIÓN PARA BUSCAR EMPLEADO(ES)
+	function buscarEmpleados(){
+		$log = new Log("log", "../../log/");
+		$log->insert('Entro metodo buscarEmpleados!', false, true, true);
+		
+		try {
+				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			parse_str($_POST["parametros"], $_POST);
+			$codigo = trim($_POST['codigo']);
+			$sql = new EmpleadoModel();
+				//VALIDAMOS LA SESSION
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
+				$salidaJSON = array('codRetorno' => '003',
+					'form' => 'Empelado',
+					'Mensaje' => 'Sesión Caducada'
+				);
+				$log->insert('Empelado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				print json_encode($salidaJSON);
+				exit();
+			}
+			
+			if (isset($_POST['partida'])) {
+				$paginaActual = $_POST['partida'];	
+			}
+				//CALCULAMOS EL INICIO
+			if ($paginaActual <= 1){
+				$inicio = 0;
+			} else {
+				$inicio = ($paginaActual - 1) * 5;
+			}
+				//CARGAMOS LOS DATOS
+			$empleados = $sql->cargarEmpleados($codigo,$inicio,$paginaActual);	
+
+			if ($empleados->CodRetorno == "000") {
+				$salidaJSON = array ('codRetorno' => $empleados->CodRetorno,
+					'datos' => $empleados->Empleados,
+					'link' => $empleados->lista,
+					'form' => 'Empleado',
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => $empleados->CodRetorno,
+					'form' => 'Empleado',
+					'bus' => '1',
+					'Mensaje' => $empleados->Mensaje,
+				);
+			}			
+			$log->insert('Empleado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			print json_encode($salidaJSON);
+		} catch (Exception $e) {
+			$log->insert('Error buscarEmpleados '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}

@@ -12,7 +12,7 @@ class AutorModel {
 			$datos = array($codigo,$nombreAutor,$_SESSION['INGRESO']['nombre'],$status);
 			$consulta = "CALL spInsUpdAutor(?,?,?,?,@codRetorno,@msg)";
 
-			$stm = SP($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
 				$retorno->CodRetorno = $stm->codRetorno[0];
@@ -40,7 +40,7 @@ class AutorModel {
 			$datos = array($codigo,$inicio,5);
 			$consulta = "CALL spConsultaAutores(?,?,?,@msg,@CodRetorno,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
-			$stm = SP ($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
 				foreach ($stm->datos as $key => $value) {

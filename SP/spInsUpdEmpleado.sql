@@ -16,9 +16,9 @@ CREATE PROCEDURE spInsUpdEmpleado (
 	IN pCelular VARCHAR(10),
 	IN pSueldo DECIMAL,
 	IN pPuesto VARCHAR(30),
-	IN pUsuario VARCHAR(15),
-	IN pISUsu INT,
 	IN pStatus VARCHAR(10),
+	IN pISUsu INT,
+	IN pUsuario VARCHAR(15),
 	OUT CodRetorno CHAR(3),
 	OUT msg VARCHAR(100)
 )
@@ -72,9 +72,9 @@ BEGIN
 		IF NOT EXISTS(SELECT * FROM empleados WHERE nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
 				INSERT INTO empleados(nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,colonia,ciudad,estado,
-					telefono,celular,sueldo,puesto,status,usuario,fechaCreacion,fechaModificacion)
+					telefono,celular,sueldo,puesto,status,isUsu,usuario,fechaCreacion,fechaModificacion)
 				VALUES (pNombreEmpleado, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
-					pCelular, pSueldo, pPuesto, pStatus, pUsuario,NOW(), NOW() );
+					pCelular, pSueldo, pPuesto, pStatus, pISUsu, pUsuario,NOW(), NOW() );
 				SET CodRetorno = '000';
 				SET msg = 'Empleado Guardado con Exito';
 			COMMIT;

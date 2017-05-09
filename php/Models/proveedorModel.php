@@ -20,7 +20,7 @@ class ProveedorModel {
 
 			$consulta = "CALL spInsUpdProveedor(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
 
-			$stm = SP($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
 				$retorno->CodRetorno = $stm->codRetorno[0];
@@ -56,7 +56,7 @@ class ProveedorModel {
 			$datos = array($codigo,$inicio,5);
 			$consulta = "CALL spConsultaProveedores(?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
-			$stm = SP ($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
 				foreach ($stm->datos as $key => $value) {

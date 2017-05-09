@@ -1,6 +1,6 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/provedorModel.php');
+	require_once('../Models/proveedorModel.php');
 	include "../Clases/Log.php";
 	error_reporting(0);
 	session_start();

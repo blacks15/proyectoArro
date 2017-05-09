@@ -175,17 +175,17 @@ var global = {
 						$("#page-numbers").html(data.link);
 						return;
 					} else if (data.form == 'Empleado') {
-						$("#table").html("");
+						$("#table").html(""); console.log(data.datos);
 						$.each(data.datos,function(index,value){
-							numero = value.numExt+' '+value.numInt;
 							$("#table").append("<tr><td style='display: none' width='5%'>"+value.id+
-								"</td><td width='30%'>"+value.nombreEmpleado+"</td><td width='15%'>"+value.apellidos+
+								"</td><td width='25%'>"+value.nombreEmpleado+"</td><td width='20%'>"+value.apellidos+
 								"</td><td width='25%'>"+value.direccion+"</td><td width='8%'>"+value.ciudad+
 								"</td><td width='8%'>"+value.estado+"</td><td width='5%'>"+value.telefono+
 								"</td><td width='5%'>"+value.celular+"</td><td width='5%'>"+value.sueldo+
 								"</td><td width='5%'>"+value.puesto+"</td><td style='display: none' width='5%'>"+value.colonia+
-								"</td><td style='display: none' width='5%'>"+value.calle+"</td><td style='display: none' width='5%'>"+numero+
+								"</td><td style='display: none' width='5%'>"+value.calle+"</td><td style='display: none' width='5%'>"+value.numExt+' '+value.numInt+
 								"</td><td style='display: none' width='5%'>"+value.apellidoPaterno+"</td><td style='display: none' width='5%'>"+value.apellidoMaterno+
+								"</td><td style='display: none' width='5%'>"+value.isUsu+
 								"</td><td><button type='button' class='icon-info btn blue btnMostrar'></button></td>\
 								<td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"

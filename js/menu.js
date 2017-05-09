@@ -2,7 +2,7 @@ $(document).ready(function(){
 	$("#user-name").html(sessionStorage.usuario);
 	$("#tipoUsuario").val(sessionStorage.tipo);
 	//global.cargarPagina("pages/Venta.html");
-	global.cargarPagina("Empleado");
+	global.cargarPagina("Cliente");
 	global.isNotAdminMenu($("#tipoUsuario").val());
 
 	$('.button-collapse').sideNav({});

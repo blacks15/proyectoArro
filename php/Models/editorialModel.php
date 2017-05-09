@@ -12,7 +12,7 @@ class EditorialModel {
 			$datos = array($codigo,$nombreEditorial,$_SESSION['INGRESO']['nombre'],$status);
 			$consulta = "CALL spInsUpdEditorial(?,?,?,?,@codRetorno,@msg)";
 
-			$stm = SP($consulta,$datos); 
+			$stm = executeSP($consulta,$datos); 
 
 			if ($stm->codRetorno[0] == '000') {
 				$retorno->CodRetorno = $stm->codRetorno[0];
@@ -40,7 +40,7 @@ class EditorialModel {
 			$datos = array($codigo,$inicio,5);
 			$consulta = "CALL spConsultaEditoriales(?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
-			$stm = SP ($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 				//VALIDAR RETORNO DEL SP
 			if ($stm->codRetorno[0] == '000') {
 				foreach ($stm->datos as $key => $value) {

@@ -32,7 +32,7 @@ class ProductoModel {
 
 			$consulta = "CALL spInsUpdProducto(?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
 
-			$stm = SP($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') {
 				$retorno->CodRetorno = $stm->codRetorno[0];
@@ -68,7 +68,7 @@ class ProductoModel {
 			$datos = array($codigo,$inicio,5,$tipoBusqueda);
 			$consulta = "CALL spConsultaProductos(?,?,?,?,@CodRetorno,@msg,@numFilas)";
 				//EJECUTAMOS LA CONSULTA
-			$stm = SP ($consulta,$datos);
+			$stm = executeSP($consulta,$datos);
 
 			if ($stm->codRetorno[0] == '000') { 
 				foreach ($stm->datos as $key => $value) {

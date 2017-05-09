@@ -132,7 +132,7 @@
 				if ($contar > 0) {
 						//VALIDAMOS SI HAY FILAS AFECTADAS Y RECORREMOS EL ARRAY PARA LLENARLO CON LA RESPUESTA
 					while ($rows = $stm->fetch(PDO::FETCH_ASSOC)){
-		            	$respuesta[] = array('value' => strtoupper($rows["nombre_empleado"]),
+		            	$respuesta[] = array('value' => strtoupper($rows["nombre_empleado"] ),
 		            		'id' => $rows["matricula"],
 		            		'isUsu' => $rows["isUsu"]
 		            	);
