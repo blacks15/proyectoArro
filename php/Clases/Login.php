@@ -13,10 +13,25 @@ class Login {
 		$password = limpiarCadena($password);
 		try {
 			$objUsuario = new Usuario();
+
+			if (!isset($_SESSION['intentos']) ) {
+				$_SESSION['intentos'] = 0; 
+				$_SESSION['usuario'] = ""; 
+			} else if ($_SESSION['intentos'] > 3 && $_SESSION['usuario'] == $nombreUsuario) {
+				$this->bloquearUsuario($nombreUsuario);
+				$res->Mensaje = 'Usuario Bloqueado Contacte con el Administrador';
+				return $res;
+				exit();
+			}
+				//VALIDAMOS USUARIO Y PASSWORD
 			if ($this->validaUsuario($nombreUsuario) == false ) {
 				$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
+				$_SESSION['intentos'] += 1; 
+				$_SESSION['usuario'] = $nombreUsuario;
 			} else if ($this->validaPassword($nombreUsuario,$password) == false) {
 				$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
+				$_SESSION['intentos'] += 1; 
+				$_SESSION['usuario'] = $nombreUsuario;
 			} else {
 				$objUsuario->setClave($_SESSION['INGRESO']['id']);
 				$objUsuario->setUsuario($_SESSION['INGRESO']['nombre']);
@@ -40,11 +55,15 @@ class Login {
 			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
 			$datos = array($usuario);
 
-			$sql = "SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = ?";
+			$sql = "SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = ?";
 
 			$stm = SQL($sql,$datos); 
 
-			if ($stm->rowCount() > 0) {
+			if ($stm->fetchColumn(1) == 'BLOQUEADO') {
+				$res->Mensaje = 'Usuario Bloqueado Contacte con el Administrador';
+				return $res;
+				exit();
+			} else if ($stm->rowCount() > 0) {
 				$res = true;
 			} else {
 				$res = false;
@@ -67,7 +86,8 @@ class Login {
 			if (empty($password)) {
 				$res = false;
 			} else {
-				$sql = "SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status FROM usuarios WHERE nombre_usuario = ?";
+				$sql = "SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = ?";
 
 				$stm = SQL($sql,$datos);
 
@@ -99,10 +119,29 @@ class Login {
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}
-/*
- * Retorna el IP de usuario
- * @return [string] [devuel la io del usuario]
- */
+		//BLOQUEAR USUARIO
+	private function bloquearUsuario($usuario){
+		try {
+			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
+			$status = 'BLOQUEADO';
+			$datos = array($status,$usuario);
+			$sql = "UPDATE usuarios SET status = ? WHERE nombre_usuario = ?";
+
+			$stm = SQL($sql,$datos);
+
+			if ($stm->rowCount() > 0) {
+				$res = true;
+			} else {
+				$res = false;
+			}
+
+			return $res;
+		} catch (Exception $e) {
+			$log->insert('Error bloquearUsuaro '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}
+		//Retorna el IP de usuario/
 	private function IPuser() {
 		$retorno = "";
 

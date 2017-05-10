@@ -88,13 +88,11 @@ class LibroModel {
 					$retorno->CodRetorno = "001";
 					$retorno->Mensaje = 'No Hay Datos Para Mostrar';
 				} else {
-						//CREAMOS LA LISTA DE PAGINACIÓN
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
-						//ASIGNAMOS DATOS AL RETORNO
-					$retorno->CodRetorno = "000";
-					$retorno->libros = $libros;
 					$retorno->lista = $lista;
 				}
+				$retorno->CodRetorno = "000";
+				$retorno->libros = $libros;
 			} else {
 				$retorno->CodRetorno = "002";
 				$retorno->Mensaje = "Ocurrio Un Error";

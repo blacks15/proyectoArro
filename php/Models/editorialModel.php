@@ -55,13 +55,12 @@ class EditorialModel {
 					$retorno->CodRetorno = $stm->codRetorno;
 					$retorno->Mensaje = 'No Hay Datos Para Mostrar';
 				} else {
-						//CREAMOS LA LISTA DE PAGINACIÓN
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
-						//ASIGNAMOS DATOS AL RETORNO
-					$retorno->CodRetorno = $stm->codRetorno[0];
-					$retorno->editoriales = $editoriales;
 					$retorno->lista = $lista;
 				}
+
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->editoriales = $editoriales;
 			} else {
 				$retorno->CodRetorno = $stm->codRetorno[0];
 				$retorno->Mensaje = $stm->Mensaje;

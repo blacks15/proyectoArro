@@ -49,12 +49,12 @@ $(document).ready(function(){
 		//OCULTA O MUESTRA CAMPOS PARA BUSQUEDA
 	$("#busqueda").change(function(){
 			//OBTENEMOS EL VALOR DEL SELECT Y LIMPIAMOS LOS CAMPOS
-		var opc =  $(this).val();
 		var nombre = "";
+		var opc =  $(this).val();
 
 		$("#buscar").val("");
 		$("#codigoProducto").val(''); 
-			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = EMPRESA
+			//VALIDAMOS LA OPCIÓN SELECCIONADA 1 = NOMBRE , 2 = PROVEEDOR
 		if (opc == 0) {
 			$("#busquedas").hide('explode');
 		} else if (opc == 2) {

@@ -48,7 +48,7 @@ $(document).ready(function(){
 		$(this).prop('disabled',true);
 
 		if (buscar != "") {
-			var respuesta = global.buscar('ControllerEmpleado','buscar',buscar); console.log(respuesta);
+			var respuesta = global.buscar('ControllerEmpleado','buscar',buscar);
 			if (respuesta.codRetorno == '000') {
 				$.each(respuesta.datos,function(index,value){
 					$("#codigoEmpleado").val(value.id);

@@ -25,8 +25,7 @@
 								</select>
 							</div>
 							<div class="col s5" id="busquedas">
-								<input type="text" class="buscar" name="buscarE" id="buscarE" placeholder="Buscar por Empresa">
-								<input type="text" class="buscar" name="buscarN" id="buscarN" placeholder="Buscar por Nombre">
+								<input type="text" class="buscar" name="buscar" id="buscar" placeholder="Buscar">
 							</div>
 							<div class="col s3">
 								<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
@@ -67,22 +66,18 @@
 						<legend class="titulo">Datos Cliente</legend>
 						<table>
 							<tr>
-								<td class="row" style="text-transform: capitalize;">
-									<div class="col s3">
+								<td class="row" style="text-transform: capitalize; font-size: 14px;">
+									<div class="col s6">
 										<p id="codigo"></p>
+										<p id="rfc"></p>
+										<p id="nombreEmpresa"></p>
 										<p id="nombreCliente"></p>
 										<p id="apellidos"></p>
 									</div>
-									<div class="col s3">
-										<p id="rfc"></p>
-										<p id="nombreEmpresa"></p>
-									</div>
-									<div class="col s3">
+									<div class="col s6">
 										<p id="domicilio"></p>
 										<p id="ciudad"></p>
 										<p id="estado"></p>
-									</div>
-									<div class="col s3">
 										<p id="telefono"></p>
 										<p id="celular"></p>
 										<p style="text-transform: none;" id="email"></p>

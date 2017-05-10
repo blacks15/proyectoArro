@@ -49,8 +49,9 @@ button {
 	width: 100%;
 }
 #user-name {
-	width: 100px;
+	width: 130px;
 	text-transform: capitalize;
+	margin-right: 10px;
 }
 #login {
 	display: table-cell;

@@ -219,15 +219,15 @@ var global = {
 					} else if (data.form == 'Cliente') {
 						$("#table").html("");
 						$.each(data.datos,function(index,value){
-							$("#table").append("<tr><td style='display: none' width='5%'>"+value.id+
-								"</td><td width='8%'>"+value.rfc+"</td><td width='15%'>"+value.nombreEmpresa+
+							$("#table").append("<tr><td style='display: none'>"+value.id+
+								"</td><td style='text-transform: uppercase' width='8%'>"+value.rfc+"</td><td width='15%'>"+value.nombreEmpresa+
 								"</td><td width='15%'>"+value.nombreCliente+"</td><td width='15%'>"+value.apellidos+
-								"</td><td width='25%'>"+value.direccion+"</td><td width='8%'>"+value.ciudad+
-								"</td><td width='8%'>"+value.estado+"</td><td width='5%'>"+value.telefono+
-								"</td><td style='display: none' width='5%'>"+value.celular+"</td><td style='display: none' width='5%'>"+value.email+
-								"</td><td style='display: none' width='5%'>"+value.colonia+
-								"</td><td style='display: none' width='5%'>"+value.calle+"</td><td style='display: none' width='5%'>"+value.numero+
-								"</td><td style='display: none' width='5%'>"+value.apellidoPaterno+"</td><td style='display: none' width='5%'>"+value.apellidoMaterno+
+								"</td><td width='22%'>"+value.direccion+"</td><td width='8%'>"+value.ciudad+
+								"</td><td width='8%'>"+value.estado+"</td><td width='7%'>"+value.telefono+
+								"</td><td style='display: none'>"+value.celular+"</td><td style='display: none'>"+value.email+
+								"</td><td style='display: none'>"+value.colonia+"</td><td style='display: none'>"+value.calle+
+								"</td><td style='display: none'>"+value.numExt+' '+value.numInt+
+								"</td><td style='display: none'>"+value.apellidoPaterno+"</td><td style='display: none'>"+value.apellidoMaterno+
 								"</td><td><button type='button' class='icon-info btn blue btnMostrar'></button></td>\
 								<td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
 								</td></tr>"
@@ -383,7 +383,7 @@ var global = {
 		//FUNCIÓN PARA ACEPTAR SOLO NÚMEROS Y LETRAS
 	numerosLetras: function(evt){
 		var charCode = evt.which || evt.keyCode;
-	    var str = String.fromCharCode(charCode);
+		var str = String.fromCharCode(charCode);
 		var expreg = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\t\b\s]*$/;
 
 		if(!str.match(expreg) && charCode != 13){

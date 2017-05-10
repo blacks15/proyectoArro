@@ -161,12 +161,12 @@
 				if ($id == 1) {
 					//var_dump($_GET);
 				$consulta = "SELECT concat(nombre_contacto,' ',apellido_paterno,' ',apellido_materno) AS nombre_cliente, matricula
-				FROM clientes WHERE status != 'BAJA' AND nombre_contacto LIKE ? AND matricula != '1' ";
+				FROM clientes WHERE nombre_contacto LIKE ? AND matricula != '1' ";
 				} else {
 				//var_dump($_GET);
 				$consulta = "SELECT empresa AS nombre_cliente, matricula
 				    FROM clientes 
-					WHERE status != 'BAJA' AND empresa LIKE ? AND matricula != '1' ";
+					WHERE empresa LIKE ? AND matricula != '1' ";
 				}
 	        		//SE PREPARA Y SE EJECUTA LA CONSULTA
 				$stm = $db->prepare($consulta);

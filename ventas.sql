@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-05-2017 a las 22:47:23
+-- Tiempo de generación: 09-05-2017 a las 21:47:48
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -57,6 +57,68 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaAutores` (IN `pCodigo` BI
             END IF;
         END IF;
     END IF$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+		
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE		
+		IF (pCodigo = 0 ) THEN
+			 IF EXISTS (SELECT * FROM clientes) THEN
+			 	SELECT COUNT(*) INTO numFilas FROM clientes;
+
+				SELECT matricula,rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
+					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt,' ',colonia) AS direccion,
+					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos
+				FROM clientes
+				WHERE matricula != 1
+				ORDER BY apellidos ASC
+				LIMIT pInicio, pTamanio;
+				SET msg = 'SP Ejecutado Correctamente';
+				SET CodRetorno = '000'; 
+			ELSE
+				SET CodRetorno = '001'; 
+				SET msg = 'No Hay Datos Para Mostrar';
+			END IF;
+		ELSE
+			IF EXISTS (SELECT * FROM clientes WHERE matricula = pCodigo) THEN
+				SELECT COUNT(*) INTO numFilas FROM clientes WHERE matricula = pCodigo;
+
+				SELECT matricula,rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
+					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt,' ',colonia) AS direccion,
+					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos
+				FROM clientes
+				WHERE matricula = pCodigo AND matricula != 1
+				ORDER BY apellidos ASC;
+				SET msg = 'SP Ejecutado Correctamente';
+				SET CodRetorno = '000'; 
+			ELSE
+				SET CodRetorno = '001'; 
+				SET msg = 'No Hay Datos Para Mostrar';
+			END IF;
+		END IF;
+	END IF;
+END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEditoriales` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -961,18 +1023,18 @@ CREATE TABLE `clientes` (
   `apellido_materno` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `calle` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `numExt` int(11) NOT NULL,
-  `numInt` varchar(5) COLLATE utf8_spanish_ci DEFAULT NULL,
+  `numInt` varchar(5) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
   `colonia` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `ciudad` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `estado` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `telefono` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
-  `celular` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
+  `telefono` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `celular` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `email` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `status` char(10) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `usuario` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
+  `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `clientes`
@@ -981,14 +1043,15 @@ CREATE TABLE `clientes` (
 INSERT INTO `clientes` (`matricula`, `rfc`, `empresa`, `nombre_contacto`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
 (1, 'xxxxxxxxxxxxx', 'cliente general', 'cliente general', '', '', '', 0, '', '', '', '', '0', '0', 'null@null.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (2, '', 'bookvillage', 'luis', 'soto', 'de', 'juarez', 3312, 'A', 'las vegas', 'teic', 'BAJA', '7105585', '6678954623', 'luis@book.com', 'BAJA', '', '0000-00-00 00:00:00', '2016-09-24 06:38:00'),
-(3, 'CUPU800825569', 'papeleria del sol', 'juan', 'lopez', 'vargas', 'obregon', 5324, '5', 'centro', 'culiacan', 'sinaloa', '6675481875', '6677895471', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-03-26 03:32:00'),
-(5, '', 'librerÃ­a del sol', 'luis', 'perez', 'oso', 'lejana', 22, '', 'de', 'culiacan', 'sinaloa', '2222', '222', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(6, '', 'libreria caracol', 'jorge', 'mendoza', 'lopez', 'muy lejana', 4040, '', 'mazatlan', 'mazatlan', 'sinaloa', '657154875', '657859545', 'caracol@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(7, '', 'librerÃ­a mÃ©xico', 'rosa', 'osuna', 'lopez', 'grande', 1515, '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(8, '1vwd1d15s3sds', 'libreria Buen libro', 'ruben Alfonso', 'mendoza', 'mendoza', 'perrona', 152, '4', 'las vegas', 'tepito', 'CDMX', '5507862', '6675084532', 'tepito@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2016-08-31 09:47:00'),
+(3, 'lova750824547', 'papeleria del sol', 'juan', 'lopez', 'vargas', 'obregon', 5324, '5', 'centro', 'culiacan', 'sinaloa', '6675481875', '6677895471', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 20:01:07'),
+(5, 'peos881205785', 'librerÃ­a del sol', 'luis', 'perez', 'oso', 'lejana', 3312, 's', 'de los pobres', 'culiacan', 'sinaloa', '5558974152', '5557819348', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 19:44:00'),
+(6, 'mom900527538', 'libreria caracol', 'jorge', 'mendoza', 'lopez', 'muy lejana', 4040, '', 'mazatlan', 'mazatlan', 'sinaloa', '6677594812', '6673574819', 'caracol@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 19:00:37'),
+(7, 'oslo780627456', 'libreria mexico', 'rosa', 'osuna', 'lopez', 'grande', 1515, '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 20:00:36'),
+(8, 'meme850912789', 'libreria Buen libro', 'ruben Alfonso', 'mendoza', 'mendoza', 'perrona', 152, '4', 'las vegas', 'tepito', 'CDMX', '5555507862', '6675084532', 'tepito@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 20:01:52'),
 (9, '', 'librerÃ­a del sol', 'juan', 'rojo', 'lugo', 'camarÃ³n', 457, '5', 'las palmas', 'mazatlan', 'sinaloa', '7154812', '2147483647', 'libreriadelsol@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:25:00', '2016-08-29 09:25:00'),
-(10, '', 'librerÃ­a del sol', 'juan', 'lopez', 'lopez', 'camarones', 452, '6', 'las palmas', 'mazatlan', 'sinalo', '7481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2016-08-29 09:29:00'),
-(11, 'CUPU800825569', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-02-07 03:28:00');
+(10, 'lolo820422789', 'librerÃ­a del sol', 'juan', 'lopez', 'lopez', 'camarones', 452, '6', 'las palmas', 'mazatlan', 'sinalo', '6267481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2017-05-09 19:48:59'),
+(11, 'CUPU800825569', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-02-07 03:28:00'),
+(12, 'lora950412789', 'casa de cultura', 'helen marie', 'lopes', 'rosado', 'largisima', 4825, '5', 'los asaltantes', 'juarez', 'cdmx', '6678952415', '6667523526', 'hele_12@gmail.com', 'DISPONIBLE', 'felipe', '2017-05-09 20:09:12', '2017-05-09 20:10:05');
 
 -- --------------------------------------------------------
 
@@ -1182,20 +1245,20 @@ CREATE TABLE `empleados` (
   `apellido_materno` varchar(30) CHARACTER SET latin1 NOT NULL,
   `calle` varchar(20) CHARACTER SET latin1 NOT NULL,
   `numExt` int(5) NOT NULL,
-  `numInt` varchar(3) COLLATE utf8_bin DEFAULT NULL,
+  `numInt` varchar(3) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
   `colonia` varchar(30) CHARACTER SET latin1 NOT NULL,
   `ciudad` varchar(30) CHARACTER SET latin1 DEFAULT NULL,
   `estado` varchar(30) CHARACTER SET latin1 NOT NULL,
   `telefono` char(10) CHARACTER SET latin1 NOT NULL,
   `celular` char(10) CHARACTER SET latin1 NOT NULL,
   `sueldo` decimal(10,2) NOT NULL,
-  `puesto` varchar(30) COLLATE utf8_bin NOT NULL,
+  `puesto` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `status` char(10) CHARACTER SET latin1 NOT NULL,
   `isUsu` int(11) NOT NULL DEFAULT '0',
-  `usuario` varchar(15) COLLATE utf8_bin NOT NULL,
+  `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `empleados`
@@ -1310,7 +1373,7 @@ INSERT INTO `libros` (`codigo_libro`, `nombre_libro`, `isbn`, `autor`, `editoria
 CREATE TABLE `productos` (
   `codigo_producto` bigint(20) NOT NULL,
   `codigoBarras` bigint(20) NOT NULL,
-  `nombre_producto` varchar(50) COLLATE utf8_bin NOT NULL,
+  `nombre_producto` varchar(50) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `proveedor` bigint(20) NOT NULL,
   `stockActual` int(11) NOT NULL,
   `stockMin` int(11) NOT NULL,
@@ -1318,11 +1381,11 @@ CREATE TABLE `productos` (
   `compra` decimal(10,2) NOT NULL,
   `venta` decimal(10,2) NOT NULL,
   `categoria` bigint(20) NOT NULL,
-  `status` varchar(15) COLLATE utf8_bin NOT NULL,
-  `usuario` varchar(15) COLLATE utf8_bin NOT NULL,
+  `status` varchar(15) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `productos`
@@ -1353,23 +1416,23 @@ INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `
 
 CREATE TABLE `proveedores` (
   `codigo_proveedor` bigint(20) NOT NULL,
-  `nombre_proveedor` varchar(50) COLLATE utf8_spanish_ci NOT NULL,
-  `contacto` varchar(50) COLLATE utf8_spanish_ci NOT NULL,
-  `calle` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
+  `nombre_proveedor` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `contacto` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `calle` varchar(30) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `num_ext` int(5) NOT NULL,
-  `num_int` varchar(5) COLLATE utf8_spanish_ci DEFAULT NULL,
-  `colonia` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
-  `ciudad` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
-  `estado` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
-  `telefono` varchar(10) COLLATE utf8_spanish_ci DEFAULT NULL,
-  `celular` varchar(10) COLLATE utf8_spanish_ci DEFAULT NULL,
-  `email` varchar(40) COLLATE utf8_spanish_ci NOT NULL,
-  `web` varchar(50) COLLATE utf8_spanish_ci NOT NULL,
-  `usuario` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
-  `status` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
+  `num_int` varchar(5) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
+  `colonia` varchar(30) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `ciudad` varchar(30) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `estado` varchar(30) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `telefono` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
+  `celular` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
+  `email` varchar(40) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `web` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `status` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `proveedores`
@@ -1464,7 +1527,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `password`, `tipo_usuario`, `matricula_empleado`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
 (2, 'felipe', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 1, 2, 'DISPONIBLE', '2016-08-25 12:23:00', '2016-09-18 10:08:00'),
-(3, 'felipe123', '$2y$10$Tly.C4gf1k9oCgeYPVpnm.pbXNiiYavgrp4WduTw/cBdmM0QP1EfG', 2, 6, 'DISPONIBLE', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
+(3, 'felipe123', '$2y$10$Tly.C4gf1k9oCgeYPVpnm.pbXNiiYavgrp4WduTw/cBdmM0QP1EfG', 2, 6, 'BLOQUEADO', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
 (4, 'admin1', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 3, 4, 'DISPONIBLE', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (5, 'luigis', '$2y$10$fJ0p5n5qgpbPdDIiabYAau98gmfHSw5U2ONSsqkRPp8h7bZRt79BO', 2, 1, 'DISPONIBLE', '2017-03-26 01:19:00', '2017-03-26 01:19:00');
 
@@ -1676,7 +1739,7 @@ ALTER TABLE `categorias_producto`
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 --
 -- AUTO_INCREMENT de la tabla `deudas`
 --

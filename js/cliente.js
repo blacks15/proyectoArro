@@ -58,9 +58,7 @@ $(document).ready(function(){
 		var buscar = $("#codigoCliente").val(); 
 
 		if (buscar != "") {
-			var parametros = {opc: 'buscarCliente','buscar': buscar };
-
-			var respuesta = global.buscar('cliente',parametros);
+			var respuesta = global.buscar('ControllerCliente','buscar',buscar);
 			if (respuesta.codRetorno == '000') {
 				$.each(respuesta.datos,function(index,value){
 					$("#codigoCliente").val(value.id);
@@ -78,15 +76,18 @@ $(document).ready(function(){
 					$("#colonia").val(value.colonia);
 					$("#ciudad").val(value.ciudad);
 					$("#estado").val(value.estado);
+					$("#status").val(value.status);
 				});
 				
-				$("#buscar").val("");
+				$("#busquedas").hide();
+				$("#busqueda").val(0).prop('selected', 'selected');
 				$("#btnUpdate").prop('disabled',false);
 			}	
 		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
-
+	
+		$("#buscar").val('');
 		$(this).prop('disabled',false);
 	});
 		//BOTÓN REPORTE
@@ -130,7 +131,7 @@ $(document).ready(function(){
 		if (charCode == 13) {
 			$("#apellidoPaterno").focus();
 		} else {
-			global.letars(evt);
+			global.letras(evt);
 		}
 	});
 		//EVENTO KEYUP
@@ -199,8 +200,6 @@ $(document).ready(function(){
 
 		if (charCode == 13) {
 			$("#telefono").focus();
-		} else {
-			global.numerosLetras(evt);
 		}
 	});
 		//EVENTO KEYUP
@@ -384,7 +383,6 @@ $(document).ready(function(){
 			res = localStorage.getItem('cliente');
 				//CONVERTIMOS EL JSON A UN OBJETO
 			resJson = JSON.parse(res);
-			console.log(resJson);
 			numero = resJson[13].split(" ",2);
 			setTimeout(function() {
 				numero = resJson[13].split(" ",2);

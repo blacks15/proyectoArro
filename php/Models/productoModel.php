@@ -91,13 +91,14 @@ class ProductoModel {
 					//CREAMOS LA LISTA DE PAGINACIÓN
 				if ($stm->numFilas[0] > 0) {
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
+					$retorno->lista = $lista;
 				} else {
-					$lista = "";
+					$retorno->CodRetorno = $stm->codRetorno[0];
+					$retorno->Mensaje = $stm->Mensaje[0];
 				}
 					//ASIGNAMOS DATOS AL RETORNO
 				$retorno->CodRetorno = $stm->codRetorno[0];
 				$retorno->Productos = $productos;
-				$retorno->lista = $lista;
 			} else {
 				$retorno->CodRetorno = $stm->codRetorno[0];
 				$retorno->Mensaje = $stm->Mensaje[0];

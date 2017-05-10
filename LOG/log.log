@@ -1,0 +1,132 @@
+2017-05-09 21:52:59 [text] Entro metodo login
+2017-05-09 21:52:59 [text] Entro metodo loginM
+2017-05-09 21:52:59 [text] Entro metodo SQL!
+2017-05-09 21:52:59 [text] trama: UPDATE usuarios SET status = 'BLOQUEADO' WHERE nombre_usuario = 'felipe'
+2017-05-09 21:52:59 [text] Login Codigo de Retorno 002
+2017-05-09 21:57:10 [text] Entro metodo login
+2017-05-09 21:57:10 [text] Entro metodo loginM
+2017-05-09 21:57:10 [text] Entro metodo SQL!
+2017-05-09 21:57:10 [text] trama: SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:10 [text] Entro metodo SQL!
+2017-05-09 21:57:10 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:10 [text] Login Codigo de Retorno 002
+2017-05-09 21:57:13 [text] Entro metodo login
+2017-05-09 21:57:13 [text] Entro metodo loginM
+2017-05-09 21:57:13 [text] Entro metodo SQL!
+2017-05-09 21:57:13 [text] trama: SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:13 [text] Entro metodo SQL!
+2017-05-09 21:57:13 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:13 [text] Login Codigo de Retorno 002
+2017-05-09 21:57:15 [text] Entro metodo login
+2017-05-09 21:57:15 [text] Entro metodo loginM
+2017-05-09 21:57:15 [text] Entro metodo SQL!
+2017-05-09 21:57:15 [text] trama: SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:15 [text] Entro metodo SQL!
+2017-05-09 21:57:15 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:15 [text] Login Codigo de Retorno 002
+2017-05-09 21:57:17 [text] Entro metodo login
+2017-05-09 21:57:17 [text] Entro metodo loginM
+2017-05-09 21:57:17 [text] Entro metodo SQL!
+2017-05-09 21:57:17 [text] trama: SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:17 [text] Entro metodo SQL!
+2017-05-09 21:57:17 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:57:17 [text] Login Codigo de Retorno 002
+2017-05-09 21:58:17 [text] Entro metodo login
+2017-05-09 21:58:17 [text] Entro metodo loginM
+2017-05-09 21:58:17 [text] Entro metodo SQL!
+2017-05-09 21:58:17 [text] trama: SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:58:17 [text] Entro metodo SQL!
+2017-05-09 21:58:17 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:58:17 [text] Login Codigo de Retorno 002
+2017-05-09 21:59:56 [text] Entro metodo login
+2017-05-09 21:59:56 [text] Entro metodo loginM
+2017-05-09 21:59:57 [text] Entro metodo SQL!
+2017-05-09 21:59:57 [text] trama: UPDATE usuarios SET status = 'BLOQUEADO' WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:59:56 [text] Login Codigo de Retorno 002
+2017-05-09 21:59:59 [text] Entro metodo login
+2017-05-09 21:59:59 [text] Entro metodo loginM
+2017-05-09 21:59:59 [text] Entro metodo SQL!
+2017-05-09 21:59:59 [text] trama: UPDATE usuarios SET status = 'BLOQUEADO' WHERE nombre_usuario = 'felipe123'
+2017-05-09 21:59:59 [text] Login Codigo de Retorno 002
+2017-05-09 22:00:04 [text] Entro metodo login
+2017-05-09 22:00:04 [text] Entro metodo loginM
+2017-05-09 22:00:04 [text] Entro metodo SQL!
+2017-05-09 22:00:04 [text] trama: SELECT nombre_usuario FROM  usuarios WHERE nombre_usuario = 'felipe'
+2017-05-09 22:00:04 [text] Entro metodo SQL!
+2017-05-09 22:00:04 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe'
+2017-05-09 22:00:04 [text] Login Codigo de Retorno 000
+2017-05-09 22:00:07 [text] Entro metodo buscarClientes!
+2017-05-09 22:00:07 [text] trama: CALL spConsultaClientes('0','0','5',@CodRetorno,@msg,@numFilas)
+2017-05-09 22:00:07 [text] codRetorno SP: 000
+2017-05-09 22:00:07 [text] Cliente CodRetorno: 000
+2017-05-09 22:04:26 [text] Entro metodo logOut
+2017-05-09 22:04:26 [text] LogOut CodRetorno: 003
+2017-05-09 22:04:44 [text] Entro metodo login
+2017-05-09 22:04:44 [text] Entro metodo loginM
+2017-05-09 22:04:44 [text] Entro metodo SQL!
+2017-05-09 22:04:44 [text] trama: SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:04:44 [text] Entro metodo SQL!
+2017-05-09 22:04:44 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:04:44 [text] Login Codigo de Retorno 002
+2017-05-09 22:05:02 [text] Entro metodo login
+2017-05-09 22:05:02 [text] Entro metodo loginM
+2017-05-09 22:05:02 [text] Entro metodo SQL!
+2017-05-09 22:05:02 [text] trama: SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:02 [text] Entro metodo SQL!
+2017-05-09 22:05:02 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:02 [text] Login Codigo de Retorno 002
+2017-05-09 22:05:18 [text] Entro metodo login
+2017-05-09 22:05:18 [text] Entro metodo loginM
+2017-05-09 22:05:18 [text] Entro metodo SQL!
+2017-05-09 22:05:18 [text] trama: SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:18 [text] Entro metodo SQL!
+2017-05-09 22:05:18 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:18 [text] Login Codigo de Retorno 002
+2017-05-09 22:05:32 [text] Entro metodo login
+2017-05-09 22:05:32 [text] Entro metodo loginM
+2017-05-09 22:05:32 [text] Entro metodo SQL!
+2017-05-09 22:05:32 [text] trama: SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:32 [text] Entro metodo SQL!
+2017-05-09 22:05:32 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:32 [text] Login Codigo de Retorno 002
+2017-05-09 22:05:59 [text] Entro metodo login
+2017-05-09 22:05:59 [text] Entro metodo loginM
+2017-05-09 22:05:59 [text] Entro metodo SQL!
+2017-05-09 22:05:59 [text] trama: UPDATE usuarios SET status = 'BLOQUEADO' WHERE nombre_usuario = 'felipe123'
+2017-05-09 22:05:59 [text] Login Codigo de Retorno 002
+2017-05-09 22:06:05 [text] Entro metodo login
+2017-05-09 22:06:05 [text] Entro metodo loginM
+2017-05-09 22:06:05 [text] Entro metodo SQL!
+2017-05-09 22:06:05 [text] trama: SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = 'felipe'
+2017-05-09 22:06:05 [text] Entro metodo SQL!
+2017-05-09 22:06:05 [text] trama: SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
+					FROM usuarios WHERE nombre_usuario = 'felipe'
+2017-05-09 22:06:05 [text] Login Codigo de Retorno 000
+2017-05-09 22:06:07 [text] Entro metodo buscarClientes!
+2017-05-09 22:06:07 [text] trama: CALL spConsultaClientes('0','0','5',@CodRetorno,@msg,@numFilas)
+2017-05-09 22:06:07 [text] codRetorno SP: 000
+2017-05-09 22:06:07 [text] Cliente CodRetorno: 000
+2017-05-09 22:10:01 [text] Entro metodo buscarClientes!
+2017-05-09 22:10:01 [text] trama: CALL spConsultaClientes('0','0','5',@CodRetorno,@msg,@numFilas)
+2017-05-09 22:10:01 [text] codRetorno SP: 000
+2017-05-09 22:10:01 [text] Cliente CodRetorno: 000
+2017-05-09 22:10:15 [text] Entro metodo buscarClientes!
+2017-05-09 22:10:15 [text] trama: CALL spConsultaClientes('0','0','5',@CodRetorno,@msg,@numFilas)
+2017-05-09 22:10:15 [text] codRetorno SP: 000
+2017-05-09 22:10:15 [text] Cliente CodRetorno: 000
+2017-05-09 22:13:58 [text] Entro metodo buscarClientes!
+2017-05-09 22:13:58 [text] trama: CALL spConsultaClientes('0','0','5',@CodRetorno,@msg,@numFilas)
+2017-05-09 22:13:58 [text] codRetorno SP: 000
+2017-05-09 22:13:58 [text] Cliente CodRetorno: 000
+2017-05-09 22:14:37 [text] Entro metodo logOut
+2017-05-09 22:14:37 [text] LogOut CodRetorno: 003

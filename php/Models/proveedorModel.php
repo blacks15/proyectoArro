@@ -79,19 +79,17 @@ class ProveedorModel {
 				}
 					//VALIDAMOS EL NÚMERO DE FILAS
 				if ($stm->numFilas[0] == 0) {
-					$retorno->CodRetorno = "001";
-					$retorno->Mensaje = 'No Hay Datos Para Mostrar';
+					$retorno->CodRetorno = $stm->codRetorno[0];
+					$retorno->Mensaje = $stm->Mensaje[0];
 				} else {
-						//CREAMOS LA LISTA DE PAGINACIÓN
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
-						//ASIGNAMOS DATOS AL RETORNO
-					$retorno->CodRetorno = "000";
-					$retorno->proveedores = $proveedores;
 					$retorno->lista = $lista;
 				}
+				$retorno->CodRetorno = "000";
+				$retorno->proveedores = $proveedores;
 			} else {
-				$retorno->CodRetorno = "002";
-				$retorno->Mensaje = "Ocurrio Un Error";
+				$retorno->CodRetorno = $stm->codRetorno[0];
+				$retorno->Mensaje = $stm->Mensaje[0];
 			} 
 
 			return $retorno;
