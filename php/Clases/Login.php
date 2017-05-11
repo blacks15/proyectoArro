@@ -3,7 +3,7 @@ require_once('funciones.php');
 require_once('Usuario.php');
 session_start();
 /*
-	Clase: Model de Usuario
+	Clase: Login
 	Autor: Felipe Monzón
 	Fecha: 26-ABR-2017
 */

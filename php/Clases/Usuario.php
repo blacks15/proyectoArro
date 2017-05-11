@@ -9,14 +9,16 @@
 class Usuario {
 	private $clave;
 	private $usuario;
+	private $empleado;
 	private $tipoUsuario;
 	private $status;
 
-	function __construct($clave,$usuario,$tipoUsuario,$status) {
+	function __construct($clave,$usuario,$tipoUsuario,$status,$empleado) {
 		$this->clave = $clave;
 		$this->usuario = $usuario;
 		$this->tipoUsuario = $tipoUsuario;
 		$this->status = $status;
+		$this->empleado = $empleado;
 	}
 		//GETTERS AND SETTERS
 	public function getClave(){
@@ -49,6 +51,14 @@ class Usuario {
 
 	public function setStatus($status){
 		$this->status = $status;
+	}
+
+	public function getEmpleado(){
+		return $this->empleado;
+	}
+
+	public function setEmpleado($empleado){
+		$this->empleado = $empleado;
 	}
 }
 ?>

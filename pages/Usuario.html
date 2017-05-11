@@ -23,7 +23,7 @@
 						<div class="col s8">
 							<input type="text" class="buscar email" name="buscar" id="buscar" placeholder="Buscar">
 						</div>
-						<div class="col s4">
+						<div class="col s3">
 							<button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
 							</button>
 						</div>
@@ -32,7 +32,7 @@
 			</table>
 			<table class="table col s12">
 				<tr>
-					<div class="row ">
+					<div class="row">
 						<div class="col s5">
 							<label>Código Empleado</label>
 							<input type="text" id="codigoEmpleado" name="codigoEmpleado" readonly="true">
@@ -43,15 +43,15 @@
 									<input type="hidden" name="isUsu" id="isUsu">
 								</div>
 								<div class="col s4" style="margin-top: 15px;">
-									<button type="button" id="btnCanNom" class="btn-floating red waves-effect waves-light"><i class="material-icons">close</i></button>
+									<button type="button" id="btnCanNom" class="btn-floating red waves-effect waves-light" style="display: none"><i class="material-icons">close</i></button>
 								</div>
 							</div>
 							<label>Tipo</label>
 							<select class="browser-default" id="tipo" name="tipo" disabled="true">
 								<option value="0">SELECCIONE</option>
 								<option value="1">ADMINISTRADOR</option>
-								<option value="2">Cajero</option>
-								<option value="3">Vendedor</option>
+								<option value="2">CAJERO</option>
+								<option value="3">VENDEDOR</option>
 							</select>
 						</div>
 						<div class="col s4">
@@ -61,8 +61,8 @@
 									<input type="text" class="email" id="nombreUsuario" name="nombreUsuario" maxlength="15" disabled="true">
 								</div>
 								<div class="col s4" style="margin-top: 15px;">
-									<button type="button" id="disp" class="btn-floating blue waves-effect waves-light"><i class="material-icons">done</i></button>
-									<button type="button" id="noDisp" class="btn-floating red waves-effect waves-light"><i class="material-icons">close</i></button>
+									<button type="button" id="disp" class="btn-floating blue waves-effect waves-light" style="display: none"><i class="material-icons">done</i></button>
+									<button type="button" id="noDisp" class="btn-floating red waves-effect waves-light" style="display: none"><i class="material-icons">close</i></button>
 								</div>
 							</div>
 							<label for="contrasenia">Contraeña </label>
@@ -71,7 +71,7 @@
 							<input type="password" id="repContrasenia" name="repContrasenia" maxlength="20" disabled="true">
 						</div>
 						<div class="col s2" align="center">
-							<button type="button" class="icon-save btn card-panel blue darken-4 waves-effect waves-light" id="btnSave"></button><br><br>
+							<button type="button" class="icon-save btn card-panel blue darken-4 waves-effect waves-light" id="btnSave" disabled="true"></button><br><br>
 							<button type="button" class="icon-borrar btn red" id="btnDelete" disabled="true"></button>
 						</div>
 					</div>

@@ -131,7 +131,6 @@
 			$codigoLibro = trim($_POST['codigo']);
 			$tipoBusqueda = trim($_POST['tipoBusqueda']);
 			$sql = new LibroModel();
-
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',

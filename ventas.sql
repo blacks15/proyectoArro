@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 09-05-2017 a las 21:47:48
+-- Tiempo de generación: 10-05-2017 a las 21:29:58
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -88,10 +88,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` B
 			 	SELECT COUNT(*) INTO numFilas FROM clientes;
 
 				SELECT matricula,rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
-					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt,' ',colonia) AS direccion,
+					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt) AS direccion,
 					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos
 				FROM clientes
-				WHERE matricula != 1
 				ORDER BY apellidos ASC
 				LIMIT pInicio, pTamanio;
 				SET msg = 'SP Ejecutado Correctamente';
@@ -105,10 +104,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` B
 				SELECT COUNT(*) INTO numFilas FROM clientes WHERE matricula = pCodigo;
 
 				SELECT matricula,rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
-					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt,' ',colonia) AS direccion,
+					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt) AS direccion,
 					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos
 				FROM clientes
-				WHERE matricula = pCodigo AND matricula != 1
+				WHERE matricula = pCodigo
 				ORDER BY apellidos ASC;
 				SET msg = 'SP Ejecutado Correctamente';
 				SET CodRetorno = '000'; 
@@ -676,7 +675,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BI
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIGINT, IN `pNombreEmpleado` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pSueldo` DECIMAL, IN `pPuesto` VARCHAR(30), IN `pStatus` VARCHAR(10), IN `pISUsu` INT, IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIGINT, IN `pNombreEmpleado` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pSueldo` DECIMAL, IN `pPuesto` VARCHAR(30), IN `pUsuario` VARCHAR(15), IN `pISUsu` INT, IN `pStatus` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
@@ -721,9 +720,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIG
 		IF NOT EXISTS(SELECT * FROM empleados WHERE nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
 				INSERT INTO empleados(nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,colonia,ciudad,estado,
-					telefono,celular,sueldo,puesto,status,isUsu,usuario,fechaCreacion,fechaModificacion)
+					telefono,celular,sueldo,puesto,status,usuario,fechaCreacion,fechaModificacion)
 				VALUES (pNombreEmpleado, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
-					pCelular, pSueldo, pPuesto, pStatus, pISUsu, pUsuario,NOW(), NOW() );
+					pCelular, pSueldo, pPuesto, pStatus, pUsuario,NOW(), NOW() );
 				SET CodRetorno = '000';
 				SET msg = 'Empleado Guardado con Exito';
 			COMMIT;
@@ -761,7 +760,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT
 			IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
 					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,fechaModificacion = NOW()
-					WHERE codigo_libro = pCodigo;
+					 WHERE codigo_libro = pCodigo;
 					SET CodRetorno = '000';
 					SET msg = 'Libro Actualizado con Exito';
 				COMMIT; 
@@ -772,10 +771,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT
 			END IF;
 		ELSE
 			SET CodRetorno = '001';
-			SET msg = 'El Libro no Éxiste';
+			SET msg = 'El Libro no Existe';
 		END IF;
 	ELSE 
-		IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
+		IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci) THEN
 			START TRANSACTION;
 				INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,usuario,status,fechaCreacion,fechaModificacion)
 				VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pUsuario, pStatus,NOW(), NOW() );
@@ -784,7 +783,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT
 			COMMIT;
 		ELSE
 			SET CodRetorno = '001';
-			SET msg = 'El Libro ya Éxiste';
+			SET msg = 'El Libro ya Existe';
 			ROLLBACK;
 		END IF; 
 	END IF; 
@@ -820,30 +819,30 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProducto` (IN `pCodigo` BIG
 						categoria = pCategoria, status = pStatus, fechaModificacion = NOW()
 					WHERE codigo_producto = pCodigo;
 					SET CodRetorno = '000';
-					SET msg = 'Producto Actualizado con Exito';
+					SET msg = 'Proveedor Actualizado con Exito';
 				COMMIT; 
 			ELSE
 				SET CodRetorno = '001';
-				SET msg = 'El Nombre del Producto ya fue Registrado';
+				SET msg = 'El Nombre del Proveedor ya fue Registrado';
 				ROLLBACK;
 			END IF;
 		ELSE
 			SET CodRetorno = '001';
-			SET msg = 'El Producto no Éxiste';
+			SET msg = 'El Proveedor no Éxiste';
 		END IF;
 	ELSE 
-		IF NOT EXISTS(SELECT * FROM productos WHERE nombre_producto = CONVERT(pNombreProducto USING utf8) COLLATE utf8_general_ci ) THEN
+		IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
-				INSERT INTO productos(nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,
+				INSERT INTO proveedores(nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,
 					venta,categoria,status,usuario,fechaCreacion,fechaModificacion)
 				VALUES(pNombreProducto, pCodigoBarras, pProveedor, pStActual, pStMin, pStMax, pCompra, pVenta, pCategoria,
 					pStatus, pUsuario,NOW(), NOW() );
 				SET CodRetorno = '000';
-				SET msg = 'Producto Guardado con Exito';
+				SET msg = 'Proveedor Guardado con Exito';
 			COMMIT;
 		ELSE
 			SET CodRetorno = '001';
-			SET msg = 'El Producto ya Éxiste';
+			SET msg = 'El Proveedor ya Éxiste';
 			ROLLBACK;
 		END IF; 
 	END IF; 
@@ -872,7 +871,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BI
 		
 	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
 		IF EXISTS(SELECT * FROM proveedores WHERE codigo_proveedor = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM proveedores WHERE codigo_proveedor != pCodigo AND nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
+			IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
 					UPDATE proveedores SET nombre_proveedor = pNombreProveedor, contacto = pContacto, calle = pCalle,
 						num_ext = pNumExt, num_int = pNumInt, colonia = pColonia, ciudad = pCiudad, estado = pEstado,
@@ -948,6 +947,64 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, I
 	END IF; 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARCHAR(10), IN `pUsuario` VARCHAR(10), OUT `codRetono` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+
+	DECLARE isAdmin INT;
+	DECLARE vStatus VARCHAR(15);
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (pNombre = NULL && pUsuario = NULL) THEN
+		SET codRetono = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE		
+		IF EXISTS (SELECT * FROM usuarios WHERE nombre_usuario = pNombre) THEN
+			SELECT tipo_usuario INTO isAdmin FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci ;
+
+			IF (isAdmin != 1) THEN
+				SELECT status INTO vStatus FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+				IF (vStatus = 'DISPONIBLE') THEN
+					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,
+						CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
+					FROM usuarios u
+					INNER JOIN empleados e ON e.matricula = u.matricula_empleado
+					WHERE u.status = 'DISPONIBLE' AND nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+				ELSE 
+					SET codRetono = '001';
+					SET msg = 'Usuario Bloqueado';
+				END IF;
+			ELSE
+				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,
+					CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
+				FROM usuarios u
+				INNER JOIN empleados e ON e.matricula = u.matricula_empleado
+				WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+			END IF;
+		ELSE 
+			SET codRetono = '001';
+			SET msg = 'El Usuario no Existe';
+		END IF;
+	END IF;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -995,8 +1052,8 @@ INSERT INTO `autores` (`codigo_autor`, `nombre_autor`, `usuario`, `status`, `fec
 
 CREATE TABLE `categorias_producto` (
   `codigo_catpro` bigint(20) NOT NULL,
-  `nombre_categoria` varchar(20) COLLATE utf8_spanish_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+  `nombre_categoria` varchar(20) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `categorias_producto`
@@ -1005,8 +1062,8 @@ CREATE TABLE `categorias_producto` (
 INSERT INTO `categorias_producto` (`codigo_catpro`, `nombre_categoria`) VALUES
 (1, 'LIBROS'),
 (2, 'DIDACTICOS'),
-(3, 'OTROS'),
-(4, 'COMIC/MANGA');
+(3, 'COMIC/MANGA'),
+(4, 'OTROS');
 
 -- --------------------------------------------------------
 
@@ -1022,11 +1079,11 @@ CREATE TABLE `clientes` (
   `apellido_paterno` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `apellido_materno` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `calle` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `numExt` int(11) NOT NULL,
+  `numExt` char(5) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `numInt` varchar(5) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
-  `colonia` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `colonia` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `ciudad` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `estado` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `estado` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `telefono` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `celular` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `email` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
@@ -1041,17 +1098,16 @@ CREATE TABLE `clientes` (
 --
 
 INSERT INTO `clientes` (`matricula`, `rfc`, `empresa`, `nombre_contacto`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'xxxxxxxxxxxxx', 'cliente general', 'cliente general', '', '', '', 0, '', '', '', '', '0', '0', 'null@null.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(2, '', 'bookvillage', 'luis', 'soto', 'de', 'juarez', 3312, 'A', 'las vegas', 'teic', 'BAJA', '7105585', '6678954623', 'luis@book.com', 'BAJA', '', '0000-00-00 00:00:00', '2016-09-24 06:38:00'),
-(3, 'lova750824547', 'papeleria del sol', 'juan', 'lopez', 'vargas', 'obregon', 5324, '5', 'centro', 'culiacan', 'sinaloa', '6675481875', '6677895471', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 20:01:07'),
-(5, 'peos881205785', 'librerÃ­a del sol', 'luis', 'perez', 'oso', 'lejana', 3312, 's', 'de los pobres', 'culiacan', 'sinaloa', '5558974152', '5557819348', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 19:44:00'),
-(6, 'mom900527538', 'libreria caracol', 'jorge', 'mendoza', 'lopez', 'muy lejana', 4040, '', 'mazatlan', 'mazatlan', 'sinaloa', '6677594812', '6673574819', 'caracol@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 19:00:37'),
-(7, 'oslo780627456', 'libreria mexico', 'rosa', 'osuna', 'lopez', 'grande', 1515, '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 20:00:36'),
-(8, 'meme850912789', 'libreria Buen libro', 'ruben Alfonso', 'mendoza', 'mendoza', 'perrona', 152, '4', 'las vegas', 'tepito', 'CDMX', '5555507862', '6675084532', 'tepito@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 20:01:52'),
-(9, '', 'librerÃ­a del sol', 'juan', 'rojo', 'lugo', 'camarÃ³n', 457, '5', 'las palmas', 'mazatlan', 'sinaloa', '7154812', '2147483647', 'libreriadelsol@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:25:00', '2016-08-29 09:25:00'),
-(10, 'lolo820422789', 'librerÃ­a del sol', 'juan', 'lopez', 'lopez', 'camarones', 452, '6', 'las palmas', 'mazatlan', 'sinalo', '6267481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2017-05-09 19:48:59'),
-(11, 'CUPU800825569', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-02-07 03:28:00'),
-(12, 'lora950412789', 'casa de cultura', 'helen marie', 'lopes', 'rosado', 'largisima', 4825, '5', 'los asaltantes', 'juarez', 'cdmx', '6678952415', '6667523526', 'hele_12@gmail.com', 'DISPONIBLE', 'felipe', '2017-05-09 20:09:12', '2017-05-09 20:10:05');
+(1, 'xxxxxxxxxxxxx', 'cliente general', 'cliente general', '', '', '', '0', '', '', '', '', '0', '0', 'null@null.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(2, '', 'bookvillage', 'luis', 'soto', 'de', 'juarez', '3312', 'A', 'las vegas', 'teic', 'BAJA', '7105585', '6678954623', 'luis@book.com', 'BAJA', '', '0000-00-00 00:00:00', '2016-09-24 06:38:00'),
+(3, 'CUPU800825569', 'papeleria del sol', 'juan', 'lopez', 'vargas', 'obregon', '5324', '5', 'centro', 'culiacan', 'sinaloa', '6675481875', '6677895471', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-03-26 03:32:00'),
+(5, '', 'librerÃ­a del sol', 'luis', 'perez', 'oso', 'lejana', '22', '', 'de', 'culiacan', 'sinaloa', '2222', '222', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(6, 'momf900527538', 'libreria caracol', 'jorge', 'mendoza', 'lopez', 'muy lejana', '4040', 'C', 'mazatlan', 'mazatlan', 'sinaloa', '6677584796', '6679154835', 'caracol@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 12:51:26'),
+(7, '', 'librerÃ­a mÃ©xico', 'rosa', 'osuna', 'lopez', 'grande', '1515', '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(8, '1vwd1d15s3sds', 'libreria Buen libro', 'ruben Alfonso', 'mendoza', 'mendoza', 'perrona', '152', '4', 'las vegas', 'tepito', 'CDMX', '5507862', '6675084532', 'tepito@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2016-08-31 09:47:00'),
+(9, '', 'librerÃ­a del sol', 'juan', 'rojo', 'lugo', 'camarÃ³n', '457', '5', 'las palmas', 'mazatlan', 'sinaloa', '7154812', '2147483647', 'libreriadelsol@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:25:00', '2016-08-29 09:25:00'),
+(10, '', 'librerÃ­a del sol', 'juan', 'lopez', 'lopez', 'camarones', '452', '6', 'las palmas', 'mazatlan', 'sinalo', '7481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2016-08-29 09:29:00'),
+(11, 'CUPU800825569', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', '4818', 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-02-07 03:28:00');
 
 -- --------------------------------------------------------
 
@@ -1251,7 +1307,7 @@ CREATE TABLE `empleados` (
   `estado` varchar(30) CHARACTER SET latin1 NOT NULL,
   `telefono` char(10) CHARACTER SET latin1 NOT NULL,
   `celular` char(10) CHARACTER SET latin1 NOT NULL,
-  `sueldo` decimal(10,2) NOT NULL,
+  `sueldo` char(10) CHARACTER SET latin1 NOT NULL,
   `puesto` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `status` char(10) CHARACTER SET latin1 NOT NULL,
   `isUsu` int(11) NOT NULL DEFAULT '0',
@@ -1265,13 +1321,12 @@ CREATE TABLE `empleados` (
 --
 
 INSERT INTO `empleados` (`matricula`, `nombre_empleado`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `sueldo`, `puesto`, `status`, `isUsu`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'juan', 'martinez', 'lopez', 'muy larga', 4815, 'B', 'la mas peligrosa 2', 'juarez', 'sinaloa', '7105452', '6673031398', '1100.00', 'cajero', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2017-04-10 07:22:00'),
-(2, 'felipe', 'monzon', 'mendoza', 'siempre viva', 1234, '5', 'alegre', 'springfield', 'california', '7106788', '6671234567', '4957.00', 'capturista', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2016-09-01 10:18:00'),
-(3, 'luis', 'oso', 'oso', 'quinta av.', 4215, '', 'diaz ordaz', 'culiacan', 'sinaloa', '7154824', '6672051684', '1100.00', '', 'BAJA', 0, 'felipe', '0000-00-00 00:00:00', '2016-09-16 09:33:00'),
-(4, 'josÃ©', 'lopez', 'lopez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinalos', '', '6673031398', '400.00', 'vendedor', 'DISPONIBLE', 1, 'felipe', '2016-08-27 03:19:00', '2016-08-27 03:19:00'),
-(5, 'juan', 'perez', 'lopez', 'corta', 4452, 'A', 'peligrosa', 'culiacan', 'sinaloa', '7106788', '6673031398', '400.00', 'vendedor', 'DISPONIBLE', 0, 'felipe', '2016-09-01 10:05:00', '2016-09-01 10:05:00'),
-(6, 'felipe de jesus', 'monzon', 'mendoza', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677606060', '6673031398', '0.00', 'cajero', 'DISPONIBLE', 1, 'felipe', '2017-01-19 05:09:00', '2017-01-21 12:24:00'),
-(7, 'paola', 'aispuro', 'mendoza', 'sin nombre', 4815, '15', 'el ranchillo', 'culiacan', 'sinaloa', '667605556', '6673021548', '200.00', 'cajera', 'DISPONIBLE', 0, 'felipe', '2017-05-07 21:59:20', '2017-05-07 21:59:20');
+(1, 'juan', 'martinez', 'lopez', 'muy larga', 4815, 'B', 'la mas peligrosa 2', 'juarez', 'sinaloa', '7105452', '6673031398', '1100', 'cajero', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2017-04-10 07:22:00'),
+(2, 'felipe', 'monzon', 'mendoza', 'siempre viva', 1234, '5', 'alegre', 'springfield', 'california', '7106788', '6671234567', '4957', 'capturista', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2016-09-01 10:18:00'),
+(3, 'luis', 'oso', 'oso', 'quinta av.', 4215, '', 'diaz ordaz', 'culiacan', 'sinaloa', '7154824', '6672051684', '1100', '', 'BAJA', 0, 'felipe', '0000-00-00 00:00:00', '2016-09-16 09:33:00'),
+(4, 'jose', 'lopez', 'lopez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinalos', '6677106788', '6673031398', '400', 'vendedor', 'DISPONIBLE', 1, 'felipe', '2016-08-27 03:19:00', '2017-05-08 18:05:48'),
+(5, 'juan', 'perez', 'lopez', 'corta', 4452, 'A', 'peligrosa', 'culiacan', 'sinaloa', '7106788', '6673031398', '400', 'vendedor', 'DISPONIBLE', 0, 'felipe', '2016-09-01 10:05:00', '2016-09-01 10:05:00'),
+(6, 'felipe de jesus', 'monzon', 'mendoza', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677606060', '6673031398', '$3150.50', 'cajero', 'DISPONIBLE', 1, 'felipe', '2017-01-19 05:09:00', '2017-01-21 12:24:00');
 
 -- --------------------------------------------------------
 
@@ -1308,11 +1363,11 @@ INSERT INTO `folios` (`id`, `nombre`, `anio`, `consecutivo`) VALUES
 
 CREATE TABLE `generos` (
   `codigo_genero` bigint(20) NOT NULL,
-  `nombre_genero` varchar(50) COLLATE utf8_spanish_ci NOT NULL,
+  `nombre_genero` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `usuario` bigint(20) NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `generos`
@@ -1396,17 +1451,16 @@ INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `
 (4, 2, 'huevo chico dinosaurio', 3, 0, 1, 10, '20.00', '25.50', 3, 'AGOTADO', '', '0000-00-00 00:00:00', '2017-01-17 06:47:00'),
 (5, 3, 'animales magicos', 5, 0, 1, 0, '30.00', '50.00', 0, 'AGOTADO', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (6, 4, 'bolsa emoji', 3, 0, 1, 30, '5.00', '10.00', 3, 'AGOTADO', '', '0000-00-00 00:00:00', '2017-01-17 06:48:00'),
-(9, 9786074009811, 'ochenta melodÃ­as de pasiÃ³n en amarillo', 1, 5, 1, 10, '180.50', '220.00', 1, 'SOBRESTOCK', 'felipe', '2016-09-02 11:00:00', '2017-03-15 05:23:00'),
+(9, 9786074009811, 'ochenta melodias de pasion en amarillo', 1, 5, 1, 10, '185.00', '250.00', 1, 'DISPONIBLE', 'felipe', '2016-09-02 11:00:00', '2017-05-04 11:01:33'),
 (10, 5, 'el principito', 1, 0, 1, 4, '15.00', '25.00', 1, 'AGOTADO', 'felipe', '2016-09-03 07:31:00', '2016-09-03 07:31:00'),
-(11, 6, 'ochenta melodias de pasiÃ³n en azul', 1, 14, 1, 10, '100.00', '180.00', 1, 'SOBRESTOCK', 'felipe', '2017-01-17 04:54:00', '2017-03-15 05:24:00'),
-(12, 7, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 'felipe', '2017-01-17 04:55:00', '2017-03-16 04:01:00'),
-(13, 8, 'las aventuras de tom sayer', 2, 0, 1, 5, '30.00', '60.00', 1, 'AGOTADO', 'felipe', '2017-01-17 04:57:00', '2017-01-17 06:49:00'),
+(11, 6, 'ochenta melodias de pasion en azul', 1, 14, 1, 10, '100.00', '180.00', 1, 'SOBRESTOCK', 'felipe', '2017-01-17 04:54:00', '2017-03-15 05:24:00'),
+(12, 6, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 'felipe', '2017-01-17 04:55:00', '2017-03-16 04:01:00'),
+(13, 7, 'las aventuras de tom sayer', 2, 0, 1, 5, '30.00', '60.00', 1, 'AGOTADO', 'felipe', '2017-01-17 04:57:00', '2017-01-17 06:49:00'),
 (14, 9788478887590, 'harry potter y la piedra filosofal', 4, 1, 1, 15, '100.00', '150.00', 1, 'DISPONIBLE', 'felipe', '2017-03-08 05:48:00', '2017-03-13 03:39:00'),
 (15, 9788478887613, 'harry potter y el prisionero de azkaban', 4, 5, 1, 10, '200.00', '300.00', 1, 'DISPONIBLE', 'felipe', '2017-03-12 10:26:00', '2017-03-13 03:40:00'),
 (16, 9788478887606, 'harry potter y la camara de los secretos', 4, 4, 1, 10, '150.00', '300.00', 1, 'DISPONIBLE', 'felipe', '2017-03-12 10:27:00', '2017-03-13 03:40:00'),
 (17, 9788478887446, 'harry potter y la orden del fÃ©nix', 4, 15, 1, 10, '100.00', '157.00', 1, 'SOBRESTOCK', 'felipe', '2017-04-01 01:29:00', '2017-04-01 01:29:00'),
-(18, 9781401236960, 'maid sama tomo 2', 5, 15, 1, 10, '80.00', '99.00', 1, 'SOBRESTOCK', 'felipe', '2017-04-09 12:05:00', '2017-05-07 19:39:13'),
-(19, 9781401236961, 'maid sama tomo 1', 5, 6, 1, 5, '70.00', '89.00', 2, 'SOBRESTOCK', 'felipe', '2017-05-03 21:44:08', '2017-05-03 21:44:08');
+(18, 9781401236960, 'maid sama tomo 2', 5, 15, 1, 10, '80.00', '99.00', 3, 'SOBRESTOCK', 'felipe', '2017-04-09 12:05:00', '2017-05-05 15:23:27');
 
 -- --------------------------------------------------------
 
@@ -1440,10 +1494,11 @@ CREATE TABLE `proveedores` (
 
 INSERT INTO `proveedores` (`codigo_proveedor`, `nombre_proveedor`, `contacto`, `calle`, `num_ext`, `num_int`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `web`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
 (1, 'Grupo Editorial Tomo S.A de C.V', 'pamela silva', 'NicolÃ¡s San Juan', 1043, '5', 'del valle', 'benito juarez', 'CDMX', '5555750186', '6673031398', 'pamelas@grupotomo.com.mx', 'www.grupotomo.com.mx', '1', 'DISPONIBLE', '2016-08-22 10:50:00', '2017-01-16 05:57:00'),
-(2, 'librerÃ­a mÃ©xico', 'juan lopez sanchez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'juan_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-05-02 20:53:51'),
+(2, 'librerÃ­a mÃ©xico', 'luis lopez sanchez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'luis_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-01-16 05:55:00'),
 (3, 'materiales didacticos roggers', 'maria lopez', 'av obregon', 7852, '52', 'centro', 'tlaquepalque', 'guadalajara', '5555750186', '6674568266', 'malo@hotmail.com', '', 'felipe', 'DISPONIBLE', '2017-01-17 05:36:00', '2017-01-17 05:36:00'),
-(4, 'editorial OcÃ©ano de MÃ©xico SA de CV', 'lorena montes', 'eugenio sue', 5500, '0', 'miguel hidalgo', 'polanco chapultepec', 'CDMX', '5591785100', '', 'lorena.montes@editorialoceano.com', 'www.oceano.com.mx', 'felipe', 'DISPONIBLE', '2017-03-13 03:37:00', '2017-03-13 03:37:00'),
-(5, 'grupo editorial panini', 'juan panini', 'benito juarez', 1245, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-05-02 20:37:12');
+(4, 'editorial Oceano de Mexico SA de CV', 'lorena montes', 'eugenio sue', 5500, '0', 'miguel hidalgo', 'polanco chapultepec', 'CDMX', '5591785100', '', 'lorena.montes@editorialoceano.com', 'www.oceano.com.mx', 'felipe', 'DISPONIBLE', '2017-03-13 03:37:00', '2017-03-13 03:37:00'),
+(5, 'grupo editorial panini', 'juan panini', 'benito juarez', 61, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-04-09 12:05:00'),
+(6, 'mas libros s A de C v', 'silvia Rodriguez', 'av siempre viva', 6666, '', 'las vegas', 'springfield', 'chico', '6781457828', '2758152433', 'silvi@maslibros.com', '', 'felipe', 'DISPONIBLE', '2017-05-02 16:53:03', '2017-05-02 16:53:03');
 
 -- --------------------------------------------------------
 
@@ -1492,8 +1547,8 @@ INSERT INTO `retiros` (`codigo_retiro`, `folio`, `fecha`, `empleado`, `cantidad`
 
 CREATE TABLE `tipo_usuarios` (
   `id_tipoUsuario` bigint(20) NOT NULL,
-  `descripcion` varchar(15) COLLATE utf8_spanish_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+  `descripcion` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `tipo_usuarios`
@@ -1512,14 +1567,14 @@ INSERT INTO `tipo_usuarios` (`id_tipoUsuario`, `descripcion`) VALUES
 
 CREATE TABLE `usuarios` (
   `id_usuario` bigint(20) NOT NULL,
-  `nombre_usuario` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
-  `password` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
+  `nombre_usuario` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `password` varchar(100) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `tipo_usuario` bigint(20) NOT NULL,
   `matricula_empleado` bigint(20) NOT NULL,
-  `status` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
+  `status` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `usuarios`
@@ -1527,7 +1582,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `password`, `tipo_usuario`, `matricula_empleado`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
 (2, 'felipe', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 1, 2, 'DISPONIBLE', '2016-08-25 12:23:00', '2016-09-18 10:08:00'),
-(3, 'felipe123', '$2y$10$Tly.C4gf1k9oCgeYPVpnm.pbXNiiYavgrp4WduTw/cBdmM0QP1EfG', 2, 6, 'BLOQUEADO', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
+(3, 'felipe123', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 2, 6, 'DISPONIBLE', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
 (4, 'admin1', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 3, 4, 'DISPONIBLE', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (5, 'luigis', '$2y$10$fJ0p5n5qgpbPdDIiabYAau98gmfHSw5U2ONSsqkRPp8h7bZRt79BO', 2, 1, 'DISPONIBLE', '2017-03-26 01:19:00', '2017-03-26 01:19:00');
 
@@ -1545,11 +1600,11 @@ CREATE TABLE `ventas` (
   `total` decimal(10,2) NOT NULL,
   `isTarjeta` int(11) NOT NULL,
   `folioTarjeta` int(11) DEFAULT NULL,
-  `status` varchar(15) COLLATE utf8_spanish2_ci NOT NULL,
-  `usuario` varchar(15) COLLATE utf8_spanish2_ci NOT NULL,
+  `status` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish2_ci NOT NULL,
+  `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish2_ci NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `ventas`
@@ -1739,7 +1794,7 @@ ALTER TABLE `categorias_producto`
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 --
 -- AUTO_INCREMENT de la tabla `deudas`
 --
@@ -1754,7 +1809,7 @@ ALTER TABLE `editoriales`
 -- AUTO_INCREMENT de la tabla `empleados`
 --
 ALTER TABLE `empleados`
-  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
 -- AUTO_INCREMENT de la tabla `folios`
 --
@@ -1774,12 +1829,12 @@ ALTER TABLE `libros`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `codigo_producto` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `codigo_producto` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
-  MODIFY `codigo_proveedor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `codigo_proveedor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
 -- AUTO_INCREMENT de la tabla `retiros`
 --
