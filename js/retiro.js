@@ -1,67 +1,38 @@
 $(document).ready(function(){
-	global.validaSesion();
+	//global.validaSesion();
 	global.isAdmin();
-	global.cargaFolio('php/retiro.php','recuperaFolio');
 	$("#cantidad").focus(),
 	$("#fecha").val(global.obtenerFechaActual());
 	editarDatos();
+	recuperarFolio();
 ///////////////////////////////////////////////////////////
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
-		global.cargarPagina('pages/Retiro.html');
+		global.cargarPagina('Retiro');
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		$("#btnSave").prop('disabled',true);
-		var cadena = $("#frmAgregarRetiro").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('retiro',parametros);
-		}
-		$("#btnSave").prop('disabled',false);
+		enviarDatos('guardar');
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
-		$("#btnUpdate").prop('disabled',true);
-		var cadena = $("#frmAgregarRetiro").serialize();
-		var parametros = {opc: 'actualizar',cadena };
-		
-		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('retiro',parametros);
-		}	
-		$("#btnUpdate").prop('disabled',false);
+		enviarDatos('guardar');
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnDelete").on('click',function(){
-		$("#btnDelete").prop('disabled',true);
-		var cadena = $("#frmAgregarRetiro").serialize();
-		var parametros = {opc: 'borrar',cadena };
-		
-		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('retiro',parametros);
-		}	
-		$("#btnDelete").prop('disabled',false);
+		enviarDatos('borrar');
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$(this).prop('disabled',true);
 		var buscar = $("#buscar").val(); 
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'buscarRetiro','buscar': buscar };
-
-			var respuesta = global.buscar('retiro',parametros);
+			var respuesta = global.buscar('ControllerMovimientos','buscar',buscar,'');
 			if (respuesta.codRetorno == '000') {
 				//console.log(respuesta);	
 				$("#codigoRetiro").val(respuesta.id);
@@ -77,9 +48,9 @@ $(document).ready(function(){
 			}	
 		} else {
 			$("#buscar").focus();
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
-		$("#btnSearch").prop('disabled',false);
+		$(this).prop('disabled',false);
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
@@ -127,6 +98,28 @@ $(document).ready(function(){
 		/**************************
 		*		  FUNCIONES		  *
 		**************************/
+	function recuperarFolio(){
+		var datos = global.cargaFolio('ControllerMovimientos','recuperaFolio');
+		if (datos.codRetorno = '000') {
+			$("#folio").val(datos.folio);
+			$("#nombreEmpleado").val(datos.nombreEmpleado);
+		}
+		console.log(datos);
+	}
+		//FUNCIÓN PARA ENVIAR DATOS
+	function enviarDatos(opc){
+		$(this).prop('disabled',true);
+		var cadena = $("#frmAgregarRetiro").serialize();
+		var parametros = {opc: opc,cadena };
+
+		if (cadena == "") {
+			global.messajes('Error','!Debe llenar Todos los Campos','warning','','','','');
+		} else {
+			global.envioAjax('ControllerMovimientos',parametros);
+		}
+
+		$(this).prop('disabled',false);
+	}
 		//FUNCIÓN PARA HABILITAR BOTÓN
 	function habilitarBoton(){
 		var id = $("#codigoRetiro").val();

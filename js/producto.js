@@ -3,7 +3,7 @@ $(document).ready(function(){
      *	 OOCULTAR CAMPOS	   *
      **************************/
 	//global.validaSesion();
-	//global.isAdmin();
+	global.isAdmin();
 	$('ul.tabs').tabs();
 	$("#nombreProducto").focus();
 	deshabilitar();

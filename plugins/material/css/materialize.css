@@ -5750,7 +5750,7 @@ input[type=search]:disabled,
 input[type=search][readonly="readonly"],
 textarea.materialize-textarea:disabled,
 textarea.materialize-textarea[readonly="readonly"] {
-  color: rgba(0, 0, 0, 0.26);
+  color: rgba(0, 0, 0, 0.46);
   border-bottom: 1px dotted rgba(0, 0, 0, 0.26);
 }
 
@@ -5780,7 +5780,7 @@ input[type=search]:disabled + label,
 input[type=search][readonly="readonly"] + label,
 textarea.materialize-textarea:disabled + label,
 textarea.materialize-textarea[readonly="readonly"] + label {
-  color: rgba(0, 0, 0, 0.26);
+  color: rgba(0, 0, 0, 0.56);
 }
 
 input:not([type]):focus:not([readonly]),
@@ -6590,7 +6590,7 @@ select {
 }
 
 select:disabled {
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .select-wrapper input.select-dropdown:disabled {

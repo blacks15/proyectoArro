@@ -1,6 +1,9 @@
 $(document).ready(function(){
+	 /**************************
+     *	 LLAMAR FUNCIONES	   *
+     **************************/
 	//global.validaSesion();
-	//global.isAdmin();
+	global.isAdmin();
 	$("#nombreLibro").focus();
 	llenarCombo();
 	actualizarLibro();

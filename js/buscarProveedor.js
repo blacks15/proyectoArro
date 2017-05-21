@@ -3,7 +3,7 @@ $(document).ready(function(){
      *	 OOCULTAR CAMPOS	   *
      **************************/
 	//global.validaSesion();
-	//global.isNotAdminMenu($("#tipoUsuario").val());
+	global.isNotAdminMenu($("#tipoUsuario").val());
 	global.pagination('ControllerProveedor',1,0,'');
 	$("#buscar").focus();
 //////////////////////////////////////////////////////

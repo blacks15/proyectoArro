@@ -46,13 +46,21 @@
 									<button type="button" id="btnCanNom" class="btn-floating red waves-effect waves-light" style="display: none"><i class="material-icons">close</i></button>
 								</div>
 							</div>
-							<label>Tipo</label>
-							<select class="browser-default" id="tipo" name="tipo" disabled="true">
-								<option value="0">SELECCIONE</option>
-								<option value="1">ADMINISTRADOR</option>
-								<option value="2">CAJERO</option>
-								<option value="3">VENDEDOR</option>
-							</select>
+							<div class="row">
+								<div class="col s6">
+									<label>Tipo</label>
+									<select class="browser-default" id="tipo" name="tipo" disabled="true">
+										<option value="0">SELECCIONE</option>
+										<option value="1">ADMINISTRADOR</option>
+										<option value="2">CAJERO</option>
+										<option value="3">VENDEDOR</option>
+									</select>
+								</div>
+								<div class="col s6" style="display: none" id="statusUsu">
+									<label>Status</label>
+									<input type="text" id="status" name="status" disabled="true">
+								</div>
+							</div>
 						</div>
 						<div class="col s4">
 							<div class="row">

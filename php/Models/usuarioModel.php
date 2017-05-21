@@ -10,7 +10,6 @@ require_once('../Clases/UsuarioImp.php');
 class UsuarioModel {
 	public function inicioSesion($usuario,$password){
 		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo loginM', false, true, true);	
 		$objUsuario = new Usuario();
 		$login = new Login();
 		
@@ -35,9 +34,38 @@ class UsuarioModel {
 		return $response;
 	}
 
+	public function guardarUsuario($codigoEmpleado,$nombreUsuario,$contrasenia,$tipo,$status,$bandera){
+		$log = new Log("log", "../../log/");
+		try {
+			$usuarioImp = new UsuarioImp();
+
+			if (count($codigoEmpleado,$nombreUsuario,$contrasenia,$tipo,$status,$bandera) == 0 ) {
+				$retorno->CodRetorno = '004';
+				$retorno->Mensaje = 'Parametros Vacios';
+
+				return $retorno;
+				exit();
+			}
+
+			$res = $usuarioImp->guardarUsuario($codigoEmpleado,$nombreUsuario,$contrasenia,$tipo,$status,$bandera); 
+
+			if ($res->CodRetorno == '000') {
+				$response->CodRetorno = $res->CodRetorno ;
+				$response->Mensaje = $res->Mensaje;
+			} else {
+				$response->CodRetorno = $res->CodRetorno ;
+				$response->Mensaje = $res->Mensaje;
+			}
+
+			return $response;
+		} catch (Exception $e) {
+			$log->insert('Error buscarUsuario '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}
+
 	public function validaUsuario($usuario){
 		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo validaUs', false, true, true);	
 		try {
 			$usuarioImp = new UsuarioImp();
 			$objUsuario = new Usuario();
@@ -54,16 +82,48 @@ class UsuarioModel {
 			$objUsuario = $res->Datos;
 
 			if ($res->CodRetorno == '000') {
-				if ($_SESSION['INGRESO']['nombre'] == $objUsuario->getUsuario() ) {
-					$response->CodRetorno = '001';
-					$response->Mensaje = "El Usuario esta en Uso";
+				$response->CodRetorno = '000';
+				$response->Id = $objUsuario->getClave();
+				$response->Usuario = $objUsuario->getUsuario();
+				$response->Tipo = $objUsuario->getTipoUsuario();
+				$response->NombreEmpleado = $objUsuario->getEmpleado();
+				$response->Status = $objUsuario->getStatus();
+			} else {
+				$response->CodRetorno = $res->CodRetorno ;
+				$response->Mensaje = $res->Mensaje;
+			}
+
+			return $response;
+		} catch (Exception $e) {
+			$log->insert('Error buscarUsuario '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}
+
+	public function cambiarPassword($codigoUsuario,$nombreUsuario,$contrasenia) {
+		$log = new Log("log", "../../log/");
+		try {
+			$usuarioImp = new UsuarioImp();
+
+			if (!isset($codigoUsuario,$nombreUsuario,$contrasenia) ) {
+				$retorno->CodRetorno = '004';
+				$retorno->Mensaje = 'Parametros Vacios';
+
+				return $retorno;
+				exit();
+			}
+
+			$res = $usuarioImp->validarUsuario($nombreUsuario); 
+
+			if ($res->CodRetorno == '000') {
+				$respuesta = $usuarioImp->cambiarContrasenia($codigoUsuario,$nombreUsuario,$contrasenia); 
+
+				if ($respuesta->CodRetorno == '000') {
+					$response->CodRetorno = $respuesta->CodRetorno ;
+					$response->Mensaje = 'Contraseña Actualizada con Exito';
 				} else {
-					$response->CodRetorno = '000';
-					$response->Id = $objUsuario->getClave();
-					$response->Usuario = $objUsuario->getUsuario();
-					$response->Tipo = $objUsuario->getTipoUsuario();
-					$response->NombreEmpleado = $objUsuario->getEmpleado();
-					$response->Status = $objUsuario->getStatus();
+					$response->CodRetorno = $respuesta->CodRetorno ;
+					$response->Mensaje = $respuesta->Mensaje;
 				}
 			} else {
 				$response->CodRetorno = $res->CodRetorno ;

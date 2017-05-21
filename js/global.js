@@ -19,24 +19,11 @@ var global = {
 		//FUNCIÓN PARA VALIDAR SI ES ADMIN
 	isAdmin: function(){
 		var isAdmin = $("#tipoUsuario").val();
-		$.ajax({
-			cache: false,
-			type: "POST",
-			dataType: "json",
-			url: 'php/isAdmin.php',
-			success: function(response) {
-				if (response.codRetorno == '001') {
-					global.mensajesError('Usuario No autorizado!',response.mensaje,response.form,'');
-				} else if (response.codRetorno == '003') {
-					global.cerrarSesion(response.mensaje);
-				}
-			},
-			error: function(xhr,ajaxOptions,throwError){
-				if (xhr.status == 404) {
-					global.mensajesError('Error','Ocurrio un error','','');
-				}
-			}
-		});
+		var respuesta = global.buscar('ControllerUsuario','isAdmin',isAdmin,'');
+
+		if (respuesta.codRetorno != '000') {
+			global.cargarPagina(respuesta.form);
+		}
 	},
 		//FUNCIÓN ENVAIA AJAX POST
 	envioAjax: function(url,parametros){
@@ -83,7 +70,7 @@ var global = {
 			error: function(xhr,ajaxOptions,throwError){
 				console.log(xhr+" "+ajaxOptions+" "+throwError);
 				if (xhr.status == 404) {
-					global.mensajesError('Error','Ocurrio un error','');
+					global.mensajesError('Error','Ocurrio un error','','');
 				}
 			}
 		});
@@ -478,10 +465,11 @@ var global = {
 			url: 'php/Controllers/'+url+'.php',
 			timeout: 200,
 			success: function(response) {
-				if(response.codRetorno == '000') {
+				if (response.codRetorno == '000') {
 					retorno = response;
 				} else if (response.codRetorno == '001') {
 					global.mensajes('Advertencia',response.Mensaje,'warning',response.url,'','','');
+					retorno = response;
 				} else if (response.codRetorno == '002') {
 					global.mensajes('Error',response.Mensaje,'warning','','','','');
 				} else if (response.codRetorno == '003') {
@@ -560,7 +548,7 @@ var global = {
 	},
 		//FUNCION PARA  OCULTAR MENÚ SEGÚN PERFIL
 	isNotAdminMenu: function(perfil){
-		if (perfil == "VENDEDOR") {
+		if (perfil == 3) {
 			$("#libros").hide();
 			$("#autores").hide();
 			$("#editoriales").hide();
@@ -571,7 +559,7 @@ var global = {
 			$("#mClientes").hide();
 			$("#mMovimientos").hide();
 			$("#btnNuevo").hide();
-		} else if (perfil == "CAJERO") {
+		} else if (perfil == 2) {
 			$("#libros").hide();
 			$("#autores").hide();
 			$("#editoriales").hide();
@@ -585,28 +573,7 @@ var global = {
     },
 		//FUNCIÓN PARA CARGAR EL SIG. FOLIO
 	cargaFolio: function(url,opc){
-		var retorno = {};
-		$.ajax({
-			cache: false,
-			type: "POST",
-			dataType: "json",
-			async: false,
-			url: url,
-			data: {opc:opc},
-			success: function(response){
-				//console.log(response);
-				if (response != 1) {
-					$("#folio").val(response.folio);
-					$("#nombreEmpleado").val(response.nombre);
-					$("#codigoEmpleado").val(response.codigo);
-				} else {
-					global.mensajesError('Error','Contacte con el Administrador','',1);
-				}
-			},
-			error: function(xhr,ajaxOptions,throwError){
-				console.log(xhr+" "+throwError+" "+ajaxOptions);
-			}
-		});
+		return respuesta = global.buscar(url,opc,'','');
 	},
 			//FUNCIÓN PARA OBTENER LA FECHA ACTUAL
 	formatoFecha: function(fecha){

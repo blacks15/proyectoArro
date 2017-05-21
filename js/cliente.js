@@ -3,7 +3,7 @@ $(document).ready(function(){
      *	 OOCULTAR CAMPOS	   *
      **************************/
 	//global.validaSesion();
-	//global.isAdmin();
+	global.isAdmin();
 	global.isNotAdminMenu($("#tipoUsuario").val());
 	$('ul.tabs').tabs();
 	$("#nombreCliente").focus();

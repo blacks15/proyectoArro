@@ -1,32 +1,34 @@
 $(document).ready(function(){
-	global.validaSesion();
-	global.isAdmin();
+	//global.validaSesion();
+	//global.isAdmin();
+	global.isNotAdminMenu($("#tipoUsuario").val());
 	$("#nombreUsuario").focus();
 		/**************************
-	     *		BOTONOES		  *
-	     **************************/
+	    *		 BOTONES	 	  *
+	    **************************/
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
+		$(this).prop('disabled',true);
 		var buscar = $("#nombreUsuario").val(); 
 
 		if (buscar != "") {
-			$("#btnSearch").prop('disabled',true);
-			var parametros = {opc: 'validarUsuario','buscar': buscar };
-			var respuesta = global.buscar('usuario',parametros);
+			var respuesta = global.buscar('ControllerUsuario','buscar',buscar);
 			
 			if (respuesta.codRetorno == '000') {
 				$("#codigoEmpleado").val(respuesta.matricula);
 				$("#nombreEmpleado").val(respuesta.nombreEmpleado);
 				$("#tipo").val(respuesta.tipo_usuario).prop('selected','selected');
 
-				$("#nombreUsuario").val("");
+				$("#nombreUsuario").prop("readonly",true);
 				habilitarCampos();
-			}	
-			$("#btnSearch").prop('disabled',false);
+			} else {
+				global.mensajes('Error','Ocurrio un Error con la Petición','warning','','','','');
+			}
 		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
@@ -34,10 +36,10 @@ $(document).ready(function(){
 		var parametros = {opc: 'cambiarContrasenia',cadena };
 
 		if (cadena == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning');
+			global.messajes('Error','!Debe llenar Todos los Campos','warning','','','','');
 		} else {
 			if ( validaCampos() ) {
-				global.envioAjax('usuario',parametros);
+				global.envioAjax('ControllerUsuario',parametros);
 			}
 		}
 	});
@@ -87,17 +89,17 @@ $(document).ready(function(){
 
 		if (contrasenia.length < 8) {
 			$("#contrasenia").focus();
-			global.mensajes('Advertencia','La contraseña debe ser mayor a 8 caracteres','info');	
+			global.mensajes('Advertencia','La contraseña debe ser mayor a 8 caracteres','info','','','','');	
 			return false;
 		} else if (repContrasenia.length < 8) {
 			$("#repContrasenia").focus();
-			global.mensajes('Advertencia','La confirmación de la contraseña debe ser mayor a 8 caracteres','info');	
+			global.mensajes('Advertencia','La confirmación de la contraseña debe ser mayor a 8 caracteres','info','','','','');	
 			return false;
 		} else if (contrasenia != repContrasenia) {
 			$("#contrasenia").focus();
 			$("#contrasenia").val("");
 			$("#repContrasenia").val("");
-			global.mensajes('Advertencia','La contraeña y la confirmación de la contraseña no son iguales','info');	
+			global.mensajes('Advertencia','La contraeña y la confirmación de la contraseña no son iguales','info','','','','');	
 			return false;
 		} else {
 			return true

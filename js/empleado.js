@@ -1,9 +1,9 @@
 $(document).ready(function(){
 	 /**************************
-     *	 OOCULTAR CAMPOS	   *
+     *	 LLAMAR FUNCIONES	   *
      **************************/
 	//global.validaSesion();
-	//global.isAdmin();
+	global.isAdmin();
 	global.isNotAdminMenu($("#tipoUsuario").val());
 	$('ul.tabs').tabs();
 	$("#nombreEmpleado").focus();

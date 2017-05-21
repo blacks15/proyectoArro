@@ -3,7 +3,7 @@ $(document).ready(function(){
     *	 LLAMAR FUNCIONES	  *
     **************************/
 	//global.validaSesion();
-	//global.isAdmin();
+	global.isAdmin();
 	global.isNotAdminMenu($("#tipoUsuario").val());
 	$('ul.tabs').tabs();
 	$("#nombreEmpleado").focus();
@@ -19,19 +19,6 @@ $(document).ready(function(){
 	$("#btnCambiarPass").on('click',function(){
 		global.cargarPagina('CambiarContrasenia');
 	});
-		//BOTÓN GUARDAR
-	$("#btnSave").on('click',function(){
-		var cadena = $("#frmAgregarUsuario").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning','','','','');
-		} else {
-			if ( validaCampos() ) {
-				global.envioAjax('usuario',parametros);
-			}
-		}
-	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
@@ -46,6 +33,11 @@ $(document).ready(function(){
 				$("#nombreUsuario").val(respuesta.usuario);
 				$("#tipo").val(respuesta.tipo_usuario).prop('selected','selected');
 
+				if ($("#tipoUsuario").val() == 1) {
+					$("#statusUsu").show();
+					$("#status").val(respuesta.status).prop('selected','selected');
+				}
+
 				$("#buscar").val("");
 				$("#nombreEmpleado").prop('disabled',true);
 				$("#btnDelete").prop('disabled',false);
@@ -55,18 +47,31 @@ $(document).ready(function(){
 		}
 		$(this).prop('disabled',false);	
 	});
+		//BOTÓN GUARDAR
+	$("#btnSave").on('click',function(){
+		var cadena = $("#frmAgregarUsuario").serialize();
+		var parametros = {opc: 'guardar',bandera: '1',cadena };
+
+		if (cadena == "") {
+			global.messajes('Error','!Debe llenar Todos los Campos','warning','','','','');
+		} else {
+			if ( validaCampos() ) {
+				global.envioAjax('ControllerUsuario',parametros);
+			}
+		}
+	});
 		//BOTÓN BORRAR
 	$("#btnDelete").on('click',function(e){
 		e.preventDefault();
 		var codigoEmpleado = $("#codigoEmpleado").val();
-		var parametros = {opc: 'eliminar','codigoEmpleado': codigoEmpleado };
+		var parametros = {opc: 'eliminar','codigo': codigoEmpleado,bandera: '1' };
 
-		$("#btnDelete").prop('disabled',true);
+		$(this).prop('disabled',true);
 		
 		if (codigoEmpleado == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning');
+			global.messajes('Error','!Debe llenar Todos los Campos','warning','','','','');
 		} else {
-			global.envioAjax('usuario',parametros);
+			global.envioAjax('ControllerUsuario',parametros);
 		}
 	});
 		//BOTÓN CAMBIAR NOMBRE
@@ -120,32 +125,22 @@ $(document).ready(function(){
 		//VALIDA SI EL USUARIO EXISTE AL PERDER EL FOCO EL CAMPO USUARIO
 	$("#nombreUsuario").focusout(function(){
 			//LLAMAMOS LA FUNCIÓN OCULTAR
-		verificaUsuario();
+		ocultaDispUsuario();
 			//ASIGNAMOS EL CONTENIDO DEL CAMPO USUARIO A LA VARIABLE
 		var codigo = $("#codigoEmpleado").val();
 		var usuario = $("#nombreUsuario").val();
 			//VALIDAMOS SINO VIENE VACIA LA VARIABLE USUARIO
 		if (usuario != "") {
-			$.ajax({
-				cache: false,
-				type: "POST",
-				datatype: "json",
-				url: "php/usuario.php",
-				data: {opc:"buscar_usuario", usuario: usuario,codigo:codigo },
-				success: function(response){
-					if (response.codRetorno == '001') {
-						$("#noDisp").show("explode");
-						 Materialize.toast('Usuario no disponible', 3000, 'rounded')
-					} else if (response.codRetorno == '000') {
-						$("#disp").show("explode");
-					} else if (response.codRetorno == '003') {
-						global.cerrarSesion(response.mensaje);
-					}
-				},
-				error: function(xhr,ajaxOptions,throwError){
-					console.log("Ocurrio un Error");
-				}
-			});
+			var respuesta = global.buscar('ControllerUsuario','validaUsuario',usuario,codigo);
+
+			if (respuesta.codRetorno == '001') {
+				$("#noDisp").show("explode");
+				$("#nombreEmpleado").focus();
+			} else if (respuesta.codRetorno == '000') {
+				$("#disp").show("explode");
+			} else if (respuesta.codRetorno == '003') {
+				global.cerrarSesion(respuesta.Mensaje);
+			}
 		} 
 	});
 		//EVENTO KEYPRESS
@@ -277,7 +272,7 @@ $(document).ready(function(){
 		$("#tipo").focus();
 	}
 		//FUNCIÓN PARA OCULTAR BOTÓNES (DISPONIBLE O NO DISPONIBLE)
-	function verificaUsuario(){
+	function ocultaDispUsuario(){
 		$("#noDisp").hide('explode');
 		$("#disp").hide('explode');	
 	}
@@ -286,6 +281,14 @@ $(document).ready(function(){
 		$("#btnCanNom").hide();
 		$("#noDisp").hide('explode');
 		$("#disp").hide('explode');
+	}
+		//FUNCIÓN PARA DESHABILITAR CAMPOS
+	function deshabilitarCampos(){
+		$("#nombreUsuario").prop('disabled', true);
+		$("#contrasenia").prop('disabled', true);
+		$("#repContrasenia").prop('disabled', true);
+		$("#tipo").prop('disabled',true);
+		$("#btnSave").prop('disabled',true);
 	}
 		//FUNCIÓN PARA LIMPIAR LOS CAMPOS
 	function limpiar(){
@@ -299,7 +302,7 @@ $(document).ready(function(){
 	}
 		//SE CREA TOOLTIP
 	$('.tooltipped').tooltip({
-		delay: 50,
+		delay: 30,
 		tooltip: "Cambiar Contraseña",
 		position: 'right',
 	});

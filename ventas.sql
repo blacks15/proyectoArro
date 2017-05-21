@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-05-2017 a las 21:29:58
+-- Tiempo de generación: 20-05-2017 a las 02:12:45
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -24,6 +24,47 @@ DELIMITER $$
 --
 -- Procedimientos
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spCambiarPassword` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pContrasenia` VARCHAR(100), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreUsuario,'') = '' && COALESCE(pContrasenia,'') = ''  ) THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF EXISTS (SELECT * FROM usuarios WHERE matricula_empleado = pCodigo AND nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci ) THEN
+			START TRANSACTION;
+				UPDATE usuarios SET password = pContrasenia WHERE nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci AND matricula_empleado = pCodigo;
+				SET CodRetorno = '000';
+				SET msg = 'Contraseña Actualizada con Exito';
+			COMMIT; 
+		ELSE
+			SET CodRetorno = '001';
+			SET msg = 'El Usuario no Existe';
+			ROLLBACK;
+		END IF;
+	END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaAutores` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `msg` VARCHAR(100), OUT `CodRetorno` CHAR(3), OUT `numFilas` INT)  IF (pCodigo = NULL && pInicio = NULL && pTamanio = NULL) THEN
         SET CodRetorno = '002';
         SET msg = 'Parametros Vacios.';
@@ -486,6 +527,63 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo
 	END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelUsuarios` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pPaswword` VARCHAR(100), IN `pTipo` BIGINT, IN `pStatus` VARCHAR(15), IN `pBandera` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+			
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreUsuario,'') = '' && COALESCE(pPaswword,'') = '' && COALESCE(pStatus,'') = ''   && pTipo = 0) THEN
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF (pBandera = 2 ) THEN
+			IF EXISTS(SELECT * FROM usuarios WHERE matricula_empleado = pCodigo) THEN
+                START TRANSACTION;
+                    DELETE FROM usuarios WHERE matricula_empleado = pCodigo AND nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci ;
+                    UPDATE empleados SET isUsu = '0' WHERE matricula = pCodigo AND status = 'DISPONIBLE';
+                    SET CodRetorno = '000';
+                    SET msg = 'Usuario Desasociado con Exito';
+                COMMIT; 
+			ELSE
+				SET CodRetorno = '001';
+				SET msg = 'El Usuario no Éxiste';
+				ROLLBACK;
+			END IF;
+		ELSEIF (pBandera = 1) THEN 
+			IF NOT EXISTS(SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci) THEN
+				START TRANSACTION;
+					INSERT INTO usuarios (nombre_usuario,password,tipo_usuario,matricula_empleado,status,fechaCreacion,fechaModificacion)
+					VALUES (pNombreUsuario, pPaswword, pTipo, pCodigo, pStatus,NOW(), NOW() );
+					SET CodRetorno = '000';
+					SET msg = 'Usuario Guardado con Exito';
+				COMMIT;
+			ELSE
+				SET CodRetorno = '001';
+				SET msg = 'El Usuario ya Existe';
+				ROLLBACK;
+			END IF; 
+		ELSE 
+			SET CodRetorno = '002';
+			SET msg = 'Ocurrio un Error';
+		END IF; 
+	END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdAutor` (IN `pCodigo` BIGINT, IN `pNombreAutor` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
@@ -907,6 +1005,60 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BI
 	END IF; 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCHAR(10), IN `pCodigo` BIGINT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE vFolio BIGINT;
+    DECLARE vAnio INT;
+    DECLARE vMes INT;
+    DECLARE vDia INT;
+    DECLARE vConsecutivo INT;
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SELECT @full_error;
+		SHOW WARNINGS LIMIT 1;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pTabla,'') = '' ) THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF EXISTS (SELECT * FROM empleados WHERE matricula = pCodigo ) THEN
+			select YEAR(NOW()) INTO vAnio;
+            select Date_format(NOW(),' %m') INTO vMes;  
+            select DAY(NOW()) INTO vDia;
+
+            SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
+
+            SET vFolio = CONCAT(vAnio,'0',vMes,vDia); 
+            SET vFolio = CONCAT((vFolio * 10000),1);
+
+			SELECT vFolio,CONCAT(nombre_empleado,' ',apellido_paterno,' ',apellido_materno) AS nombreEmpleado FROM empleados WHERE matricula = pCodigo;
+
+            SET CodRetorno = '000';
+			SET msg = 'SP Ejecutado Correctamente';
+		ELSE
+			SET CodRetorno = '001';
+			SET msg = 'El Empleado no Existe';
+		END IF;
+	END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, IN `pStActual` INT, IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
@@ -976,27 +1128,31 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARC
 		SET codRetono = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
-		IF EXISTS (SELECT * FROM usuarios WHERE nombre_usuario = pNombre) THEN
+		IF EXISTS (SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci) THEN
 			SELECT tipo_usuario INTO isAdmin FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci ;
 
 			IF (isAdmin != 1) THEN
-				SELECT status INTO vStatus FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+				SELECT status INTO vStatus FROM usuarios WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
 				IF (vStatus = 'DISPONIBLE') THEN
-					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,
+					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,
 						CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
 					FROM usuarios u
 					INNER JOIN empleados e ON e.matricula = u.matricula_empleado
-					WHERE u.status = 'DISPONIBLE' AND nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+					WHERE u.status = 'DISPONIBLE' AND nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
+					SET codRetono = '000';
+					SET msg = 'SP Ejecutado Correcamente';
 				ELSE 
 					SET codRetono = '001';
 					SET msg = 'Usuario Bloqueado';
 				END IF;
 			ELSE
-				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,
+				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,
 					CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
 				FROM usuarios u
 				INNER JOIN empleados e ON e.matricula = u.matricula_empleado
-				WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+				WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
+				SET codRetono = '000';
+				SET msg = 'SP Ejecutado Correcamente';
 			END IF;
 		ELSE 
 			SET codRetono = '001';
@@ -1326,7 +1482,8 @@ INSERT INTO `empleados` (`matricula`, `nombre_empleado`, `apellido_paterno`, `ap
 (3, 'luis', 'oso', 'oso', 'quinta av.', 4215, '', 'diaz ordaz', 'culiacan', 'sinaloa', '7154824', '6672051684', '1100', '', 'BAJA', 0, 'felipe', '0000-00-00 00:00:00', '2016-09-16 09:33:00'),
 (4, 'jose', 'lopez', 'lopez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinalos', '6677106788', '6673031398', '400', 'vendedor', 'DISPONIBLE', 1, 'felipe', '2016-08-27 03:19:00', '2017-05-08 18:05:48'),
 (5, 'juan', 'perez', 'lopez', 'corta', 4452, 'A', 'peligrosa', 'culiacan', 'sinaloa', '7106788', '6673031398', '400', 'vendedor', 'DISPONIBLE', 0, 'felipe', '2016-09-01 10:05:00', '2016-09-01 10:05:00'),
-(6, 'felipe de jesus', 'monzon', 'mendoza', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677606060', '6673031398', '$3150.50', 'cajero', 'DISPONIBLE', 1, 'felipe', '2017-01-19 05:09:00', '2017-01-21 12:24:00');
+(6, 'felipe de jesus', 'monzon', 'mendoza', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677606060', '6673031398', '$3150.50', 'cajero', 'DISPONIBLE', 1, 'felipe', '2017-01-19 05:09:00', '2017-01-21 12:24:00'),
+(7, 'paola', 'lopez', 'mendoza', 'muy lejana', 7584, 'X', 'las vegas', 'pequeÃ±a', 'grande', '6671548278', '6673021548', '3500', 'cajera', 'felipe', 0, 'DISPONIBLE', '2017-05-11 10:02:17', '2017-05-11 10:02:17');
 
 -- --------------------------------------------------------
 
@@ -1582,9 +1739,10 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `password`, `tipo_usuario`, `matricula_empleado`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
 (2, 'felipe', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 1, 2, 'DISPONIBLE', '2016-08-25 12:23:00', '2016-09-18 10:08:00'),
-(3, 'felipe123', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 2, 6, 'DISPONIBLE', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
+(3, 'felipe123', '$2y$10$oKmmSGZIBV/9WWDuN/R9/ehIN7igos1wdbAbupuUCYHGnAxWuLPd6', 2, 6, 'DISPONIBLE', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
 (4, 'admin1', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 3, 4, 'DISPONIBLE', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(5, 'luigis', '$2y$10$fJ0p5n5qgpbPdDIiabYAau98gmfHSw5U2ONSsqkRPp8h7bZRt79BO', 2, 1, 'DISPONIBLE', '2017-03-26 01:19:00', '2017-03-26 01:19:00');
+(5, 'luigis', '$2y$10$fJ0p5n5qgpbPdDIiabYAau98gmfHSw5U2ONSsqkRPp8h7bZRt79BO', 2, 1, 'DISPONIBLE', '2017-03-26 01:19:00', '2017-03-26 01:19:00'),
+(6, 'paola123', '$2y$10$Rp.SnurWRy6Rcyw4TEm7bOvZh.v3LryH8dZZE9SCu57OBJBMdvVq2', 2, 7, 'DISPONIBLE', '2017-05-15 16:21:05', '2017-05-15 16:21:05');
 
 -- --------------------------------------------------------
 
@@ -1809,7 +1967,7 @@ ALTER TABLE `editoriales`
 -- AUTO_INCREMENT de la tabla `empleados`
 --
 ALTER TABLE `empleados`
-  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 --
 -- AUTO_INCREMENT de la tabla `folios`
 --
@@ -1849,7 +2007,7 @@ ALTER TABLE `tipo_usuarios`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
 -- Restricciones para tablas volcadas
 --
