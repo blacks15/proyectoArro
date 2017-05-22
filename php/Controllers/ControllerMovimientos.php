@@ -14,6 +14,14 @@
 		case 'guardar':
 			guardarRetiro();
 		break;
+		
+		case 'borrar':
+			borrarRetiro();
+		break;
+
+		case 'buscar':
+			buscarRetiro();
+		break;
 	}
 		//FUNCIÓN FILTRO 
     function filtroRetiro(){
@@ -110,9 +118,145 @@
 			$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error recuperaFolio '.$e->getMessage(), false, true, true);	
+			$log->insert('Error guardarRetiro '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}
+		//FUNCIÓN PARA GUARDAR RETIROS
+	function borrarRetiro(){
+		$log = new Log("log", "../../log/");
+        try {
+				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			parse_str($_POST["cadena"], $_POST);
+			$sql = new MovimientosModel();
+			$status = 'ELIMINADO';
+			 	//CICLO PARA LLENAR VARIABLES POR POST
+			foreach ($_POST as $clave => $valor) {
+				${$clave} = trim($_POST[$clave]);
+			}
+				//VALIDAMOS EL CÓDIGO
+			if ($codigoRetiro == "") {
+				$codigoRetiro = 0;
+			}
+            	//VALIDAMOS LA SESSION
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
+				$salidaJSON = array('codRetorno' => '003',
+					'form' => 'Retiro',
+					'Mensaje' => 'Sesión Caducada'
+				);
+				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//VALIDAMOS LOS PARAMETROS
+			if ( $_SESSION['INGRESO']['tipo'] != 1) {
+				$salidaJSON = array('codRetorno' => '002',
+					'form' => 'Retiro',
+					'Titulo' => 'Advertencia',
+					'Mensaje' => 'No Cuenta con los Permisos Suficientes'
+				);
+				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//VALIDAMOS LOS PARAMETROS
+			if (!isset($folio,$status) ) {
+				$salidaJSON = array('codRetorno' => '004',
+					'form' => 'Retiro',
+					'Titulo' => 'Advertencia',
+					'Mensaje' => 'Parametros Vacios'
+				);
+				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//EJECUTAMOS EL MÉTODO
+			$respuesta = $sql->eliminarRetiro($folio,$status,$_SESSION['INGRESO']['nombre']);
+				//SE VALIDA EL RETORNO DEL MÉTODO
+			if ($respuesta->CodRetorno == '000') {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => 'Retiro',
+					'Titulo' => 'Éxito',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => 'Retiro',
+					'Titulo' => 'Error',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			}
 
+			$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+			print json_encode($salidaJSON);
+		} catch (Exception $e) {
+			$log->insert('Error borrrarRetiro '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}
+ 		//FUNCIÓN PARA BUSCAR RETIROS
+	function buscarRetiro(){
+		$log = new Log("log", "../../log/");
+		try {
+				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			parse_str($_POST["parametros"], $_POST);
+			$sql = new MovimientosModel();
+			 	//CICLO PARA LLENAR VARIABLES POR POST
+			foreach ($_POST as $clave => $valor) {
+				${$clave} = trim(addslashes($_POST[$clave]));
+			}
+				//VALIDAMOS LA SESSION
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
+				$salidaJSON = array('codRetorno' => '003',
+					'form' => 'Retiro',
+					'Mensaje' => 'Sesión Caducada'
+				);
+				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//VALIDAMOS LOS PARAMETROS
+			if (!isset($codigo) ) {
+				$salidaJSON = array('codRetorno' => '004',
+					'form' => 'Retiro',
+					'Titulo' => 'Advertencia',
+					'Mensaje' => 'Parametros Vacios'
+				);
+				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				print json_encode($salidaJSON);
+				exit();
+			}
+
+			if (isset($_POST['partida'])) {
+				$paginaActual = $_POST['partida'];	
+			}
+				//CALCULAMOS EL INICIO
+			if ($paginaActual <= 1){
+				$inicio = 0;
+			} else {
+				$inicio = ($paginaActual - 1) * 5;
+			}
+				//EJECUTAMOS EL MÉTODO
+			$respuesta = $sql->buscarRetiro($codigo,$inicio,$paginaActual,$_SESSION['INGRESO']['nombre']);
+				//SE VALIDA EL RETORNO DEL MÉTODO
+			if ($respuesta->CodRetorno == '000') {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => 'Retiro',
+					'datos' => $respuesta->Retiros,
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => 'Retiro',
+					'Titulo' => 'Error',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			}
+
+			$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+			print json_encode($salidaJSON);
+		} catch (Exception $e) {
+			$log->insert('Error buscarRetiro '.$e->getMessage(), false, true, true);	
+			print('Ocurrio un Error'.$e->getMessage());	
+		}
+	}
 ?>
