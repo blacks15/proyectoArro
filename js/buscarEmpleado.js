@@ -33,6 +33,7 @@ $(document).ready(function(){
 		} else {
 			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
 		}
+
 		$(this).prop('disabled',false);	
 	});
 /////////////////////////////////////////////////////////////////////////////
@@ -103,7 +104,7 @@ $(document).ready(function(){
 			$("#sueldo").html("<b>Sueldo:</b> $"+array[8]);
 			$("#puesto").html("<b>Puesto:</b> "+array[9]);
 
-			array.clear;
+			array.length = 0;
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -118,7 +119,8 @@ $(document).ready(function(){
 	        	//CONVERTIMOS A JSON 
 			localStorage.empleado = JSON.stringify(array);
 			global.cargarPagina('Empleado');
-			array.clear;
+			
+			array.length = 0;
 		});
 	});
  		//CREAMOS LA MODAL

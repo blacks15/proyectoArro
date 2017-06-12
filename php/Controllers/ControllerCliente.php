@@ -115,8 +115,8 @@
 				if (count($clientes->Clientes) == 0) {
 					$salidaJSON = array ('codRetorno' => '001',
 						'form' => 'Cliente',
-						'Mensaje' => 'Advertencia',
-						'Mensaje' => 'Usuario no Disponible',
+						'Titulo' => 'Advertencia',
+						'Mensaje' => 'Clientes no Disponibles',
 					);
 				} else {
 					$salidaJSON = array ('codRetorno' => $clientes->CodRetorno,

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-05-2017 a las 02:12:45
+-- Tiempo de generación: 25-05-2017 a las 01:06:23
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -527,6 +527,149 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo
 	END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaRetiros` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+	DECLARE vPerfil INT;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+	IF (pCodigo = NULL && pInicio = NULL && pTamanio = NULL) THEN
+		SET CodRetorno = '002';
+		SET msg = 'Parametros Vacios';
+	ELSE		
+		SELECT tipo_usuario INTO vPerfil FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+
+		IF (vPerfil = 1) THEN 
+			IF (pCodigo > 0) THEN
+				IF EXISTS (SELECT * FROM retiros WHERE folio = pCodigo) THEN
+					SELECT COUNT(*) INTO numFilas FROM retiros WHERE folio = pCodigo;
+
+					SELECT codigo_retiro,folio,fecha,empleado,cantidad,descripcion,status 
+					FROM retiros 
+					WHERE folio = pCodigo 
+					ORDER BY folio DESC;
+					SET msg = 'SP Ejecutado Correctamente';
+					SET CodRetorno = '000'; 
+				ELSE
+					SET CodRetorno = '001'; 
+					SET msg = 'No Hay Datos Para Mostrar';
+				END IF;
+			ELSE
+				IF ( (SELECT COUNT(*) FROM retiros) > 0 ) THEN
+					SELECT COUNT(*) INTO numFilas FROM retiros;
+
+					SELECT codigo_retiro,folio,fecha,empleado,cantidad,descripcion,status 
+					FROM retiros 
+					ORDER BY folio DESC
+					LIMIT pInicio, pTamanio;
+					SET msg = 'SP Ejecutado Correctamente';
+					SET CodRetorno = '000'; 
+				ELSE
+					SET CodRetorno = '001'; 
+					SET msg = 'No Hay Datos Para Mostrar';
+				END IF;
+			END IF;
+		ELSE
+			IF (pCodigo > 0) THEN
+				IF EXISTS (SELECT * FROM retiros WHERE folio = pCodigo AND usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci) THEN
+					SELECT COUNT(*) INTO numFilas FROM retiros WHERE folio = pCodigo AND usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+
+					SELECT codigo_Retiro,folio,fecha,empleado,cantidad,descripcion,status 
+					FROM retiros 
+					WHERE folio = pCodigo AND usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci
+					ORDER BY folio ASC;
+					SET msg = 'SP Ejecutado Correctamente';
+					SET CodRetorno = '000'; 
+				ELSE
+					SET CodRetorno = '001'; 
+					SET msg = 'No Hay Datos Para Mostrar';
+				END IF;
+			ELSE
+				IF ( (SELECT COUNT(*) FROM retiros WHERE usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci) > 0 ) THEN 
+					SELECT COUNT(*) INTO numFilas FROM retiros WHERE usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+
+					SELECT codigo_retiro,folio,fecha,empleado,cantidad,descripcion,status 
+					FROM retiros 
+					WHERE usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci
+					ORDER BY folio ASC
+					LIMIT pInicio, pTamanio;
+					SET msg = 'SP Ejecutado Correctamente';
+					SET CodRetorno = '000'; 
+				ELSE
+					SET CodRetorno = '001'; 
+					SET msg = 'No Hay Datos Para Mostrar';
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spDelRetiro` (IN `pCodigo` BIGINT, IN `pStatus` VARCHAR(15), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE vPerfil INT;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SHOW WARNINGS LIMIT 1;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (COALESCE(pCodigo,'') = '' && pCodigo = 0 && COALESCE(pUsuario,'') = '') THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+        SELECT tipo_usuario INTO vPerfil FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci ;
+
+        IF ( vPerfil = 1) THEN 
+            IF EXISTS (SELECT * FROM retiros WHERE folio = pCodigo) THEN
+                START TRANSACTION;
+                    UPDATE retiros SET status = pStatus, fechaModificacion = NOW() WHERE folio = pCodigo;
+                    SET CodRetorno = '000';
+                    SET msg = 'Retiro Eliminado con Exito';
+                COMMIT; 
+            ELSE
+                SET CodRetorno = '001';
+                SET msg = 'El Folio no Existe';
+                ROLLBACK;
+            END IF;
+        ELSE
+            SET CodRetorno = '002';
+            SET msg = 'No Cuenta con los Permisos Suficientes';
+        END IF;
+	END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelUsuarios` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pPaswword` VARCHAR(100), IN `pTipo` BIGINT, IN `pStatus` VARCHAR(15), IN `pBandera` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
@@ -666,8 +809,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdCliente` (IN `pCodigo` BIGI
 		
 	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
 		IF EXISTS(SELECT * FROM clientes WHERE matricula = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci ) THEN
-				IF NOT EXISTS(SELECT * FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) THEN
+			IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci) = 0 ) THEN
+				IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) = 0 ) THEN
 					START TRANSACTION;
 						UPDATE clientes SET rfc = pRFC, empresa = pEmpresa, nombre_contacto = pNombreContacto, 
 							apellido_paterno = pAPaterno, apellido_materno = pAMaterno, calle = pCalle, numExt = pNumExt,
@@ -1005,6 +1148,63 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BI
 	END IF; 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdRetiro` (IN `pCodigo` BIGINT, IN `pFolio` BIGINT, IN `pNombreEmpleado` VARCHAR(50), IN `pCantidad` DECIMAL, IN `pDescripcion` VARCHAR(100), IN `pStatus` VARCHAR(15), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+			
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pFolio,'') = '' && COALESCE(pNombreEmpleado,'') = '' && pCantidad = 0 && COALESCE(pCantidad,'') = '' && COALESCE(pDescripcion,'') = '' && COALESCE(pStatus,'') = '' ) THEN
+		SET msg = 'Parametros Vacios';
+        SET CodRetorno = '004';
+	ELSE
+		IF (pCodigo != 0 || COALESCE(pCodigo,'') = '') THEN
+            IF EXISTS(SELECT * FROM retiros WHERE folio = pFolio) THEN
+                START TRANSACTION;
+                    UPDATE retiros SET cantidad = pCantidad, descripcion = pDescripcion, fechaModificacion = NOW() WHERE codigo_retiro = pCodigo AND folio = pFolio;
+                    SET CodRetorno = '000';
+                    SET msg = 'Retiro Actualizado con Exito';
+                COMMIT; 
+            ELSE 
+                SET CodRetorno = '001';
+                SET msg = 'El retiro no Existe';
+                ROLLBACK;
+            END IF;
+		ELSE 
+			IF ( (SELECT COUNT(*) FROM retiros WHERE folio = pFolio )= 0) THEN
+				START TRANSACTION;
+					INSERT INTO retiros (folio,fecha,empleado,cantidad,descripcion,status,usuario,fechaCreacion,fechaModificacion )
+					VALUES (pFolio, NOW(), pNombreEmpleado, pCantidad, pDescripcion, pStatus, pUsuario, NOW(), NOW() );
+					CALL spUpdFolios('retiros',@codRetorno,@msg);
+					SET CodRetorno = '000';
+					SET msg = 'Retiro Guardado con Exito';
+				COMMIT;
+			ELSE
+				SET CodRetorno = '001';
+				SET msg = 'El Folio del Retiro ya fue Registrado';
+				ROLLBACK;
+			END IF; 
+		END IF; 
+	END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCHAR(10), IN `pCodigo` BIGINT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
     DECLARE vFolio BIGINT;
     DECLARE vAnio INT;
@@ -1017,7 +1217,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
 		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
@@ -1027,14 +1227,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pTabla,'') = '' ) THEN
+	IF (COALESCE(pCodigo,'') = '' && COALESCE(pTabla,'') = '' && pCodigo = 0) THEN
 		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
@@ -1043,10 +1243,17 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
             select Date_format(NOW(),' %m') INTO vMes;  
             select DAY(NOW()) INTO vDia;
 
-            SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
-
             SET vFolio = CONCAT(vAnio,'0',vMes,vDia); 
-            SET vFolio = CONCAT((vFolio * 10000),1);
+
+            IF ( (SELECT COUNT(consecutivo) FROM folios WHERE nombre = pTabla AND anio = vAnio) > 0) THEN
+            	SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
+            	SET vFolio = CONCAT((vFolio * 10000),vConsecutivo);
+            ELSE
+            	START TRANSACTION;
+            	INSERT INTO folios (nombre,anio,consecutivo) VALUES(pTabla,vAnio,1);
+            	SET vFolio = CONCAT((vFolio * 10000),1);
+            	COMMIT;
+            END IF;
 
 			SELECT vFolio,CONCAT(nombre_empleado,' ',apellido_paterno,' ',apellido_materno) AS nombreEmpleado FROM empleados WHERE matricula = pCodigo;
 
@@ -1057,6 +1264,48 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
 			SET msg = 'El Empleado no Existe';
 		END IF;
 	END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdFolios` (IN `pTabla` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE vAnio INT;
+    DECLARE vConsecutivo INT;
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SHOW WARNINGS LIMIT 1;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (COALESCE(pTabla,'') = '') THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		SELECT YEAR(NOW()) INTO vAnio;
+		SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
+
+    	START TRANSACTION;
+    	UPDATE folios SET consecutivo = vConsecutivo+1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
+    	COMMIT;
+
+        SET CodRetorno = '000';
+		SET msg = 'SP Ejecutado Correctamente';
+END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, IN `pStActual` INT, IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
@@ -1255,14 +1504,14 @@ CREATE TABLE `clientes` (
 
 INSERT INTO `clientes` (`matricula`, `rfc`, `empresa`, `nombre_contacto`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
 (1, 'xxxxxxxxxxxxx', 'cliente general', 'cliente general', '', '', '', '0', '', '', '', '', '0', '0', 'null@null.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(2, '', 'bookvillage', 'luis', 'soto', 'de', 'juarez', '3312', 'A', 'las vegas', 'teic', 'BAJA', '7105585', '6678954623', 'luis@book.com', 'BAJA', '', '0000-00-00 00:00:00', '2016-09-24 06:38:00'),
+(2, 'solj841524457', 'bookvillage', 'jorge', 'soto', 'luna', 'juarez', '3312', 'A', 'las vegas', 'teic', 'Baja California', '6767105585', '6678954623', 'luis@book.com', 'BAJA', '', '0000-00-00 00:00:00', '2017-05-23 15:23:59'),
 (3, 'CUPU800825569', 'papeleria del sol', 'juan', 'lopez', 'vargas', 'obregon', '5324', '5', 'centro', 'culiacan', 'sinaloa', '6675481875', '6677895471', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-03-26 03:32:00'),
-(5, '', 'librerÃ­a del sol', 'luis', 'perez', 'oso', 'lejana', '22', '', 'de', 'culiacan', 'sinaloa', '2222', '222', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(5, 'peol850457123', 'librerÃ­a norte del sol', 'luis', 'perez', 'oso', 'lejana', '22', '', 'de', 'culiacan', 'sinaloa', '6761457828', '6768915272', 'ejemplo@yo.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-23 15:22:28'),
 (6, 'momf900527538', 'libreria caracol', 'jorge', 'mendoza', 'lopez', 'muy lejana', '4040', 'C', 'mazatlan', 'mazatlan', 'sinaloa', '6677584796', '6679154835', 'caracol@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-09 12:51:26'),
-(7, '', 'librerÃ­a mÃ©xico', 'rosa', 'osuna', 'lopez', 'grande', '1515', '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(7, 'oslr740537123', 'libreria mexico', 'rosa', 'osuna', 'lopez', 'grande', '1515', '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-23 15:21:02'),
 (8, '1vwd1d15s3sds', 'libreria Buen libro', 'ruben Alfonso', 'mendoza', 'mendoza', 'perrona', '152', '4', 'las vegas', 'tepito', 'CDMX', '5507862', '6675084532', 'tepito@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2016-08-31 09:47:00'),
-(9, '', 'librerÃ­a del sol', 'juan', 'rojo', 'lugo', 'camarÃ³n', '457', '5', 'las palmas', 'mazatlan', 'sinaloa', '7154812', '2147483647', 'libreriadelsol@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:25:00', '2016-08-29 09:25:00'),
-(10, '', 'librerÃ­a del sol', 'juan', 'lopez', 'lopez', 'camarones', '452', '6', 'las palmas', 'mazatlan', 'sinalo', '7481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2016-08-29 09:29:00'),
+(9, 'rolj953245646', 'librerÃ­a del sol 2', 'juan', 'rojo', 'lugo', 'camarÃ³n', '457', '5', 'las palmas', 'mazatlan', 'sinaloa', '6677154812', '2147483647', 'libreriadelsol@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:25:00', '2017-05-23 15:24:48'),
+(10, 'lolj910245123', 'librerÃ­a del sol', 'juan luis', 'lopez', 'lopez', 'camarones', '452', '6', 'las palmas', 'mazatlan', 'sinalo', '6787481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2017-05-23 15:19:37'),
 (11, 'CUPU800825569', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', '4818', 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-02-07 03:28:00');
 
 -- --------------------------------------------------------
@@ -1510,7 +1759,9 @@ INSERT INTO `folios` (`id`, `nombre`, `anio`, `consecutivo`) VALUES
 (8, 'retiro', 2017, 12),
 (9, 'deuda', 2017, 9),
 (11, 'venta', 2017, 26),
-(12, 'corteCaja', 2017, 1);
+(12, 'corteCaja', 2017, 1),
+(13, 'retiros', 2017, 3),
+(14, 'ventas', 2017, 1);
 
 -- --------------------------------------------------------
 
@@ -1611,7 +1862,7 @@ INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `
 (9, 9786074009811, 'ochenta melodias de pasion en amarillo', 1, 5, 1, 10, '185.00', '250.00', 1, 'DISPONIBLE', 'felipe', '2016-09-02 11:00:00', '2017-05-04 11:01:33'),
 (10, 5, 'el principito', 1, 0, 1, 4, '15.00', '25.00', 1, 'AGOTADO', 'felipe', '2016-09-03 07:31:00', '2016-09-03 07:31:00'),
 (11, 6, 'ochenta melodias de pasion en azul', 1, 14, 1, 10, '100.00', '180.00', 1, 'SOBRESTOCK', 'felipe', '2017-01-17 04:54:00', '2017-03-15 05:24:00'),
-(12, 6, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 'felipe', '2017-01-17 04:55:00', '2017-03-16 04:01:00'),
+(12, 8, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 'felipe', '2017-01-17 04:55:00', '2017-03-16 04:01:00'),
 (13, 7, 'las aventuras de tom sayer', 2, 0, 1, 5, '30.00', '60.00', 1, 'AGOTADO', 'felipe', '2017-01-17 04:57:00', '2017-01-17 06:49:00'),
 (14, 9788478887590, 'harry potter y la piedra filosofal', 4, 1, 1, 15, '100.00', '150.00', 1, 'DISPONIBLE', 'felipe', '2017-03-08 05:48:00', '2017-03-13 03:39:00'),
 (15, 9788478887613, 'harry potter y el prisionero de azkaban', 4, 5, 1, 10, '200.00', '300.00', 1, 'DISPONIBLE', 'felipe', '2017-03-12 10:26:00', '2017-03-13 03:40:00'),
@@ -1694,7 +1945,9 @@ INSERT INTO `retiros` (`codigo_retiro`, `folio`, `fecha`, `empleado`, `cantidad`
 (15, '201703210009', '2017-03-21 03:55:00', 'FELIPE MONZON MENDOZA', '150.00', 'cena empleados', 'EFECTUADO', 'felipe', '2017-03-21 03:55:00', '2017-03-21 03:55:00'),
 (16, '2017032200010', '2017-03-22 08:30:00', 'FELIPE MONZON MENDOZA', '150.00', 'cena', 'EFECTUADO', 'felipe', '2017-03-22 08:30:00', '2017-03-22 08:30:00'),
 (17, '2017032400011', '2017-03-24 09:08:00', 'FELIPE MONZON MENDOZA', '450.00', 'pago empleado', 'EFECTUADO', 'felipe', '2017-03-24 09:08:00', '2017-03-24 09:08:00'),
-(18, '2017040900012', '2017-04-09 08:55:00', 'FELIPE MONZON MENDOZA', '150.00', 'cena de empleados', 'EFECTUADO', 'felipe', '2017-04-09 08:55:00', '2017-04-09 08:55:00');
+(18, '2017040900012', '2017-04-09 08:55:00', 'FELIPE MONZON MENDOZA', '150.00', 'cena de empleados', 'EFECTUADO', 'felipe', '2017-04-09 08:55:00', '2017-04-09 08:55:00'),
+(19, '2017052200001', '2017-05-22 11:04:12', 'FELIPE MONZON MENDOZA', '350.00', 'pago empleado juan', 'EFECTUADO', 'felipe', '2017-05-22 11:04:12', '2017-05-22 11:04:12'),
+(20, '2017052200002', '2017-05-22 11:04:25', 'FELIPE MONZON MENDOZA', '200.00', 'comida empleados', 'EFECTUADO', 'felipe', '2017-05-22 11:04:25', '2017-05-22 11:04:25');
 
 -- --------------------------------------------------------
 
@@ -1739,8 +1992,8 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `password`, `tipo_usuario`, `matricula_empleado`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
 (2, 'felipe', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 1, 2, 'DISPONIBLE', '2016-08-25 12:23:00', '2016-09-18 10:08:00'),
-(3, 'felipe123', '$2y$10$oKmmSGZIBV/9WWDuN/R9/ehIN7igos1wdbAbupuUCYHGnAxWuLPd6', 2, 6, 'DISPONIBLE', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
-(4, 'admin1', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 3, 4, 'DISPONIBLE', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(3, 'cajero1', '$2y$10$oKmmSGZIBV/9WWDuN/R9/ehIN7igos1wdbAbupuUCYHGnAxWuLPd6', 2, 6, 'DISPONIBLE', '2017-01-29 07:49:00', '2017-01-29 07:49:00'),
+(4, 'vendedor1', '$2y$10$BK2uIwK0gXnwGYVE8K37IuQwJoOjIY1uUKbrYLfPVfldtBmL3.d8S', 3, 4, 'DISPONIBLE', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (5, 'luigis', '$2y$10$fJ0p5n5qgpbPdDIiabYAau98gmfHSw5U2ONSsqkRPp8h7bZRt79BO', 2, 1, 'DISPONIBLE', '2017-03-26 01:19:00', '2017-03-26 01:19:00'),
 (6, 'paola123', '$2y$10$Rp.SnurWRy6Rcyw4TEm7bOvZh.v3LryH8dZZE9SCu57OBJBMdvVq2', 2, 7, 'DISPONIBLE', '2017-05-15 16:21:05', '2017-05-15 16:21:05');
 
@@ -1972,7 +2225,7 @@ ALTER TABLE `empleados`
 -- AUTO_INCREMENT de la tabla `folios`
 --
 ALTER TABLE `folios`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 --
 -- AUTO_INCREMENT de la tabla `generos`
 --
@@ -1997,7 +2250,7 @@ ALTER TABLE `proveedores`
 -- AUTO_INCREMENT de la tabla `retiros`
 --
 ALTER TABLE `retiros`
-  MODIFY `codigo_retiro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `codigo_retiro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 --
 -- AUTO_INCREMENT de la tabla `tipo_usuarios`
 --

@@ -27,6 +27,9 @@
     function filtroRetiro(){
         $log = new Log("log", "../../log/");
         try {
+				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			parse_str($_POST["parametros"], $_POST);
+			$tipo =	 trim($_POST['codigo']);
             $sql = new MovimientosModel();
             	//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
@@ -38,8 +41,19 @@
 				print json_encode($salidaJSON);
 				exit();
 			}
+				//VALIDMOS LOS PERMISOS
+			if ($_SESSION['INGRESO']['tipo'] != 1 && $_SESSION['INGRESO']['tipo'] != 2) {
+				$salidaJSON = array('codRetorno' => '005',
+					'form' => 'Inicio',
+					'bus' => '1',
+					'Mensaje' => 'No Cuenta con los permisos necesarios'
+				);
+				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				print json_encode($salidaJSON);
+				exit();
+			} 
 
-            $folio = $sql->recuperarFolio('retiros',$_SESSION['INGRESO']['id']);
+            $folio = $sql->recuperarFolio($tipo,$_SESSION['INGRESO']['id']);
 
 			if ($folio->CodRetorno == "000") {
 				$salidaJSON = array('codRetorno' => '000',
@@ -243,6 +257,7 @@
 				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
 					'form' => 'Retiro',
 					'datos' => $respuesta->Retiros,
+					'link' => $respuesta->lista
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,

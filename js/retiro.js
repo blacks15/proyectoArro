@@ -1,8 +1,7 @@
 $(document).ready(function() {
     //global.validaSesion();
-    global.isAdmin();
     $("#cantidad").focus(),
-        $("#fecha").val(global.obtenerFechaActual());
+    $("#fecha").val(global.obtenerFechaActual());
     editarDatos();
     recuperarFolio();
     ///////////////////////////////////////////////////////////
@@ -99,19 +98,18 @@ $(document).ready(function() {
             global.numeros(evt);
         }
     });
-    /////////////////////////////////////////////////////
-    /**************************
-     *		  FUNCIONES		  *
-     **************************/
+/////////////////////////////////////////////////////
+        /**************************
+        *		  FUNCIONES		  *
+        **************************/
     function recuperarFolio() {
-        var datos = global.cargaFolio('ControllerMovimientos', 'recuperaFolio');
+        var datos = global.cargaFolio('ControllerMovimientos', 'recuperaFolio','retiros');
         if (datos.codRetorno = '000') {
             $("#folio").val(datos.folio);
             $("#nombreEmpleado").val(datos.nombreEmpleado);
         }
-        console.log(datos);
     }
-    //FUNCIÓN PARA ENVIAR DATOS
+        //FUNCIÓN PARA ENVIAR DATOS
     function enviarDatos(opc) {
         $(this).prop('disabled', true);
         var cadena = $("#frmAgregarRetiro").serialize();
@@ -125,7 +123,7 @@ $(document).ready(function() {
 
         $(this).prop('disabled', false);
     }
-    //FUNCIÓN PARA HABILITAR BOTÓN
+        //FUNCIÓN PARA HABILITAR BOTÓN
     function habilitarBoton() {
         var id = $("#codigoRetiro").val();
         var cantidad = $("#cantidad").val();
@@ -139,28 +137,28 @@ $(document).ready(function() {
             }
         }
     }
-    //FUNCIÓN PARA EDITAR DATOS DESDE BUSCAR RETIROS
+        //FUNCIÓN PARA EDITAR DATOS DESDE BUSCAR RETIROS
     function editarDatos() {
         var res = "";
         var resJson = "";
 
         if (localStorage.retiros != undefined) {
-            //RECUPERAMOS LOS VALORES ALMACENADOS EN SESSION 
+                //RECUPERAMOS LOS VALORES ALMACENADOS EN SESSION 
             res = localStorage.getItem('retiros');
-            //CONVERTIMOS EL JSON A UN OBJETO
+                //CONVERTIMOS EL JSON A UN OBJETO
             resJson = JSON.parse(res);
-            console.log(resJson);
+
             setTimeout(function() {
-                //ASGINAMOS VALORES A LOS INPUTS
+                    //ASGINAMOS VALORES A LOS INPUTS
                 $("#codigoRetiro").val(resJson[0]);
                 $("#folio").val(resJson[1]);
                 $("#nombreEmpleado").val(resJson[2]);
                 $("#cantidad").val(resJson[3]);
                 $("#descripcion").val(resJson[4]);
                 $("#fecha").val(resJson[5]);
-                //OCULTAMOS BOTON GUARDAR Y MOSTRAMOS MODIFICAR
+                    //OCULTAMOS BOTON GUARDAR Y MOSTRAMOS MODIFICAR
                 $("#btnUpdate").prop('disabled', false);
-                //VACIAMOS LA SESSION
+                    //VACIAMOS LA SESSION
                 localStorage.clear();
             }, 300);
         }

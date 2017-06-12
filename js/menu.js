@@ -2,7 +2,11 @@ $(document).ready(function(){
 	$("#user-name").html(sessionStorage.usuario);
 	$("#tipoUsuario").val(sessionStorage.tipo);
 	//global.cargarPagina("pages/Venta.html");
-	global.cargarPagina("Retiro");
+	if ($("#tipoUsuario").val() != 1) {
+		global.cargarPagina("Inicio");
+	} else {
+		global.cargarPagina("InicioAdmin");
+	}
 	global.isNotAdminMenu($("#tipoUsuario").val());
 
 	$('.button-collapse').sideNav({});
@@ -25,7 +29,11 @@ $(document).ready(function(){
 	});
 
 	$("#inicio").on('click',function(){
-		global.cargarPagina("Inicio");
+		if ($("#tipoUsuario").val() != 1) {
+			global.cargarPagina("Inicio");
+		} else {
+			global.cargarPagina("InicioAdmin");
+		}
 	});
 		//////////////////////////
 		//		MODULO VENTAS	//

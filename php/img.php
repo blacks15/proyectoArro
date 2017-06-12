@@ -19,12 +19,13 @@
 	$nombre = rtrim($nombre);
 	$nombre = utf8_decode($nombre);
 	$archivador = $upload_folder . '/' . $nombre;
-	$log->insert('imagen '.$nombre, false, true, true);
+	$ruta = "images/".$nombre;
+	$log->insert('imagen '.$archivador, false, true, true);
 		//SE VALIDA SI SE SUBIO CORRECTAMENTE LA IMÁGEN
 	if (!move_uploaded_file($tmp_archivo, $archivador)) {
-		$return = array('codRetorno' => '001');
+		$return = array('codRetorno' => '001', 'imagen' => $ruta);
 	} else {
-		$return = array('codRetorno' => '000');
+		$return = array('codRetorno' => '000', 'imagen' => $ruta);
 	}
 	print(json_encode($return));
  ?>

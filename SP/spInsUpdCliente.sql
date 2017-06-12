@@ -33,7 +33,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET CodRetorno = '003';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -42,7 +43,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET CodRetorno = '003';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
@@ -50,8 +52,8 @@ BEGIN
 		
 	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
 		IF EXISTS(SELECT * FROM clientes WHERE matricula = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci ) THEN
-				IF NOT EXISTS(SELECT * FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) THEN
+			IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci) = 0 ) THEN
+				IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) = 0 ) THEN
 					START TRANSACTION;
 						UPDATE clientes SET rfc = pRFC, empresa = pEmpresa, nombre_contacto = pNombreContacto, 
 							apellido_paterno = pAPaterno, apellido_materno = pAMaterno, calle = pCalle, numExt = pNumExt,

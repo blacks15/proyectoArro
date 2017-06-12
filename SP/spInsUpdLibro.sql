@@ -10,6 +10,7 @@ CREATE PROCEDURE spInsUpdLibro (
 	IN pDescripcion VARCHAR(500),
 	IN pUsuario VARCHAR(15),
 	IN pStatus VARCHAR(10),
+	IN pRutaIMG VARCHAR(50),
 	OUT CodRetorno CHAR(3),
 	OUT msg VARCHAR(100)
 )
@@ -24,7 +25,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msg = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -33,7 +35,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
@@ -43,7 +46,7 @@ BEGIN
 		IF EXISTS(SELECT * FROM libros WHERE codigo_libro = pCodigo) THEN
 			IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
-					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,fechaModificacion = NOW()
+					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,rutaIMG = pRutaIMG,fechaModificacion = NOW()
 					WHERE codigo_libro = pCodigo;
 					SET CodRetorno = '000';
 					SET msg = 'Libro Actualizado con Exito';
@@ -60,8 +63,8 @@ BEGIN
 	ELSE 
 		IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
-				INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,usuario,status,fechaCreacion,fechaModificacion)
-				VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pUsuario, pStatus,NOW(), NOW() );
+				INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,rutaIMG,usuario,status,fechaCreacion,fechaModificacion)
+				VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pRutaIMG, pUsuario, pStatus,NOW(), NOW() );
 				SET CodRetorno = '000';
 				SET msg = 'Libro Guardado con Exito';
 			COMMIT;

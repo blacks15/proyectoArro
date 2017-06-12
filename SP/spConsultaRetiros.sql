@@ -23,7 +23,7 @@ BEGIN
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
-		SET CodRetorno = '002';
+		SET CodRetorno = '003';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -33,7 +33,7 @@ BEGIN
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
-		SET CodRetorno = '002';
+		SET CodRetorno = '003';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
@@ -52,7 +52,7 @@ BEGIN
 					SELECT codigo_retiro,folio,fecha,empleado,cantidad,descripcion,status 
 					FROM retiros 
 					WHERE folio = pCodigo 
-					ORDER BY folio ASC;
+					ORDER BY folio DESC;
 					SET msg = 'SP Ejecutado Correctamente';
 					SET CodRetorno = '000'; 
 				ELSE
@@ -65,7 +65,7 @@ BEGIN
 
 					SELECT codigo_retiro,folio,fecha,empleado,cantidad,descripcion,status 
 					FROM retiros 
-					ORDER BY folio ASC
+					ORDER BY folio DESC
 					LIMIT pInicio, pTamanio;
 					SET msg = 'SP Ejecutado Correctamente';
 					SET CodRetorno = '000'; 

@@ -4,7 +4,7 @@ DELIMITER $$
 CREATE PROCEDURE spValidaUsuario (
 	IN pNombre VARCHAR(10),
 	IN pUsuario VARCHAR(10),
-	OUT codRetono CHAR(3),
+	OUT codRetorno CHAR(3),
 	OUT msg VARCHAR(100)
 )
 -- =============================================
@@ -22,7 +22,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET codRetorno = '003';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -31,14 +32,15 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET codRetorno = '003';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
 	IF (pNombre = NULL && pUsuario = NULL) THEN
-		SET codRetono = '004';
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
 		IF EXISTS (SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci) THEN
@@ -52,10 +54,10 @@ BEGIN
 					FROM usuarios u
 					INNER JOIN empleados e ON e.matricula = u.matricula_empleado
 					WHERE u.status = 'DISPONIBLE' AND nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
-					SET codRetono = '000';
+					SET codRetorno = '000';
 					SET msg = 'SP Ejecutado Correcamente';
 				ELSE 
-					SET codRetono = '001';
+					SET codRetorno = '001';
 					SET msg = 'Usuario Bloqueado';
 				END IF;
 			ELSE
@@ -64,11 +66,11 @@ BEGIN
 				FROM usuarios u
 				INNER JOIN empleados e ON e.matricula = u.matricula_empleado
 				WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
-				SET codRetono = '000';
+				SET codRetorno = '000';
 				SET msg = 'SP Ejecutado Correcamente';
 			END IF;
 		ELSE 
-			SET codRetono = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Usuario no Existe';
 		END IF;
 	END IF;

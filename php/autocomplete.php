@@ -41,7 +41,10 @@
 		$buscar = trim($_GET['term']);
 			//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 		if(!empty($buscar)) {
-      		$consulta = "SELECT codigo_autor,nombre_autor FROM autores WHERE nombre_autor LIKE ? AND status = 'DISPONIBLE' ";
+      		$consulta = "SELECT codigo_autor,nombre_autor 
+				FROM autores 
+				WHERE nombre_autor LIKE ? AND status = 'DISPONIBLE'
+				ORDER BY nombre_autor ASC ";
     			//SE PREPARA Y SE EJECUTA LA CONSULTA
 			$stm = $db->prepare($consulta);
 			$stm->execute(array("%$buscar%"));
@@ -66,7 +69,10 @@
 		$buscar = trim($_GET['term']);
 			//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 		if(!empty($buscar)) {
-      		$consulta = "SELECT codigo_libro,nombre_libro FROM libros WHERE nombre_libro LIKE ? ";
+      		$consulta = "SELECT codigo_libro,nombre_libro 
+				FROM libros 
+				WHERE nombre_libro LIKE ? 
+				ORDER BY nombre_libro ASC ";
     			//SE PREPARA Y SE EJECUTA LA CONSULTA
 			$stm = $db->prepare($consulta);
 			$stm->execute(array("%$buscar%"));
@@ -91,7 +97,10 @@
 		$buscar = trim($_GET['term']);
 			//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 		if(!empty($buscar)) {
-      		$consulta = "SELECT codigo_proveedor,nombre_proveedor FROM proveedores WHERE status != 'BAJA' and nombre_proveedor LIKE ? ";
+      		$consulta = "SELECT codigo_proveedor,nombre_proveedor 
+				FROM proveedores 
+				WHERE status != 'BAJA' and nombre_proveedor LIKE ?
+				ORDER BY nombre_proveedor ASC ";
     			//SE PREPARA Y SE EJECUTA LA CONSULTA
 			$stm = $db->prepare($consulta);
 			$stm->execute(array("%$buscar%"));
@@ -120,8 +129,9 @@
 				//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 			if(!empty($buscar)) {
 				$consulta = "SELECT matricula,concat(nombre_empleado,' ',apellido_paterno,' ',
-					apellido_materno) as nombre_empleado,isUsu
-				FROM empleados WHERE status != 'BAJA' and nombre_empleado LIKE ? ";
+						apellido_materno) as nombre_empleado,isUsu
+					FROM empleados WHERE status != 'BAJA' and nombre_empleado LIKE ?
+					ORDER BY nombre_empleado ASC ";
 	        		//SE PREPARA Y SE EJECUTA LA CONSULTA
 				$stm = $db->prepare($consulta);
 				$stm->execute(array("%$buscar%"));
@@ -161,12 +171,14 @@
 				if ($id == 1) {
 					//var_dump($_GET);
 				$consulta = "SELECT concat(nombre_contacto,' ',apellido_paterno,' ',apellido_materno) AS nombre_cliente, matricula
-				FROM clientes WHERE nombre_contacto LIKE ? AND matricula != '1' ";
+					FROM clientes 
+					WHERE nombre_contacto LIKE ? AND matricula != '1'
+					ORDER BY nombre_cliente ASC ";
 				} else {
-				//var_dump($_GET);
-				$consulta = "SELECT empresa AS nombre_cliente, matricula
-				    FROM clientes 
-					WHERE empresa LIKE ? AND matricula != '1' ";
+					$consulta = "SELECT empresa AS nombre_cliente, matricula
+						FROM clientes 
+						WHERE empresa LIKE ? AND matricula != '1'
+						ORDER BY nombre_cliente ASC ";
 				}
 	        		//SE PREPARA Y SE EJECUTA LA CONSULTA
 				$stm = $db->prepare($consulta);
@@ -204,7 +216,9 @@
 			if (!empty($buscar)) {
 					//CREAMOS LA CONSULTA
 				$consulta = "SELECT nombre_producto,codigo_producto,venta,codigoBarras,stockActual,stockMax,status
-					FROM productos WHERE nombre_producto LIKE ?";
+					FROM productos 
+					WHERE nombre_producto LIKE ?
+					ORDER BY nombre_producto ASC";
 						//SE PREPARA Y SE EJECUTA LA CONSULTA
 				$stm = $db->prepare($consulta);
 				$stm->execute(array("%$buscar%"));
@@ -241,7 +255,10 @@
 		$buscar = trim($_GET['term']);
 			//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 		if (!empty($buscar)) {
-      		$consulta = "SELECT codigo_editorial,nombre_editorial FROM editoriales WHERE nombre_editorial LIKE ? AND status = 'DISPONIBLE' ";
+      		$consulta = "SELECT codigo_editorial,nombre_editorial 
+				FROM editoriales
+				WHERE nombre_editorial LIKE ? AND status = 'DISPONIBLE'
+				ORDER BY nombre_editorial ASC ";
     			//SE PREPARA Y SE EJECUTA LA CONSULTA
 			$stm = $db->prepare($consulta);
 			$stm->execute(array("%$buscar%"));

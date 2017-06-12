@@ -3,7 +3,7 @@ DROP PROCEDURE IF EXISTS spInsUpdEditorial;
 DELIMITER $$
 CREATE PROCEDURE spInsUpdEditorial (
 	IN pCodigo BIGINT,
-	IN pNombreEditorial VARCHAR(50) COLLATE utf8_spanish2_ci,
+	IN pNombreEditorial VARCHAR(50),
 	IN pUsuario VARCHAR(15),
 	IN pStatus VARCHAR(15),
 	OUT CodRetorno CHAR(3),
@@ -20,7 +20,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -29,16 +30,18 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET CodRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 			
 	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreEditorial,'') = '' && COALESCE(pUsuario,'') = ''  && COALESCE(pStatus,'') = '' ) THEN
+		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
-		IF (pCodigo != 0 || COALESCE(pCodigo,'') = '') THEN
+		IF (pCodigo != 0 ) THEN
 			IF EXISTS(SELECT * FROM editoriales WHERE codigo_editorial = pCodigo) THEN
 				IF NOT EXISTS(SELECT * FROM editoriales WHERE codigo_editorial != pCodigo AND nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci ) THEN
 					START TRANSACTION;
@@ -56,7 +59,7 @@ BEGIN
 				SET msg = 'La Editorial no Éxiste';
 			END IF;
 		ELSE 
-			IF NOT EXISTS(SELECT * FROM editoriales WHERE nombre_editorial = pNombreEditorial) THEN
+			IF NOT EXISTS(SELECT * FROM editoriales WHERE nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
 					INSERT INTO editoriales(nombre_editorial,usuario,status,fechaCreacion,fechaModificacion)
 					VALUES (pNombreEditorial, pUsuario, pStatus,NOW(), NOW() );

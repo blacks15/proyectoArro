@@ -119,7 +119,7 @@ $(document).ready(function(){
 			$("#celular").html("<b>Celular: </b>"+array[9]);
 			$("#email").html("<b>E-mail: </b>"+array[10]);
 
-			array.clear;
+			array.length = 0;
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -134,7 +134,7 @@ $(document).ready(function(){
 				//CONVERTIMOS A JSON 
 			localStorage.cliente = JSON.stringify(array);
 			global.cargarPagina('Cliente');
-			array.clear;
+			array.length = 0;
 		});
 	});
  		//CREAMOS LA MODAL

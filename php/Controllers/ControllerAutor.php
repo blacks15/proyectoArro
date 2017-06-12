@@ -61,7 +61,7 @@
 			$log->insert('Autor CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error guardarAutores! '.$e->getMessage(), false, true, true);	
+			$log->insert('Error guardarAutores '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}

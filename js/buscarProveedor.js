@@ -25,7 +25,7 @@ $(document).ready(function(){
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		$("#btnSearch").prop('disabled',true);
+		$(this).prop('disabled',true);
 		var buscar = $("#buscar").val(); 
 		var codigo = $("#codigo").val();
 
@@ -36,7 +36,7 @@ $(document).ready(function(){
 			global.mensajes('Advertencia','Campo Buscar vacio','warning');
 		}
 			
-		$("#btnSearch").prop('disabled',false);	
+		$(this).prop('disabled',false);	
 	});
 /////////////////////////////////////////////////////////////////////////////
 		/**************************
@@ -102,7 +102,7 @@ $(document).ready(function(){
 			$("#email").html("E-mail: "+array[8]);
 			$("#web").html("Página Web: "+array[9]);
 
-			array.clear;
+			array.length = 0;
 		});
 	});
 	    //FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -117,7 +117,7 @@ $(document).ready(function(){
 	        	//CONVERTIMOS A JSON 
 			localStorage.proveedor = JSON.stringify(array);
 			global.cargarPagina('Proveedor');
-			array.clear;
+			array.length = 0;
 		});
 	});
  		//CREAMOS LA MODAL

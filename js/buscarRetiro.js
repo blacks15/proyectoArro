@@ -2,9 +2,9 @@ $(document).ready(function(){
 	/**************************
      *	 OOCULTAR CAMPOS	   *
      **************************/
-	global.validaSesion();
+	//global.validaSesion();
 	global.isNotAdminMenu($("#tipoUsuario").val());
-	global.pagination('php/retiro.php',1);
+	global.pagination('ControllerMovimientos',1,0,'');
 	$("#buscar").focus();
 //////////////////////////////////////////////////////
 	/**************************
@@ -12,36 +12,25 @@ $(document).ready(function(){
      **************************/
 		//BOTÓN NUEVO LIBRO
 	$("#btnNuevo").on('click',function(){
-		global.cargarPagina("pages/Retiro.html");
+		global.cargarPagina("Retiro");
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
 		e.preventDefault();
-		$("#btnSearch").prop('disabled',true);
+		$(this).prop('disabled',true);
 		var buscar = $("#buscar").val(); 
 
-		if (buscar != "") {
-			var parametros = {opc: 'buscarRetiro','buscar': buscar };
-
-			var respuesta = global.buscar('retiro',parametros);
-			if (respuesta.codRetorno == '000') {
-				console.log(respuesta);
-				$("#table").html("");
-				$("#table").append("<tr><td style='display: none' width='5%'>"+respuesta.id+
-					"</td><td width='15%'>"+respuesta.folio+"</td><td width='25%'>"+respuesta.nombreEmpleado+
-					"</td><td width='15%'>"+respuesta.cantidad+"</td><td width='25%'>"+respuesta.descripcion+
-					"</td><td width='15%'>"+global.formatoFecha(respuesta.fecha)+
-					"</td><td style='display: none' width='15%'>"+respuesta.fecha+
-					"</td><td><button type='button' class='icon-editar btn green lighten-1 btnEditar'></button>\
-					</td></tr>"
-				);
-
-				$('#page-numbers').html("");
-			}
-		} else {
-			global.mensajes('Advertencia','Campo Buscar vacio','warning');
+		if (buscar == "") {
+			global.mensajes('Advertencia','Campo Buscar vacio','warning','','','','');
+		} else if (buscar.length < 13) {
+            global.mensajes('Advertencia', 'El Folio Debe Ser Mayor a 13 Digitos', 'warning', '', '', '', '');
+        } else {
+			global.pagination('ControllerMovimientos',1,buscar,'');
+			$('#pagination').hide();
 		}
-		$("#btnSearch").prop('disabled',false);	
+
+		$("#buscar").focus();
+		$(this).prop('disabled',false);	
 	});
 		//BOTÓN CREAR REPORTE
 	$("#btnReporte").on('click',function(){
@@ -64,14 +53,14 @@ $(document).ready(function(){
 		//EVENTO KEYUP DEL CAMPO BUSCAR
 	$("#buscar").on('keyup',function(){
 		if ( $(this).val().length == 0 && $(this).val() == "") {
-			global.pagination('php/retiro.php',1);
+			global.pagination('ControllerMovimientos',1,0,'');
 		}
 	});
 		//FUNCIÓN PARA CAMBIAR PÁGINACION
-	$("#pages").on('click',function(){
+	$("#pagination").on('click',function(){
 		$(".paginate").on('click',function(){
 			var page = $(this).attr("data");	
-			global.pagination('php/retiro.php',page);
+			global.pagination('ControllerMovimientos',page,0,'');
 		});
 	});
 		//FUNCIÓN PARA TOMAR EL BOTOÓN ACTUALIZAR DE LA TABLA
@@ -85,8 +74,8 @@ $(document).ready(function(){
 			localStorage.clear();
 				//CONVERTIMOS A JSON 
 			localStorage.retiros = JSON.stringify(array);
-			global.cargarPagina('pages/Retiro.html');
-			array.clear;
+			global.cargarPagina('Retiro');
+			array.length = 0;
 		});
 	});
 });

@@ -21,7 +21,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msg = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -30,7 +31,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
@@ -47,7 +49,7 @@ BEGIN
 				 IF EXISTS (SELECT * FROM libros WHERE status = 'DISPONIBLE') THEN
 				 	SELECT COUNT(*) INTO numFilas FROM libros WHERE status = 'DISPONIBLE';
 
-					SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor
+					SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor,rutaIMG
 					FROM libros l
 					INNER JOIN autores a ON a.codigo_autor = l.autor
 					INNER JOIN editoriales e ON e.codigo_editorial = l.editorial 
@@ -65,7 +67,7 @@ BEGIN
 					IF EXISTS (SELECT * FROM libros WHERE status = 'DISPONIBLE' AND codigo_libro = pCodigo) THEN
 						SELECT COUNT(*) INTO numFilas FROM libros WHERE status = 'DISPONIBLE' AND codigo_libro = pCodigo;
 
-						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor
+						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor,rutaIMG
 						FROM libros l
 						INNER JOIN autores a ON a.codigo_autor = l.autor
 						INNER JOIN editoriales e ON e.codigo_editorial = l.editorial 
@@ -81,7 +83,7 @@ BEGIN
 					IF EXISTS (SELECT * FROM libros WHERE status = 'DISPONIBLE' AND autor = pCodigo) THEN
 						SELECT COUNT(*) INTO numFilas FROM libros WHERE status = 'DISPONIBLE' AND autor = pCodigo;
 					
-						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor
+						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor,rutaIMG
 						FROM libros l
 						INNER JOIN autores a ON a.codigo_autor = l.autor
 						INNER JOIN editoriales e ON e.codigo_editorial = l.editorial 

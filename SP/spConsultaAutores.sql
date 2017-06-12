@@ -5,7 +5,7 @@ CREATE PROCEDURE spConsultaAutores (
 	IN pCodigo BIGINT,
 	IN pInicio INT,
 	IN pTamanio INT,
-	OUT codRetono CHAR(3),
+	OUT codRetorno CHAR(3),
 	OUT msg VARCHAR(100),
 	OUT numFilas INT
 )
@@ -20,7 +20,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msg = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -29,13 +30,14 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 	IF (pCodigo = NULL && pInicio = NULL && pTamanio = NULL) THEN
-		SET CodRetorno = '002';
+		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
 		SELECT COUNT(*) INTO numFilas FROM autores WHERE status = 'DISPONIBLE';

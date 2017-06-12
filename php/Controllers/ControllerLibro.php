@@ -61,8 +61,9 @@
 	function guardar_libro(){	
 		$log = new Log("log", "../../log/");
 		$log->insert('Entro metodo guardarLibro!', false, true, true);		
-		try {
+		try { 
 			$sql = new LibroModel();
+			$rutaIMG2 = trim($_POST['img']);
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
 			parse_str($_POST["cadena"], $_POST);
 			 	//DECLARACION Y ASIGNACIÓN DE VARIABLES
@@ -70,6 +71,10 @@
 			 	//CICLO PARA LLENAR VARIABLES POR POST
 			foreach ($_POST as $clave => $valor) {
 				${$clave} = trim($_POST[$clave]);
+			}
+				//COMPROBAMOS SI LA VARIABLE TRAE LA RUTA DE LA IMÀGEN 
+			if ($rutaIMG2 != "" || $rutaIMG2 != null) {
+				$rutaIMG = $rutaIMG2;
 			}
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
@@ -82,7 +87,7 @@
 				exit();
 			}
 				//VALIDAMOS LOS PARAMETROS
-			if (!isset($codigoLibro,$nombreLibro,$isbn,$autor,$editorial) ) {
+			if (!isset($codigoLibro,$nombreLibro,$isbn,$autor,$editorial,$rutaIMG) ) {
 				$salidaJSON = array('codRetorno' => '004',
 					'form' => 'Libro',
 					'Titulo' => 'Advertencia',
@@ -97,7 +102,7 @@
 				$codigoLibro = 0;
 			}
 				//SE CREA EL ARRAY CON LOS DATOS A INSERTAR
-			$datos = array($codigoLibro,$nombreLibro,$isbn,$autor,$editorial,$descripcionLibro,$_SESSION['INGRESO']['nombre'],$status);
+			$datos = array($codigoLibro,$nombreLibro,$isbn,$autor,$editorial,$descripcionLibro,$_SESSION['INGRESO']['nombre'],$status,$rutaIMG);
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
 			$res = $sql->guardarLibro($datos);
 				//SE VALIDA EL RETORNO DEL MÉTODO
@@ -107,11 +112,17 @@
 					'Titulo' => 'Éxito',
 					'Mensaje' => $res->Mensaje,
 				);
-			} else {
+			} else if (!empty($res->CodRetorno) ) {
 				$salidaJSON = array('codRetorno' => $res->CodRetorno,
 					'form' => 'Libro',
 					'Titulo' => 'Error',
 					'Mensaje' => $res->Mensaje,
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => '002',
+					'form' => 'Libro',
+					'Titulo' => 'Error',
+					'Mensaje' => 'Ocurrio un Error',
 				);
 			}
 

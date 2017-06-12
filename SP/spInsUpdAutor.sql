@@ -20,7 +20,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -29,7 +30,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msg = @full_error;
+		SET CodRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
@@ -38,7 +40,7 @@ BEGIN
 	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreAutor,'') = '' && COALESCE(pUsuario,'') = ''  && COALESCE(pStatus,'') = '' ) THEN
 		SET msg = 'Parametros Vacios';
 	ELSE
-		IF (pCodigo != 0 || COALESCE(pCodigo,'') = '') THEN
+		IF (pCodigo != 0) THEN
 			IF EXISTS(SELECT * FROM autores WHERE codigo_autor = pCodigo) THEN
 				IF NOT EXISTS(SELECT * FROM autores WHERE codigo_autor != pCodigo AND nombre_autor = CONVERT(pNombreAutor USING utf8) COLLATE utf8_general_ci ) THEN
 					START TRANSACTION;
@@ -57,7 +59,7 @@ BEGIN
 				ROLLBACK;
 			END IF;
 		ELSE 
-			IF NOT EXISTS(SELECT * FROM autores WHERE nombre_autor = pNombreAutor) THEN
+			IF NOT EXISTS(SELECT * FROM autores WHERE nombre_autor = CONVERT(pNombreAutor USING utf8) COLLATE utf8_general_ci) THEN
 				START TRANSACTION;
 					INSERT INTO autores (nombre_autor,usuario,status,fechaCreacion,fechaModificacion)
 					VALUES (pNombreAutor, pUsuario, pStatus,NOW(), NOW() );
@@ -66,7 +68,7 @@ BEGIN
 				COMMIT;
 			ELSE
 				SET CodRetorno = '001';
-				SET msg = 'El Autor ya Éxiste';
+				SET msg = 'El Autor ya Existe';
 				ROLLBACK;
 			END IF; 
 		END IF; 

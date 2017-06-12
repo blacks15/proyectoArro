@@ -98,7 +98,7 @@ $(document).ready(function(){
 				//CONVERTIMOS A JSON 
 			localStorage.producto = JSON.stringify(array);
 			global.cargarPagina('Producto');
-			array.clear;
+			array.length = 0;
 		});
 	});
 /////////////////////////////////////////////////////////////////////////////

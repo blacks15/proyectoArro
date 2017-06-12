@@ -14,12 +14,11 @@
 		case 'cerrarSession':
 			logOut();
 		break;
-	}
+	} 
 		//FUNCIÓN PARA LOGIN
-	function login($usuario,$password){
+	function login(){
 		$log = new Log("log", "../../log/");
 		$log->insert('Entro metodo login', false, true, true);	
-
 		try {
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
 			parse_str($_POST["cadena"], $_POST);

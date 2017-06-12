@@ -30,7 +30,7 @@ class LibroModel {
 				return $retorno;
 			}
 
-			$consulta = "CALL spInsUpdLibro(?,?,?,?,?,?,?,?,@codRetorno,@msg)";
+			$consulta = "CALL spInsUpdLibro(?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
 
 			$stm = executeSP($consulta,$datos);
 
@@ -79,7 +79,8 @@ class LibroModel {
 						'idAutor' => $value['autor'],
 						'idEditorial' => $value['editorial'],
 						'editorial' => $value['nombre_editorial'],
-						'descripcion' => $value['descripcion']
+						'descripcion' => $value['descripcion'],
+						'rutaIMG' => $value['rutaIMG']
 					);
 					$i++;
 				}
