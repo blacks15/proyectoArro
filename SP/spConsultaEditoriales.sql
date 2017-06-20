@@ -20,7 +20,7 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET CodRetorno = '003';
+		SET CodRetorno = '002';
 		SET msg = @full_error;
 		RESIGNAL;
 		ROLLBACK;
@@ -30,7 +30,7 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET CodRetorno = '003';
+		SET CodRetorno = '002';
 		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;

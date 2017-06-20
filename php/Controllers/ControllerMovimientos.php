@@ -58,7 +58,8 @@
 			if ($folio->CodRetorno == "000") {
 				$salidaJSON = array('codRetorno' => '000',
 					'folio' => $folio->Datos[0]['vFolio'],
-					'nombreEmpleado' => strtoupper($folio->Datos[0]['nombreEmpleado'])
+					'nombreEmpleado' => strtoupper($folio->Datos[0]['nombreEmpleado']),
+					'matricula' => $_SESSION['INGRESO']['id']
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => '002',

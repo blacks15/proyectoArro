@@ -1,11 +1,9 @@
 <?php 
-
 /*
 	Clase Usuario
 	Autor: Felipe Monzón
 	Fecha: 23-ABR-2017
 */
-
 class Usuario {
 	private $clave;
 	private $usuario;

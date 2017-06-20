@@ -25,7 +25,7 @@ BEGIN
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
-		SET CodRetorno = '003';
+		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -36,7 +36,7 @@ BEGIN
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
-		SET CodRetorno = '003';
+		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;

@@ -1,186 +1,189 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Ventas</title>
+    <title>Ventas</title>
 </head>
+
 <body>
-<div class="card-panel">
-	<form id="frmAgregarVenta">
-		<fieldset>
-			<div class="col s12">
-				<div class="row">
-					<div class="col s4">
-						<div class="row"> 
-							<div class="col s6">
-								<label>Folio Venta</label>
-								<input type="text" name="folio" id="folio" readonly="true">	
-							</div>
-							<div class="col s8">
-								<label>Fecha</label>
-								<input type="text" name="fechaVenta" id="fechaVenta" readonly="true">
-							</div>
-							<div class="col s8">
-								<label>Código Producto</label>
-								<input type="text" name="codigoProducto1" id="codigoProducto1" maxlength="20">
-								<input type="hidden" name="codigoProducto" id="codigoProducto">
-							</div>
-						</div>
-					</div>
-					<div class="col s6">
-						<div class="row">
-							<div class="col s8">
-								<label>Cajero</label>
-								<input type="text" name="nombreEmpleado" id="nombreEmpleado" readonly="true">
-								<input type="hidden" name="codigoEmpleado" id="codigoEmpleado">
-							</div>
-						</div>
-						<div class="row">
-							<div class="col s8">
-								<label>Nombre Cliente</label>
-								<input type="text" name="nombreCliente" id="nombreCliente" readonly="true" value="cliente general">
-								<input type="hidden" name="codigoCliente" id="codigoCliente">
-							</div>
-						</div>
-						<div class="row">
-							<div class="col s8">
-								<label>Nombre Producto</label>
-								<input type="text" name="nombreProducto" id="nombreProducto" maxlength="50">
-								<input type="hidden" name="precioProducto" id="precioProducto">
-								<input type="hidden" name="cantidadProducto" id="cantidadProducto">
-								<input type="hidden" name="cantidad" id="cantidad">
-								<input type="hidden" name="índice" id="índice">
-							</div>
-						</div>
-					</div>
-					<div class="col s1" align="right" style="margin-top: 15px;">
-						<button type="button" class="icon-retiro btn-floating btn-large blue darken-1" id="btnPagar" disabled="true"></button>
-						<button type="button" id="agregar" class="icon-addProd btn-floating btn-large blue waves-effect waves-light tooltipped2" disabled="true"></button>
-						<button type="button" id="quitar" class="btn-floating btn-large red waves-effect waves-light tooltipped" disabled="true"><i class="material-icons">close</i></button>
-					</div>
-				</div>
-				<table id="datos" cellpadding="2">
-					<thead>
-						<th width="20%" class="center">Código Producto</th>
-						<th width="40%" class="center">Nombre Producto</th>
-						<th width="10%" class="center">Cantidad</th>
-						<th width="10%" class="center">Precio</th>
-						<th width="10%" class="center">Subtotal</th>
-					</thead>
-					<tbody id="tabla" name="tabla" class="center" style="text-transform: uppercase;"></tbody>
-					<tfoot>
-						<tr>
-							<th id="lblTotal" colspan="4" style="text-align: right; font-size: 18px;">Total</th>
-							<td id="txtTotal" class="center" style="font-size: 22px;">0</td>
-						</tr>
-					</tfoot>
-				</table>
-			</div>
-		</fieldset>
-	</form>
-<!-- SE CREA LA modal  -->
-		<div id="modal" class="modal modal-fixed-footer">
-			<div class="modal-content">
-				<form class="col s12" id="frmProductos">
-				<fieldset>
-					<legend class="titulo">Productos</legend>
-					<div class="col s12">
-						<div class="row">
-							<div class="col s10">
-								<div class="row">
-									<div class="col s3">
-										<label for="codigo">Código Producto</label>
-										<input type="text" id="codigo" name="codigo" readonly="true">
-										<input type="hidden" name="id" id="id">
-									</div>
-									<div class="col s8">
-										<label for="textfield">Nombre Producto: </label>
-										<input type="text" name="nombre" id="nombre" readonly="true">
-									</div>
-									<div class="col s1">
-										<button type="button" id="btnAgregar" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>	
-									</div>
-									<div class="col s2">
-										<label for="textfield">Cantidad: </label>
-										<input type="text" name="cantprod" id="cantprod" autofocus>
-									</div>
-									<div class="col s2">
-										<label for="textfield">Precio: </label>
-										<input type="text" name="precio" id="precio" readonly="true">
-									</div>
-									<div class="col s3">
-										<label for="textfield">Subtotal</label>
-										<input type="text" name="subtotal" id="subtotal" readonly="true">
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</fieldset>	
-				</form>
-			</div>
-		</div>
-	<!-- SE CREA LA modal  -->
-		<div id="modal2" class="modal">
-			<div class="modal-content">
-				<form class="col s12">
-				<fieldset>
-					<legend class="titulo">Total a Pagar</legend>
-					<div class="col s12">
-						<div class="row">
-							<div class="col s12" style="margin-bottom: 25px;">
-								<ul class="tabs">	
-									<li class="tab col s6"><a href="#metodoPago" class="active">Método de Pago</a></li>
-									<li class="tab col s5"><a href="#pagar">Pagar</a></li>
-								</ul>
-							</div>
-						</div>
-						<div id="metodoPago" class="col s12">
-							<div class="row">
-								<div class="col s10 m6 offset-m4">
-									<div class="row">
-										<div class="col s5">
-											<label for="total">Método de pago</label>
-											<select class="browser-default" id="metPago" name="metPago">
-												<option value="00">SELECCIONE</option>
-												<option value="1">TARJETA</option>
-												<option value="0">EFECTVO</option>
-											</select>
-										</div>
-										<div class="col s5" id="folTarj">
-											<label for="textfield">Folio Tarjeta</label>
-											<input type="text" name="folioTarjeta" id="folioTarjeta" maxlength="20">
-										</div>
-										<div class="col s2">
-											<button type="button" id="btnSig" class="arrow_right btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_forward</i>
+    <div class="card-panel">
+        <form id="frmAgregarVenta">
+            <fieldset>
+                <div class="col s12">
+                    <div class="row">
+                        <div class="col s4">
+                            <div class="row">
+                                <div class="col s6">
+                                    <label>Folio Venta</label>
+                                    <input type="text" name="folio" id="folio" readonly="true">
+                                </div>
+                                <div class="col s8">
+                                    <label>Fecha</label>
+                                    <input type="text" name="fechaVenta" id="fechaVenta" readonly="true">
+                                </div>
+                                <div class="col s8">
+                                    <label>Código Producto</label>
+                                    <input type="text" name="codigoProducto1" id="codigoProducto1" maxlength="20">
+                                    <input type="hidden" name="codigoProducto" id="codigoProducto">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col s6">
+                            <div class="row">
+                                <div class="col s8">
+                                    <label>Cajero</label>
+                                    <input type="text" name="nombreEmpleado" id="nombreEmpleado" readonly="true">
+                                    <input type="hidden" name="codigoEmpleado" id="codigoEmpleado">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col s8">
+                                    <label>Nombre Cliente</label>
+                                    <input type="text" name="nombreCliente" id="nombreCliente" readonly="true" value="cliente general">
+                                    <input type="hidden" name="codigoCliente" id="codigoCliente">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col s8">
+                                    <label>Nombre Producto</label>
+                                    <input type="text" name="nombreProducto" id="nombreProducto" maxlength="50">
+                                    <input type="hidden" name="precioProducto" id="precioProducto">
+                                    <input type="hidden" name="cantidadProducto" id="cantidadProducto">
+                                    <input type="hidden" name="cantidad" id="cantidad">
+                                    <input type="hidden" name="índice" id="índice">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col s1" align="right" style="margin-top: 15px;">
+                            <button type="button" class="icon-retiro btn-floating btn-large blue darken-1" id="btnPagar" disabled="true"></button>
+                            <button type="button" id="agregar" class="icon-addProd24 btn-floating btn-large blue waves-effect waves-light tooltipped2" disabled="true"></button>
+                            <button type="button" id="quitar" class="btn-floating btn-large red waves-effect waves-light tooltipped" disabled="true"><i class="material-icons">close</i></button>
+                        </div>
+                    </div>
+                    <table id="datos" cellpadding="2">
+                        <thead>
+                            <th width="20%" class="center">Código Producto</th>
+                            <th width="40%" class="center">Nombre Producto</th>
+                            <th width="10%" class="center">Cantidad</th>
+                            <th width="10%" class="center">Precio</th>
+                            <th width="10%" class="center">Subtotal</th>
+                        </thead>
+                        <tbody id="tabla" name="tabla" class="center" style="text-transform: uppercase;"></tbody>
+                        <tfoot>
+                            <tr>
+                                <th id="lblTotal" colspan="4" style="text-align: right; font-size: 18px;">Total</th>
+                                <td id="txtTotal" class="center" style="font-size: 22px;">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </fieldset>
+        </form>
+        <!-- SE CREA LA modal  -->
+        <div id="modal" class="modal modal-fixed-footer">
+            <div class="modal-content">
+                <form class="col s12" id="frmProductos">
+                    <fieldset>
+                        <legend class="titulo">Productos</legend>
+                        <div class="col s12">
+                            <div class="row">
+                                <div class="col s10">
+                                    <div class="row">
+                                        <div class="col s3">
+                                            <label for="codigo">Código Producto</label>
+                                            <input type="text" id="codigo" name="codigo" readonly="true">
+                                            <input type="hidden" name="id" id="id">
+                                        </div>
+                                        <div class="col s8">
+                                            <label for="textfield">Nombre Producto: </label>
+                                            <input type="text" name="nombre" id="nombre" readonly="true">
+                                        </div>
+                                        <div class="col s1">
+                                            <button type="button" id="btnAgregar" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>
+                                        </div>
+                                        <div class="col s2">
+                                            <label for="textfield">Cantidad: </label>
+                                            <input type="text" name="cantprod" id="cantprod" autofocus>
+                                        </div>
+                                        <div class="col s2">
+                                            <label for="textfield">Precio: </label>
+                                            <input type="text" name="precio" id="precio" readonly="true">
+                                        </div>
+                                        <div class="col s3">
+                                            <label for="textfield">Subtotal</label>
+                                            <input type="text" name="subtotal" id="subtotal" readonly="true">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+        <!-- SE CREA LA modal  -->
+        <div id="modal2" class="modal">
+            <div class="modal-content">
+                <form class="col s12">
+                    <fieldset>
+                        <legend class="titulo">Total a Pagar</legend>
+                        <div class="col s12">
+                            <div class="row">
+                                <div class="col s12" style="margin-bottom: 25px;">
+                                    <ul class="tabs">
+                                        <li class="tab col s6"><a href="#metodoPago" class="active">Método de Pago</a></li>
+                                        <li class="tab col s5"><a href="#pagar">Pagar</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div id="metodoPago" class="col s12">
+                                <div class="row">
+                                    <div class="col s10 m6 offset-m4">
+                                        <div class="row">
+                                            <div class="col s5">
+                                                <label for="metPago">Método de pago</label>
+                                                <select class="browser-default" id="metPago" name="metPago">
+												    <option value="0">SELECCIONE</option>
+                                                    <option value="1">EFECTVO</option>
+												    <option value="2">TARJETA</option>
+												</select>
+                                            </div>
+                                            <div class="col s5" id="folTarj">
+                                                <label for="textfield">Folio Tarjeta</label>
+                                                <input type="text" name="folioTarjeta" id="folioTarjeta" maxlength="20">
+                                            </div>
+                                            <div class="col s2">
+                                                <button type="button" id="btnSig" class="arrow_right btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_forward</i>
 											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div id="pagar" class="col s12">
-							<div class="row">
-								<div class="col s12 m6 offset-m3">
-									<div class="col s3" style="margin-top: 15px;">
-										<button type="button" id="btnAnt" class="btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="pagar" class="col s12">
+                                <div class="row">
+                                    <div class="col s12 m6 offset-m3">
+                                        <div class="col s3" style="margin-top: 15px;">
+                                            <button type="button" id="btnAnt" class="btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
 										</button>
-									</div>
-									<div class="col s5">
-										<label for="total">Total</label>
-										<input type="text" id="total" name="total" readonly="true" class="swal2-input">
-									</div>
-									<div class="col s3">
-										<button type="button" id="btnSave" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>	
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</fieldset>	
-				</form>
-			</div>
-		</div>
-	</div>
+                                        </div>
+                                        <div class="col s5">
+                                            <label for="total">Total</label>
+                                            <input type="text" id="total" name="total" readonly="true" class="swal2-input">
+                                        </div>
+                                        <div class="col s3">
+                                            <button type="button" id="btnSave" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
-	<script type="text/javascript" src="js/ventas.js"></script>
+<script type="text/javascript" src="js/ventas.js"></script>
+
 </html>

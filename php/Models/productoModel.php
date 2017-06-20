@@ -91,6 +91,7 @@ class ProductoModel {
 					//CREAMOS LA LISTA DE PAGINACIÓN
 				if ($stm->numFilas[0] > 0) {
 					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
+					$retorno->numFilas = $stm->numFilas[0];
 					$retorno->lista = $lista;
 				} else {
 					$retorno->CodRetorno = $stm->codRetorno[0];

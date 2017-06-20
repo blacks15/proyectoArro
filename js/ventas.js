@@ -133,7 +133,7 @@ $(document).ready(function() {
     //CHANGE
     $("#metPago").on('change', function(evt) {
         //VALIDAMOS QUE LA CANTIDAD SEA MAYOR QUE CERO
-        if ($(this).val() == 1) {
+        if ($(this).val() == 2) {
             $("#folTarj").show('slow');
         } else {
             $("#folTarj").hide('slow');
@@ -157,6 +157,7 @@ $(document).ready(function() {
         if (datos.codRetorno = '000') {
             $("#folio").val(datos.folio);
             $("#nombreEmpleado").val(datos.nombreEmpleado);
+            $("#codigoEmpleado").val(datos.matricula);
         }
     }
     //FUNCIÓN PARA LIMPIAR CAMPOS
@@ -251,10 +252,10 @@ $(document).ready(function() {
         $("#tabla").append("<tr id=" + j + "><td width='20%'><p class='center' id=i" + j + ">" + id +
             "</p></td><td width='40%'><p class='center' id=n" + j + ">" + nombre + "</p></td><td width='10%'><p class='center' id=c" + j + ">" + cantidad +
             "</p></td><td width='10%'><p class='center' id=p" + j + ">" + precio + "</p></td><td width='10%'><p class='center' id=st" + j + ">" + subtotal +
-            "</p></td><td><button type='button' class='icon-editar btn green lighten-1 btnEditar' data=" + j + "></button>\
-			</td><td><button type='button' class='icon-delProd16 btn red lighten-1 btnEliminar' data=" + j + "></button>\
+            "</p></td><td><a href='#'><img class='icon-editar btnEditar' width='30' height='30' data=" + j + "></a> \
+			</td><td><a href='#'><img class='icon-delProd24 btnEliminar' width='30' height='30' data=" + j + "></a>\
 			</td></tr>"
-        ).show('fold', 1000);
+        );
         //LLAMAR FUNCIONES
         limpiarCampos();
         habilitar();

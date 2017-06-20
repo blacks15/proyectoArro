@@ -63,6 +63,10 @@ button {
     vertical-align: middle;
 }
 
+a img {
+    border-top: none;
+}
+
 .centerDiv {
     margin-left: 10%;
 }
@@ -159,20 +163,28 @@ button {
     background: url(iconos/compra.png) no-repeat center transparent;
 }
 
-.icon-addProd {
+.icon-addProd16 {
+    background: url(iconos/addProducto16.png) no-repeat center transparent;
+}
+
+.icon-addProd24 {
     background: url(iconos/agregarProducto.png) no-repeat center transparent;
 }
 
 .icon-delProd16 {
-    background: url(iconos/quitarProducto16.png) no-repeat center transparent;
+    background: url(iconos/delProducto16.png) no-repeat center transparent;
+}
+
+.icon-delProd24 {
+    background: url(iconos/delProducto24.png) no-repeat center transparent;
 }
 
 .icon-busProd {
-    background: url(iconos/buscarProducto.png) no-repeat center transparent;
+    background: url(iconos/searchProd24.png) no-repeat center transparent;
 }
 
 .icon-delProd {
-    background: url(iconos/quitarProducto.png) no-repeat center transparent;
+    background: url(iconos/delProducto24.png) no-repeat center transparent;
 }
 
 .icon-box-search {
