@@ -33,7 +33,7 @@ $(document).ready(function() {
         var metPago = $("#metPago").val();
         var folTarj = $("#folioTarjeta").val();
         var total = $("#total").val();
-        var cliente = $("#nombreCliente").val();
+        var cliente = $("#codigoCliente").val();
         var id = $("#codigoEmpleado").val();
         var datos = JSON.stringify(datos);
 
@@ -101,6 +101,24 @@ $(document).ready(function() {
             } else {
                 habilitar();
             }
+            return ui.item.label;
+        },
+        response: function(event, ui) {
+            if (ui.content[0].label == null) {
+                var noResult = { value: "", label: "No Se Encontrarón Resultados" };
+                ui.content.push(noResult);
+            }
+        }
+    });
+    //AUTOCOMPLETAR CAMPO LIBRO
+    $("#nombreCliente").autocomplete({
+        minLength: 2,
+        source: "php/autocomplete.php?opc=cliente",
+        autoFocus: true,
+        select: function(event, ui) {
+            if (ui.item.value != "") {
+                $('#codigoCliente').val(ui.item.id);
+            } 
             return ui.item.label;
         },
         response: function(event, ui) {

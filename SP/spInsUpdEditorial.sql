@@ -7,7 +7,8 @@ CREATE PROCEDURE spInsUpdEditorial (
 	IN pUsuario VARCHAR(15),
 	IN pStatus VARCHAR(15),
 	OUT CodRetorno CHAR(3),
-	OUT msg VARCHAR(100)
+	OUT msg VARCHAR(100),
+	OUT msgSQL VARCHAR(100)
 )
 -- =============================================
 -- Author:       	Pedro Ed Monzón Mendoza
@@ -20,7 +21,7 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
@@ -30,14 +31,14 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SET CodRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 			
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreEditorial,'') = '' && COALESCE(pUsuario,'') = ''  && COALESCE(pStatus,'') = '' ) THEN
+	IF (pNombreEditorial = '' && pUsuario = '' && pStatus = '' ) THEN
 		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE

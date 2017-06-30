@@ -82,6 +82,10 @@ $(document).ready(function() {
         }
     });
 
+    $("#nombreLibro").on('keyup', function(evt) {
+        habilitaBoton();
+    });
+
     $("#isbn").on('keypress', function(evt) {
         var charCode = evt.which || evt.keyCode;
 
@@ -92,19 +96,35 @@ $(document).ready(function() {
         }
     });
 
+    $("#isbn").on('keyup', function(evt) {
+        habilitaBoton();
+    });
+
     $("#autor").on('keypress', function(evt) {
         var charCode = evt.which || evt.keyCode;
 
         if (charCode == 13) {
             $("#editorial").focus();
+        } else {
+            global.numerosLetras(evt);
         }
     });
 
-    $("#autor").on('change', function() {
+    $("#autor").on('keyup', function() {
         habilitaBoton();
     });
 
-    $("#editorial").on('change', function() {
+    $("#editorial").on('keypress', function(evt) {
+        var charCode = evt.which || evt.keyCode;
+
+        if (charCode == 13) {
+            $("#btnSave").focus();
+        } else {
+            global.numerosLetras(evt);
+        }
+    });
+
+    $("#editorial").on('keyup', function() {
         habilitaBoton();
     });
 
@@ -140,9 +160,8 @@ $(document).ready(function() {
         var isbn = $("#isbn").val();
         var autor = $("#autor").val();
         var editorial = $("#editorial").val();
-        var imagen = $("#imagen").val();
 
-        if (nombre != "" && isbn != "" && isbn.length > 10 && autor != 0 && editorial != 0 && imagen != "") {
+        if (nombre != "" && isbn != "" && isbn.length > 10 && autor != "" && editorial != "") {
             if (codigo.length != 0) {
                 $("#btnUpdate").prop('disabled', false);
                 $("#btnSave").prop('disabled', true);
@@ -185,9 +204,9 @@ $(document).ready(function() {
     //FUNCIÓN PARA ENVIAR DATOS
     function enviarDatos() {
         var nombre = $("#nombreLibro").val();
-        var cadena = $("#frmAgregarLibro").serialize();
+        var cadena = JSON.stringify(global.json("#frmAgregarLibro"));
         var inputFileImage = document.getElementById('imagen');
-
+        console.log(cadena);
         if (cadena == "") {
             global.mensajes('Advertencia', '!Debe llenar Todos los Campos', 'warning', '', '', '', '');
         } else {

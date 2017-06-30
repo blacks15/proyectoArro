@@ -1,156 +1,156 @@
-$(document).ready(function(){
-	$("#user-name").html(sessionStorage.usuario);
-	$("#tipoUsuario").val(sessionStorage.tipo);
-	//global.cargarPagina("pages/Venta.html");
-	if ($("#tipoUsuario").val() != 1) {
-		global.cargarPagina("Inicio");
-	} else {
-		global.cargarPagina("InicioAdmin");
-	}
-	global.isNotAdminMenu($("#tipoUsuario").val());
+$(document).ready(function() {
+    $("#user-name").html(sessionStorage.usuario);
+    $("#tipoUsuario").val(sessionStorage.tipo);
+    global.cargarPagina("Libro");
+    /*if ($("#tipoUsuario").val() != 1) {
+        global.cargarPagina("Inicio");
+    } else {
+        global.cargarPagina("InicioAdmin");
+    } */
+    global.isNotAdminMenu($("#tipoUsuario").val());
 
-	$('.button-collapse').sideNav({});
+    $('.button-collapse').sideNav({});
 
-	$(".dropdown-button").dropdown({
-		belowOrigin: true,
-		alignment: 'left'
-	});
+    $(".dropdown-button").dropdown({
+        belowOrigin: true,
+        alignment: 'left'
+    });
 
-	$('*').bind("cut copy paste",function(e) {
-		e.preventDefault();
-	});
-////////////////////////////////////////////////////
- 	/**************************
-    *	 		MENÚ		  *
-    **************************/
+    $('*').bind("cut", function(e) {
+        e.preventDefault();
+    });
+    ////////////////////////////////////////////////////
+    /**************************
+     *	 		MENÚ		  *
+     **************************/
 
-	$("#CerrarSesion").on('click',function(){
-		global.envioAjax('ControllerLogin',{opc:'cerrarSession'});
-	});
+    $("#CerrarSesion").on('click', function() {
+        global.envioAjax('ControllerLogin', { opc: 'cerrarSession' });
+    });
 
-	$("#inicio").on('click',function(){
-		if ($("#tipoUsuario").val() != 1) {
-			global.cargarPagina("Inicio");
-		} else {
-			global.cargarPagina("InicioAdmin");
-		}
-	});
-		//////////////////////////
-		//		MODULO VENTAS	//
-		//////////////////////////
+    $("#inicio").on('click', function() {
+        if ($("#tipoUsuario").val() != 1) {
+            global.cargarPagina("Inicio");
+        } else {
+            global.cargarPagina("InicioAdmin");
+        }
+    });
+    //////////////////////////
+    //		MODULO VENTAS	//
+    //////////////////////////
 
-	$("#ventas").on('click',function(){
-		global.cargarPagina("Venta");
-	});
+    $("#ventas").on('click', function() {
+        global.cargarPagina("Venta");
+    });
 
-	$("#buscarVenta").on('click',function(){
-		global.cargarPagina("BuscarVenta");
-	});
-		//////////////////////////
-		//		MODULO LIRBOS	//
-		//////////////////////////
+    $("#buscarVenta").on('click', function() {
+        global.cargarPagina("BuscarVenta");
+    });
+    //////////////////////////
+    //		MODULO LIRBOS	//
+    //////////////////////////
 
-	$("#libros").on('click',function(){
-		global.cargarPagina("Libro");
-	});
+    $("#libros").on('click', function() {
+        global.cargarPagina("Libro");
+    });
 
-	$("#buscarLibro").on('click',function(){
-		global.cargarPagina("BuscarLibro");
-	});
+    $("#buscarLibro").on('click', function() {
+        global.cargarPagina("BuscarLibro");
+    });
 
-	$("#autores").on('click',function(){
-		global.cargarPagina("Autor");
-	});
+    $("#autores").on('click', function() {
+        global.cargarPagina("Autor");
+    });
 
-	$("#editoriales").on('click',function(){
-		global.cargarPagina("Editorial");
-	});
-		//////////////////////////////////
-		//		MODULO PROVEEDORES		//
-		//////////////////////////////////
+    $("#editoriales").on('click', function() {
+        global.cargarPagina("Editorial");
+    });
+    //////////////////////////////////
+    //		MODULO PROVEEDORES		//
+    //////////////////////////////////
 
-	$("#provedores").on('click',function(){
-		global.cargarPagina("Proveedor");
-	});
+    $("#provedores").on('click', function() {
+        global.cargarPagina("Proveedor");
+    });
 
-	$("#buscarProveedor").on('click',function(){
-		global.cargarPagina("BuscarProveedor");
-	});
+    $("#buscarProveedor").on('click', function() {
+        global.cargarPagina("BuscarProveedor");
+    });
 
-	$("#productos").on('click',function(){
-		global.cargarPagina("Producto");
-	});
+    $("#productos").on('click', function() {
+        global.cargarPagina("Producto");
+    });
 
-	$("#buscarProductos").on('click',function(){
-		global.cargarPagina("BuscarProducto");
-	});
+    $("#buscarProductos").on('click', function() {
+        global.cargarPagina("BuscarProducto");
+    });
 
-	$("#modificarInventario").on('click',function(){
-		global.cargarPagina("Stock");
-	});
-		//////////////////////////////////
-		//		MODULO EMPLEADOS		//
-		//////////////////////////////////
+    $("#modificarInventario").on('click', function() {
+        global.cargarPagina("Stock");
+    });
+    //////////////////////////////////
+    //		MODULO EMPLEADOS		//
+    //////////////////////////////////
 
-	$("#empleados").on('click',function(){
-		global.cargarPagina("Empleado");
-	});
+    $("#empleados").on('click', function() {
+        global.cargarPagina("Empleado");
+    });
 
-	$("#buscarEmpleado").on('click',function(){
-		global.cargarPagina("BuscarEmpleado");
-	});
+    $("#buscarEmpleado").on('click', function() {
+        global.cargarPagina("BuscarEmpleado");
+    });
 
-	$("#usuarios").on('click',function(){
-		global.cargarPagina("Usuario");
-	});
+    $("#usuarios").on('click', function() {
+        global.cargarPagina("Usuario");
+    });
 
-	$("#buscarUsuario").on('click',function(){
-		global.cargarPagina("BuscarUsuario");
-	});
-		//////////////////////////////////
-		//		MODULO CLIENTES			//
-		//////////////////////////////////
+    $("#buscarUsuario").on('click', function() {
+        global.cargarPagina("BuscarUsuario");
+    });
+    //////////////////////////////////
+    //		MODULO CLIENTES			//
+    //////////////////////////////////
 
-	$("#clientes").on('click',function(){
-		global.cargarPagina("Cliente");
-	});
+    $("#clientes").on('click', function() {
+        global.cargarPagina("Cliente");
+    });
 
-	$("#buscarClientes").on('click',function(){
-		global.cargarPagina("BuscarCliente");
-	});
-	/*
-	$("#deudas").on('click',function(){
-		global.cargarPagina("Deuda");
-	});
+    $("#buscarClientes").on('click', function() {
+        global.cargarPagina("BuscarCliente");
+    });
+    /*
+    $("#deudas").on('click',function(){
+    	global.cargarPagina("Deuda");
+    });
 
-	$("#buscarDeudas").on('click',function(){
-		global.cargarPagina("BuscarDeuda");
-	});
+    $("#buscarDeudas").on('click',function(){
+    	global.cargarPagina("BuscarDeuda");
+    });
 
-	$("#abonos").on('click',function(){
-		global.cargarPagina("Abono");
-	});
+    $("#abonos").on('click',function(){
+    	global.cargarPagina("Abono");
+    });
 
-	$("#buscarAbonos").on('click',function(){
-		global.cargarPagina("BuscarAbono");
-	}); */
-		//////////////////////////////////
-		//		MODULO RETROS			//
-		//////////////////////////////////
+    $("#buscarAbonos").on('click',function(){
+    	global.cargarPagina("BuscarAbono");
+    }); */
+    //////////////////////////////////
+    //		MODULO RETROS			//
+    //////////////////////////////////
 
-	$("#retiros").on('click',function(){
-		global.cargarPagina("Retiro");
-	});
+    $("#retiros").on('click', function() {
+        global.cargarPagina("Retiro");
+    });
 
-	$("#buscarRetiros").on('click',function(){
-		global.cargarPagina("BuscarRetiro");
-	});
+    $("#buscarRetiros").on('click', function() {
+        global.cargarPagina("BuscarRetiro");
+    });
 
-	$("#corteCaja").on('click',function(){
-		global.cargarPagina("CorteCaja");
-	});
+    $("#corteCaja").on('click', function() {
+        global.cargarPagina("CorteCaja");
+    });
 
-	$("#buscarCorteCaja").on('click',function(){
-		global.cargarPagina("BuscarCorteCaja");
-	});
+    $("#buscarCorteCaja").on('click', function() {
+        global.cargarPagina("BuscarCorteCaja");
+    });
 });

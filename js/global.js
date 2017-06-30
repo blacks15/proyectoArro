@@ -100,6 +100,13 @@ var global = {
             }
         });
     },
+    //CONVERTIR FORM A JSON
+    json: function(selector) {
+        var ary = $(selector).serializeArray();
+        var obj = {};
+        for (var a = 0; a < ary.length; a++) obj[ary[a].name] = ary[a].value;
+        return obj;
+    },
     //FUNCIÓN PARA CARGAR LAS PÁGINAS
     cargarPagina: function(pagina) {
         $("#loader").fadeIn(500);

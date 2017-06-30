@@ -6,21 +6,31 @@
 */
 class DetalleVenta {
     private $folio;
-    private $CodigoProducto;
+    private $codigoProducto;
     private $cantidad;
     private $precio;
     private $subtotal;
+    private $stock;
 
-    function __construct($folio,$CodigoProducto,$cantidad,$precio,$subtotal){
+    function __construct($folio,$codigoProducto,$cantidad,$precio,$subtotal,$stock){
         $this->folio = $folio;
-        $this->CodigoProducto = $CodigoProducto;
+        $this->codigoProducto = $codigoProducto;
         $this->cantidad = $cantidad;
         $this->precio = $precio;
         $this->subtotal = $subtotal;
+        $this->stock = $stock;
+    }
+
+    public function getStock(){
+        return $this->stock;
+    }
+
+    public function setStock($stock){
+        $this->stock = $stock;
     }
 
     public function getFolio(){
-        return $this->Folio;
+        return $this->folio;
     }
 
     public function setFolio($folio){
@@ -28,11 +38,11 @@ class DetalleVenta {
     }    
 
     public function getCodigoProducto(){
-        return $this->CodigoProducto;
+        return $this->codigoProducto;
     }
 
-    public function setCodigoProducto($CodigoProducto){
-        $this->CodigoProducto = $CodigoProducto;
+    public function setCodigoProducto($codigoProducto){
+        $this->codigoProducto = $codigoProducto;
     }
 
     public function getCantidad(){

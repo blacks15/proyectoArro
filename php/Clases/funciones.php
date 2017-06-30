@@ -37,9 +37,8 @@
 		}
 	}	
 		//FUNCIÓN PARA INSERTAR DATOS
-	function SQL($sql,$datos){
+	function SQL($sql,$datos){ 
 		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo SQL!', false, true, true);
 		try {
 			$db = new Conexion();
 				//CREAMOS LA TRAMA Y ESCRIBIMOS EN EL LOG

@@ -25,7 +25,8 @@
         try { 
 			$i = 0;
 			$j = 0;
-           	$sql = new VentaModel();
+           	$stock = "";
+			$sql = new VentaModel();
 			$productosList = new ArrayObject();
 			$productosDet = new ArrayObject();
 
@@ -35,12 +36,12 @@
 			$objVenta->setFolio(trim(addslashes($_POST['folio']) ));
 			$objVenta->setCliente(trim(addslashes($_POST['cliente'])) );
 			$objVenta->setCajero(trim(addslashes($_POST['id'])));
-			$objVenta->setMetodoPago(trim(addslashes($_POST['metodo'])) );	
-			
+			$objVenta->setMetodoPago(trim($_POST['metodo']) );	
+			$objVenta->setTotal( trim(addslashes($_POST['total'])) );
+			$objVenta->setFolioTarjeta( trim(addslashes($_POST['folTarj'])) );
+
 			$json = $_POST['datos'];
 			$detalleVenta = json_decode($json,true);
-			$folioTarjeta = trim(addslashes($_POST['folTarj']));
-			$total = trim(addslashes($_POST['total']));  
             	//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
@@ -77,6 +78,7 @@
 								print json_encode($salidaJSON);
 								exit();
 							} else {
+								$producto = new Producto();
 								$objDetalleVenta = new DetalleVenta();
 
 								$objDetalleVenta->setFolio( $objVenta->getFolio());
@@ -84,8 +86,15 @@
 								$objDetalleVenta->setCantidad( $value['Cantidad'] );
 								$objDetalleVenta->setPrecio( $value['Precio'] );
 								$objDetalleVenta->setSubtotal( $value['Subtotal'] );
+								$objDetalleVenta->setStock( $cantidad );
+
+								$producto->setCodigoBarras( $value['Código Producto']  );
+								$producto->setStockAct( $cantidad );
+								$producto->setStatus( calculaStatus($cantidad,$productosList[$i]->getStockMax()) );
 
 								$productosDet[$j] = $objDetalleVenta;
+								$stock[$j] = $producto;
+
 								$j++;
 							}
 						}
@@ -93,12 +102,39 @@
 				}
 			}
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$respuesta = $sql->guardarVenta($objVenta,$productosDet);
+			$respuesta = $sql->guardarVenta($objVenta,$productosDet,$stock);
 
-			var_dump($respuesta);
+			if ($respuesta->CodRetorno == '000') {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => 'Venta',
+					'Titulo' => 'Éxito',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => 'Venta',
+					'Titulo' => 'Error',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			} 
+
+			$log->insert('Ventas CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			print json_encode($salidaJSON);
         } catch (Exception $e) {
 			$log->insert('Error guardarVenta '.$e->getMessage(), false, true, true);	
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
     }
+
+		//FUNCIÓN PARA CALCULAR STATUS
+	function calculaStatus($stActual,$stMax){
+		if ($stActual <= 0) {
+			$status = 'AGOTADO';
+		} else if ($stActual > $stMax) {
+			$status = 'SOBRESTOCK';
+		} else {
+			$status = 'DISPONIBLE';
+		}
+		return $status;
+	}
 ?>

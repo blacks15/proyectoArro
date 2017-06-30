@@ -7,18 +7,22 @@
 class Venta {
 	private $folio;
 	private $fecha;
-	private $status;
 	private $cajero;
 	private $cliente;
+	private $total;
 	private $metodoPago;
+	private $folioTarjeta;
+	private $status;
 
-	function __construct($folio,$fecha,$cajero,$status,$cliente,$status,$metodoPago){
+	function __construct($folio,$fecha,$cajero,$cliente,$total,$metodoPago,$folioTarjeta,$status){
 		$this->folio = $folio;
 		$this->fecha = $fecha;
 		$this->cajero = $cajero;
-		$this->status = $status;
 		$this->cliente = $cliente;
+		$this->total = $total;
 		$this->metodoPago = $metodoPago;
+		$this->folioTarjeta = $folioTarjeta;
+		$this->status = $status;
 	}		
 
 	public function getFolio() {
@@ -66,8 +70,25 @@ class Venta {
 	}
 
     public function setMetodoPago($metodoPago){
-		return $this->$metodoPago = $metodoPago;
+		return $this->metodoPago = $metodoPago;
 	}	 
+
+	public function getTotal() {
+		return $this->total;
+	}
+
+    public function setTotal($total){
+		return $this->total = $total;
+	}	
+
+	public function getFolioTarjeta() {
+		return $this->folioTarjeta;
+	}
+
+    public function setFolioTarjeta($folioTarjeta){
+		return $this->folioTarjeta = $folioTarjeta;
+	}	
+
 }
 
 ?>

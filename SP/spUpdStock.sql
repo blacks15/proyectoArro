@@ -36,7 +36,7 @@ BEGIN
 		ROLLBACK;
 	END;
 		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
+	IF (pCodigo != 0) THEN
 		IF EXISTS(SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
 			START TRANSACTION;
 				UPDATE productos SET stockActual = pStActual, status = pStatus, fechaModificacion = NOW()

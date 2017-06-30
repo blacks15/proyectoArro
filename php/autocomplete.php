@@ -1,5 +1,6 @@
 <?php 
 	require_once('Clases/Conexion.php');
+	require_once('Clases/funciones.php');
 	header('Content-Type: application/json');
 	
 	error_reporting(0);
@@ -164,37 +165,42 @@
 				//DECLARACIÓN Y ASIGNACIÓN DE VARIABLES
 			$db = new Conexion();
 			$buscar = trim($_GET['term']);
-			$id = trim($_GET['id']);
 			$consulta = "";
 				//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 			if(!empty($buscar)) {
-				if ($id == 1) {
-					//var_dump($_GET);
 				$consulta = "SELECT concat(nombre_contacto,' ',apellido_paterno,' ',apellido_materno) AS nombre_cliente, matricula
-					FROM clientes 
-					WHERE nombre_contacto LIKE ? AND matricula != '1'
-					ORDER BY nombre_cliente ASC ";
-				} else {
-					$consulta = "SELECT empresa AS nombre_cliente, matricula
-						FROM clientes 
-						WHERE empresa LIKE ? AND matricula != '1'
-						ORDER BY nombre_cliente ASC ";
-				}
-	        		//SE PREPARA Y SE EJECUTA LA CONSULTA
+					FROM clientes WHERE nombre_contacto LIKE ? AND matricula != '1' ORDER BY nombre_cliente ASC ";
+				$datos = array("%$buscar%");
+
 				$stm = $db->prepare($consulta);
 				$stm->execute(array("%$buscar%"));
-					//SE TRAEN EL NÚMERO DE FILAS AFECTADAS Y EL ERROR EN CASO DE HABER
+					//SE TRAEN EL NÚMERO DE FILAS AFECTADAS Y EL ERROR EN CASO DE EXISTIR
 				$contar = $stm->rowCount();
 				$error = $stm->errorInfo();
 	        		//VALIDAMOS SI HAY RESUPUESTA Y RECORREMOS EL ARRAY PARA LLENARLO CON LA RESPUESTA
 	        	if ($contar > 0){
-						//VALIDAMOS SI HAY FILAS AFECTADAS Y RECORREMOS EL ARRAY PARA LLENARLO CON LA RESPUESTA
 					while($rows = $stm->fetch(PDO::FETCH_ASSOC)){
                 		$respuesta[] = array('value' => strtoupper($rows["nombre_cliente"]) ,
                 			'id' => $rows["matricula"]);
 					}
 		        } else {
-					$respuesta[] = array('value' => null);
+					$consulta = "SELECT empresa AS nombre_cliente, matricula
+						FROM clientes WHERE empresa LIKE ? AND matricula != '1' ORDER BY nombre_cliente ASC ";
+
+					$stm = $db->prepare($consulta);
+					$stm->execute(array("%$buscar%"));
+						//SE RECUPERA EL NÚMERO DE FILAS AFECTADAS Y EL ERROR EN CASO DE EXISTIR
+					$contar = $stm->rowCount();
+					$error = $stm->errorInfo();
+
+					if ($contar > 0) {
+						while($rows = $stm->fetch(PDO::FETCH_ASSOC)){
+							$respuesta[] = array('value' => strtoupper($rows["nombre_cliente"]) ,
+								'id' => $rows["matricula"]);
+						}
+					} else {
+						$respuesta[] = array('value' => null);
+					}
 				}
 				print(json_encode($respuesta));	
 			}

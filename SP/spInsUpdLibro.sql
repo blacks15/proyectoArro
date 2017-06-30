@@ -12,7 +12,8 @@ CREATE PROCEDURE spInsUpdLibro (
 	IN pStatus VARCHAR(10),
 	IN pRutaIMG VARCHAR(50),
 	OUT CodRetorno CHAR(3),
-	OUT msg VARCHAR(100)
+	OUT msg VARCHAR(100),
+	OUT msgSQL VARCHAR(100)	
 )
 -- =============================================
 -- Author:       	Felipe Monzón
@@ -26,7 +27,7 @@ BEGIN
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET CodRetorno = '002';
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -36,13 +37,13 @@ BEGIN
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET CodRetorno = '002';
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
+	IF (pCodigo != 0) THEN
 		IF EXISTS(SELECT * FROM libros WHERE codigo_libro = pCodigo) THEN
 			IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;

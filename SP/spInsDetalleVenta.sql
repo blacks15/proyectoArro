@@ -7,7 +7,7 @@ CREATE PROCEDURE spInsDetalleVenta (
     IN pCantidad INT,
     IN pPrecio DECIMAL(10,2),
     IN pSubTotal DECIMAL(10,2),
-    OUT codRetorno CHAR(3),
+    OUT CodRetorno CHAR(3),
     OUT msg VARCHAR(100)
 )
 -- ====================================================================
@@ -39,11 +39,11 @@ BEGIN
         ROLLBACK;
     END;
 
-    IF (pFolio = 0 || pIdProducto ||pCantidad = 0 || pPrecio = 0.00 || pSubTotal = 0.00) THEN
+    IF (pFolio = 0 || pIdProducto = 0 || pCantidad = 0 || pPrecio = 0.00 || pSubTotal = 0.00) THEN
         SET CodRetorno = '004';
         SET msg = 'Parametros Vacios';
     ELSE 
-        IF NOT EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio) THEN
+        IF NOT EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio AND clave_producto = pIdProducto) THEN
             START TRANSACTION;
                 INSERT INTO detalle_venta (folio,clave_producto,cantidad,precio,subtotal)
                 VALUES(pFolio,pIdProducto,pCantidad,pPrecio,pSubTotal);

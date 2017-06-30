@@ -9,8 +9,13 @@
 
 		public function __construct() {
 			try {
-				parent::__construct($this->tipo_de_base.':host='.$this->host.';dbname='.$this->nombre_de_base, $this->usuario, $this->contrasena);
-
+				parent::__construct($this->tipo_de_base.
+					':host='.$this->host.
+					';dbname='.$this->nombre_de_base,
+					$this->usuario,
+					$this->contrasena
+				);
+				parent::setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			} catch (PDOException $e){
 				$salidaJson = array(
 					'error' => $e->getMessage(),

@@ -18,7 +18,7 @@
 					$append = ($result) ? $result : FILE_APPEND;
 				}
 			};
-			$log    = $this->date . " [text] " . $text . PHP_EOL;
+			$log = $this->date." [ip] ". $this->ip." [text] ".$text.PHP_EOL;
 					
 			$result = (file_put_contents($this->path . $this->filename . $date . ".log", $log, $append)) ? 1 : 0;
 
