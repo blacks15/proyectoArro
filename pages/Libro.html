@@ -6,20 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
 </head>
-
 <body>
-    <div class="card-panel">
-        <form id="frmAgregarLibro" accept="image/jpeg, image/png">
-            <fieldset>
-                <legend class="titulo">Agregar Libro</legend>
-                <table class="table" border="0" style="margin-bottom: 15px;">
+	<div class="card-panel">
+		<form id="frmAgregarLibro">
+			<fieldset>
+			<legend class="titulo">Agregar Libro</legend>
+				<table class="table" border="0" style="margin-bottom: 15px;">
                     <tr class="row">
                         <td width="55%">
                             <button type="button" id="btnReporte" class="icon-reporte btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
                             <button type="button" id="btnLibros" class="icon-searchBook btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
                             <button type="button" id="btnRefresh" class="btn-floating btn-large blue darken-4 waves-effect waves-light">
-								<i class="material-icons">autorenew</i>
-							</button>
+                                <i class="material-icons">autorenew</i>
+                            </button>
                         </td>
                         <td width="45%">
                             <div class="col s9">
@@ -27,38 +26,58 @@
                             </div>
                             <div class="col s3">
                                 <button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
-								</button>
+                                </button>
                             </div>
                         </td>
                     </tr>
-                </table>
-                <table class="col s12">
-                    <tr>
+	            </table>		
+                <div id="swipeable" class="section scrollspy">
+                    <ul id="tabs-swipe-demo" class="tabs">
+                        <li class="tab col s3"><a id="test-swipe-1" class="active">Test 1</a></li>
+                        <li class="tab col s3"><a id="test-swipe-2" >Test 2</a></li>
+                        <li class="tab col s3"><a id="test-swipe-3" >Test 3</a></li>
+                    </ul>
+                </div>
+                <div class="tabs-content carousel carousel-slider center">
+                    <div class="carousel-item">
                         <div class="row">
-                            <div class="col s4">
+                            <div class="col s6">
+                                <p>Tipo de Producto</p>
+                                <input type="radio" name="tipo" id="libro" value="libro"><label for="libro">Libro</label>
+                                <input type="radio" name="tipo" id="nuevo" value="nuevo"><label for="nuevo"> Nuevo Producto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="row">
+                            <div class="col s3">
                                 <input type="hidden" name="rutaIMG" id="rutaIMG">
                                 <input type="file" class="file-loading" name="imagen" id="imagen">
                                 <div id="errorBlock" class="help-block"></div>
                             </div>
                             <div class="col s6">
-                                <input type="hidden" id="codigoLibro" name="codigoLibro">
-                                <label for="nombreLibro">Nombre Libro: </label>
-                                <input type="text" id="nombreLibro" name="nombreLibro" maxlength="50">
                                 <div class="row">
-                                    <div class="col s6">
+                                    <div class="col s6 input-field">
+                                        <input type="hidden" id="codigoLibro" name="codigoLibro">
+                                        <label for="nombreLibro">Nombre Libro: </label>
+                                        <input type="text" id="nombreLibro" name="nombreLibro" maxlength="50">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s6 input-field">
                                         <label for="isbn">ISBN: </label>
                                         <input type="text" id="isbn" name="isbn" maxlength="13">
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col s8">
+                                    <div class="col s8 input-field">
                                         <label>Autor: </label>
                                         <input type="hidden" id="codigoAutor" name="codigoAutor">
                                         <input type="text" id="autor" name="autor" maxlength="50">
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col s8">
+                                    <div class="col s8 input-field">
                                         <label>Editorial: </label>
                                         <input type="hidden" id="codigoEditorial" name="codigoEditorial">
                                         <input type="text" id="editorial" name="editorial" maxlength="50">
@@ -67,9 +86,55 @@
                                 <div class="row">
                                     <div class="col s12">
                                         <label>Descripción: </label>
-                                        <textarea id="descripcionLibro" name="descripcionLibro" class="swal2-textarea" maxlength="500" style="font-size: 12px; "></textarea>
+                                        <textarea id="descripcionLibro" name="descripcionLibro" class="swal2-textarea" maxlength="500" style="font-size: 12px;"></textarea>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="row">
+                            <div class="col s2">
+                                <button type="button" id="btnAnt" class="arrow_left btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
+                                </button>
+                            </div>
+                            <div class="col s4">
+                                <div class="row">
+                                    <div class="col s7">
+                                        <label for="textfield">*Stock Mínimo: </label>
+                                        <input type="text" name="stMin" id="stMin" maxlength="6">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s7">
+                                        <label for="textfield">*Stock Máximo: </label>
+                                        <input type="text" name="stMax" id="stMax" maxlength="6">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s7">
+                                        <label for="textfield">*Stock Actual: </label>
+                                        <input type="text" name="stActual" id="stActual" maxlength="6">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col s4">
+                                <div class="row">
+                                    <div class="col s7">
+                                        <label for="textfield">*Precio Compra: </label>
+                                        <input type="text" name="compra" id="compra" maxlength="6">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s7">
+                                        <label for="textfield">*Precio Venta: </label>
+                                        <input type="text" name="venta" id="venta" maxlength="6">
+                                    </div>
+                                </div>
+                                <label>*Categoria</label>
+                                <select class="browser-default" id="categoria" name="categoria">
+                                    <option value="0">SELECCIONE</option>
+                                </select>
                             </div>
                             <div class="col s2" align="center">
                                 <button type="button" class="icon-save btn blue darken-1" id="btnSave" disabled="true"></button><br><br>
@@ -77,12 +142,36 @@
                                 <button type="button" class="icon-borrar btn red" id="btnDelete" disabled="true"></button>
                             </div>
                         </div>
-                    </tr>
-                </table>
-            </fieldset>
-        </form>
+                    </div>
+                </div>
+            </fieldset>			
+        </form>		
     </div>
-    <script type="text/javascript" src="js/libro.js"></script>
+    <script src="js/libro.js" type="text/javascript"></script>
+    <script>
+        $(function() {
+            $('.carousel.carousel-slider').carousel({
+                full_width: true
+            });
+            $('#tabs-swipe-demo').tabs({ 'swipeable': true });
+
+            $('.carousel.carousel-slider').carousel({ fullWidth: true });
+            $('.carousel').carousel();
+
+            $("#test-swipe-3").on('click', function() {
+                $('.carousel').carousel('set', 2);
+            });
+
+            $("#test-swipe-2").on('click', function() {
+                $('.carousel').carousel('set', 1);
+            });
+
+            $("#test-swipe-1").on('click', function() {
+                $('.carousel').carousel('set', 0);
+            });
+        });
+    </script>
 </body>
+
 
 </html>
