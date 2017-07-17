@@ -3,46 +3,50 @@ $(document).ready(function(){
     /**************************
      *	 LLAMAR FUNCIONES	   *
      **************************/
-    // //global.validaSesion();
+    //global.validaSesion();
     global.isAdmin();
 
-    // $("#nombreLibro").focus();
+    $('ul.tabs').tabs();
+
     llenarCombo();
     actualizarLibro();
+        //MASCARA DE PESOS
+    $('#compra').mask("#,##0.00", {reverse: true});
+    $('#venta').mask("#,##0.00", {reverse: true});
     /**************************
-     *		BOTONOES		  *
-     **************************/
+    *		BOTONOES		  *
+    **************************/
     //BOTÓN NUEVO AUTOR
-    // $("#btnSearch").on('click', function(e) {
-    //     e.preventDefault();
-    //     $("#btnSearch").prop('disabled', true);
-    //     var buscar = $("#codigoLibro").val();
+    $("#btnSearch").on('click', function(e) {
+        e.preventDefault();
+        $("#btnSearch").prop('disabled', true);
+        var buscar = $("#codigoLibro").val();
 
-    //     if (buscar != "") {
-    //         $("#codigoLibro").val('');
-    //         $("#buscar").val('');
+        if (buscar != "") {
+            $("#codigoLibro").val('');
+            $("#buscar").val('');
 
-    //         var respuesta = global.buscar('ControllerLibro', 'buscar', buscar, '1');
-    //         if (respuesta.codRetorno == '000') {
-    //             $.each(respuesta.datos, function(index, value) {
-    //                 $("#codigoLibro").val(value.id);
-    //                 $("#nombreLibro").val(value.nombre);
-    //                 $("#isbn").val(value.isbn);
-    //                 $("#autor").val(value.idAutor).prop('selected', 'selected');
-    //                 $("#editorial").val(value.idEditorial).prop('selected', 'selected');
-    //                 $("#descripcionLibro").val(value.descripcion);
-    //                 $("#rutaIMG").val(value.rutaIMG);
-    //                 //VALIDAR SI LA IMAGEN NO ESTA VACIA O NO SE ENCUENTRA 
-    //                 cargar_imagen(value.rutaIMG);
-    //             });
+            var respuesta = global.buscar('ControllerLibro', 'buscar', buscar, '1');
+            if (respuesta.codRetorno == '000') {
+                $.each(respuesta.datos, function(index, value) {
+                    $("#codigoLibro").val(value.id);
+                    $("#nombreLibro").val(value.nombre);
+                    $("#isbn").val(value.isbn);
+                    $("#autor").val(value.idAutor).prop('selected', 'selected');
+                    $("#editorial").val(value.idEditorial).prop('selected', 'selected');
+                    $("#descripcionLibro").val(value.descripcion);
+                    $("#rutaIMG").val(value.rutaIMG);
 
-    //             $("#btnUpdate").prop('disabled', false);
-    //         }
-    //     } else {
-    //         global.mensajes('Advertencia', 'Campo Buscar vacio', 'warning');
-    //     }
-    //     $("#btnSearch").prop('disabled', false);
-    // });
+                    cargar_imagen(value.rutaIMG);
+                });
+
+                $("#btnUpdate").prop('disabled', false);
+            }
+        } else {
+            global.mensajes('Advertencia', 'Campo Buscar vacio', 'warning');
+        }
+        $("#btnSearch").prop('disabled', false);
+    });
     //BOTÓN GUARDAR
     $("#btnSave").on('click', function() {
         enviarDatos();
@@ -70,6 +74,26 @@ $(document).ready(function(){
         e.preventDefault();
         global.cargarPagina('BuscarLibro');
     });
+
+     $("#btnSigPaso2").on('click', function() {
+        nextTab('producto');
+        //$('ul.tabs').tabs('select_tab', 'producto');
+    });
+
+    $("#btnAntPaso1").on('click', function() {
+        nextTab('tipo');
+        //$('ul.tabs').tabs('select_tab', 'tipo');
+    });
+    
+    $("#btnSigPaso3").on('click', function() {
+        nextTab('inventario');
+        //$('ul.tabs').tabs('select_tab', 'inventario');
+    }); 
+
+    $("#btnAntPaso2").on('click', function() {
+        nextTab('producto');
+        //$('ul.tabs').tabs('select_tab', 'producto');
+    }); 
     /////////////////////////////////////////////////////////////////////////////////////	
     /***************************
      *		    EVENTOS	       *
@@ -85,6 +109,7 @@ $(document).ready(function(){
     });
 
     $("#nombreLibro").on('keyup', function(evt) {
+        habilitarPaso3();
         habilitaBoton();
     });
 
@@ -99,6 +124,7 @@ $(document).ready(function(){
     });
 
     $("#isbn").on('keyup', function(evt) {
+        habilitarPaso3();
         habilitaBoton();
     });
 
@@ -108,85 +134,243 @@ $(document).ready(function(){
         if (charCode == 13) {
             $("#editorial").focus();
         } else {
-            global.numerosLetras(evt);
+            global.letras(evt);
         }
     });
 
     $("#autor").on('keyup', function() {
+        habilitarPaso3();
         habilitaBoton();
     });
 
-    // $("#editorial").on('keypress', function(evt) {
-    //     var charCode = evt.which || evt.keyCode;
+    $("#editorial").on('keypress', function(evt) {
+        var charCode = evt.which || evt.keyCode;
 
-    //     if (charCode == 13) {
-    //         $("#btnSave").focus();
-    //     } else {
-    //         global.numerosLetras(evt);
-    //     }
-    // });
+        if (charCode == 13) {
+            $("#descripcionLibro").focus();
+        } else {
+            global.letras(evt);
+        }
+    });
 
-    // $("#editorial").on('keyup', function() {
-    //     habilitaBoton();
-    // });
+    $("#editorial").on('keyup', function() {
+        habilitarPaso3();
+        habilitaBoton();
+    });
 
-    // $("#buscar").on('keypress', function(evt) {
-    //     var charCode = evt.which || evt.keyCode;
+        //EVENTO KEYPRESS
+	$("#codigoBarras").on('keypress',function(evt){
+		var charCode = evt.which || evt.keyCode;
 
-    //     if (charCode == 13) {
-    //         $("#btnSearch").focus();
-    //     } else {
-    //         global.numerosLetras(evt);
-    //     }
-    // });
-    // //AUTOCOMPLETE
-    // $("#buscar").autocomplete({
-    //     minLength: 2,
-    //     source: "php/autocomplete.php?opc=libro",
-    //     autoFocus: true,
-    //     select: function(event, ui) {
-    //         $('#codigoLibro').val(ui.item.id);
-    //         return ui.item.label;
-    //     },
-    //     response: function(event, ui) {
-    //         if (ui.content[0].label == null) {
-    //             var noResult = { value: "", label: "No Se Encontrarón Resultados" };
-    //             ui.content.push(noResult);
-    //         }
-    //     }
-    // });
-    // //FUNCIÓN PARA HABILITAR BOTÓN ACEPTAR 
-    // function habilitaBoton() {
-    //     var codigo = $("#codigoLibro").val();
-    //     var nombre = $("#nombreLibro").val();
-    //     var isbn = $("#isbn").val();
-    //     var autor = $("#autor").val();
-    //     var editorial = $("#editorial").val();
+		if ( $(this).val().length > 11 && charCode == 13) {
+			$("#proveedor").focus();
+		} else {
+			global.numeros(evt);
+		}
+	});
+		//EVENTO KEYUP
+	$("#codigoBarras").on('keyup',function(){
+		habilitaBoton();
+	});
 
-    //     if (nombre != "" && isbn != "" && isbn.length > 10 && autor != "" && editorial != "") {
-    //         if (codigo.length != 0) {
-    //             $("#btnUpdate").prop('disabled', false);
-    //             $("#btnSave").prop('disabled', true);
-    //         } else {
-    //             $("#btnSave").prop('disabled', false);
-    //         }
-    //     } else {
-    //         $("#btnSave").prop('disabled', true);
-    //     }
-    // }
-    //FUNCIÓN PARA ENTRAR DESDE BUSCAReMPELADOS Y MODIFICAR EL EMPLEADO	
+    	//EVENTO CHANGE
+	$("#proveedor").on('change',function(){
+		habilitaBoton();
+	});
+
+    	//EVENTO CHANGE
+	$("#categoria").on('change',function(){
+		habilitaBoton();
+	});
+
+    		//EVENTO KEYPRESS
+	$("#stMin").on('keypress',function(evt){
+		var charCode = evt.which || evt.keyCode;
+
+		if ( $(this).val() != 0 && charCode == 13) {
+			$("#stMax").focus();
+		} else {
+			global.numeros(evt);
+		}
+	});
+		//EVENTO KEYUP
+	$("#stMin").on('keyup',function(){
+		habilitaBoton();
+	});
+		//EVENTO KEYPRESS
+	$("#stMax").on('keypress',function(evt){
+		var charCode = evt.which || evt.keyCode;
+
+		if ( $(this).val() != 0 && charCode == 13) {
+			$("#stActual").focus();
+		} else {
+			global.numeros(evt);
+		}
+	});
+		//EVENTO KEYUP
+	$("#stMax").on('keyup',function(){
+		habilitaBoton();
+	});
+		//EVENTO KEYPRESS
+	$("#stActual").on('keypress',function(evt){
+		var charCode = evt.which || evt.keyCode;
+
+		if ( $(this).val() != 0 && charCode == 13) {
+			$("#compra").focus();
+		} else {
+			global.numeros(evt);
+		}
+	});
+		//EVENTO KEYUP
+	$("#stActual").on('keyup',function(){
+		habilitaBoton();
+	});
+		//EVENTO KEYPRESS
+	$("#compra").on('keypress',function(evt){
+		var charCode = evt.which || evt.keyCode;
+
+		if ( $(this).val() != 0 && charCode == 13) {
+			$("#venta").focus();
+		} else {
+			global.numeros(evt);
+		}
+	});
+		//EVENTO KEYUP
+	$("#compra").on('keyup',function(){
+		habilitaBoton();
+	});
+		//EVENTO KEYPRESS
+	$("#venta").on('keypress',function(evt){
+		var charCode = evt.which || evt.keyCode;
+
+		if ( $(this).val() != 0 && charCode == 13) {
+			$("#categoria").focus();
+		} else {
+			global.numeros(evt);
+		}
+	});
+		//EVENTO KEYUP
+	$("#venta").on('keyup',function(evt){
+		habilitaBoton();
+	});
+
+    $("#buscar").on('keypress', function(evt) {
+        var charCode = evt.which || evt.keyCode;
+
+        if (charCode == 13) {
+            $("#btnSearch").focus();
+        } else {
+            global.numerosLetras(evt);
+        }
+    });
+        //AUTOCOMPLETE
+    $("#buscar").autocomplete({
+        minLength: 2,
+        source: "php/autocomplete.php?opc=libro",
+        autoFocus: true,
+        select: function(event, ui) {
+            $('#codigoLibro').val(ui.item.id);
+            return ui.item.label;
+        },
+        response: function(event, ui) {
+            if (ui.content[0].label == null) {
+                var noResult = { value: "", label: "No Se Encontrarón Resultados" };
+                ui.content.push(noResult);
+            }
+        }
+    });
+    	//VALIDAR CAMBIO EN LOS RADIOBUTTONS DE TIPO DE PRODUCTO
+	$("input[name=tipo]").change(function(){
+        var tipo = $(this).val();
+
+        if ( $(this).is(':checked') ) {
+            if (tipo == 'libro') {
+                $("#btnSigPaso2").prop('disabled',false);
+                $("#np").hide();
+            } else {
+                nextTab('inventario');
+                $("#btnAntPaso2").prop('disabled',true);
+            }
+        } else {
+            $("#btnSigPaso2").prop('disabled',true);
+        }
+    });
+    /**************************
+    *		 FUNCIONES        *
+    **************************/
+        //FUNCIÓN PARA AVANZAR A LA SIGUIENTE TABS
+    function nextTab(tab) {
+        $('li.tab').removeClass('disabled');
+        $('ul.tabs').tabs('select_tab', tab);
+        $('li.tab').addClass('disabled');
+    }
+        //FUNCIÓN PARA HABILITAR BOTÓN ACEPTAR 
+    function habilitaBoton() {    
+        var tipo = $("input[name=tipo]:checked").val();
+        var nombre = $("#nombreLibro").val();
+        var isbn = $("#isbn").val();
+        var autor = $("#autor").val();
+        var editorial = $("#editorial").val ();
+        var nombreProducto = $("#nombreProducto").val();
+		var codigoBarras = $("#codigoBarras").val();
+		var proveedor = $("#proveedor").val();
+		var stActual = $("#stActual").val();
+		var stMin = $("#stMin").val();
+		var stMax = $("#stMax").val();
+		var compra = $("#compra").val();
+		var venta = $("#venta").val();
+		var categoria = $("#categoria").val();
+
+        if (tipo == 'libro') {
+            if (nombre != "" && isbn != "" && isbn.length > 10 && autor != "" && editorial != "" && codigoBarras != "" && proveedor != 0 && 
+                stMin != "" && stMax != "" && stMax != 0 && stActual != "" && stActual != 0 && compra != "" && 
+                compra != 0 && venta != "" && venta != 0 && categoria != 0) {
+                if ($("#codigoLibro").val() != "") {
+                    $("#btnUpdate").prop('disabled', false);
+                    $("#btnSave").prop('disabled', true);
+                } else {
+                    $("#btnSave").prop('disabled', false);
+                }
+            } else {
+                $("#btnSave").prop('disabled', true);
+            }
+        } else if (tipo == 'nuevo') {
+            if (nombreProducto != "" && codigoBarras != "" && proveedor != 0 && stMin != "" && stMax != "" && stMax != 0 && 
+                stActual != "" && stActual != 0 && compra != "" && compra != 0 && venta != "" && venta != 0 && categoria != 0) {
+                if ($("#codigoProducto").val() == "" ) {
+                    $("#btnSave").prop('disabled',false);
+                } else {
+                    $("#btnUpdate").prop('disabled',false);
+                }
+            }
+        }
+    }
+        //FUNCIÓN PARA HABILITAR EL PASO 3
+    function habilitarPaso3(){
+        var nombre = $("#nombreLibro").val();
+        var isbn = $("#isbn").val();
+        var autor = $("#autor").val();
+        var editorial = $("#editorial").val();
+
+        if (nombre != "" && isbn != "" && isbn.length > 10 && autor != "" && editorial != "") {
+            $("#btnSigPaso3").prop('disabled', false);
+        } else {
+            $("#btnSigPaso3").prop('disabled', true);
+        }
+    }
+        //FUNCIÓN PARA ENTRAR DESDE BUSCAReMPELADOS Y MODIFICAR EL EMPLEADO	
     function actualizarLibro() {
         var res = "";
         var resJson = "";
 
         if (localStorage.libros != undefined) {
-            //RECUPERAMOS LOS VALORES ALMACENADOS EN SESSION 
+                //RECUPERAMOS LOS VALORES ALMACENADOS EN SESSION 
             res = localStorage.getItem('libros');
-            //CONVERTIMOS EL JSON A UN OBJETO
+                //CONVERTIMOS EL JSON A UN OBJETO
             resJson = JSON.parse(res);
             console.log(resJson);
             setTimeout(function() {
-                //ASGINAMOS VALORES A LOS INPUTS
+                    //ASGINAMOS VALORES A LOS INPUTS
                 $("#codigoLibro").val(resJson[0]);
                 $("#nombreLibro").val(resJson[1]);
                 $("#isbn").val(resJson[2]);
@@ -195,98 +379,98 @@ $(document).ready(function(){
                 $("#editorial").val(resJson[7]).attr('selected', 'selected');
                 $("#rutaIMG").val(resJson[8]);
                 cargar_imagen(resJson[8]);
-                //OCULTAMOS BOTON GUARDAR Y MOSTRAMOS MODIFICAR
+                    //OCULTAMOS BOTON GUARDAR Y MOSTRAMOS MODIFICAR
                 $("#codigoLibro").show('explode');
                 $("#btnUpdate").prop('disabled', false);
-                //VACIAMOS LA SESSION
+                    //VACIAMOS LA SESSION
                 localStorage.clear();
             }, 300);
         }
     }
-    // //FUNCIÓN PARA ENVIAR DATOS
-    // function enviarDatos() {
-    //     var nombre = $("#nombreLibro").val();
-    //     var cadena = JSON.stringify(global.json("#frmAgregarLibro"));
-    //     var inputFileImage = document.getElementById('imagen');
-    //     console.log(cadena);
-    //     if (cadena == "") {
-    //         global.mensajes('Advertencia', '!Debe llenar Todos los Campos', 'warning', '', '', '', '');
-    //     } else {
-    //         var nombreIMG = global.subirimagen(nombre);
-    //         var parametros = { opc: 'guardar', img: nombreIMG.imagen, cadena };
+    //FUNCIÓN PARA ENVIAR DATOS
+    function enviarDatos() {
+        var nombre = $("#nombreLibro").val();
+        var cadena = JSON.stringify(global.json("#frmAgregarProducto"));
+        var inputFileImage = document.getElementById('imagen');
+        console.log(cadena);
+        if (cadena == "") {
+            global.mensajes('Advertencia', '!Debe llenar Todos los Campos', 'warning', '', '', '', '');
+        } else {
+            var nombreIMG = global.subirimagen(nombre);
+            var parametros = { opc: 'guardar', img: nombreIMG.imagen, cadena };
 
-    //         if (inputFileImage.files.length > 0) {
-    //             if (nombreIMG.codRetorno != '000') {
-    //                 swal({
-    //                         title: 'Error al subir la Imágen',
-    //                         text: '¿Desea Continuar?',
-    //                         type: 'warning',
-    //                         allowEscapeKey: false,
-    //                         allowOutsideClick: false,
-    //                         showCancelButton: true,
-    //                         confirmButtonColor: '#3085d6',
-    //                         cancelButtonColor: '#d33',
-    //                         confirmButtonText: 'Si'
-    //                     },
-    //                     function(isConfirm) {
-    //                         if (isConfirm) {
-    //                             global.envioAjax('ControllerLibro', parametros);
-    //                         }
-    //                     });
-    //             } else {
-    //                 global.envioAjax('ControllerLibro', parametros);
-    //             }
-    //         } else {
-    //             global.envioAjax('ControllerLibro', parametros);
-    //         }
-    //     }
-    // }
-    //FUNCIÓN PARA LLENAR LOS SELECT DE LA VISTA	
-    function llenarCombo() {
-        var respuesta = global.buscar('ControllerLibro', 'filtro', '', '');
-
-        if (respuesta.codRetorno = '000') {
-            $("#editorial").html(respuesta.editoriales);
-            $("#autor").html(respuesta.autores);
+            if (inputFileImage.files.length > 0) {
+                if (nombreIMG.codRetorno != '000') {
+                    swal({
+                        title: 'Error al subir la Imágen',
+                        text: '¿Desea Continuar?',
+                        type: 'warning',
+                        allowEscapeKey: false,
+                        allowOutsideClick: false,
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Si'
+                    },
+                    function(isConfirm) {
+                        if (isConfirm) {
+                            global.envioAjax('ControllerLibro', parametros);
+                        }
+                    });
+                } else {
+                    global.envioAjax('ControllerLibro', parametros);
+                }
+            } else {
+                global.envioAjax('ControllerLibro', parametros);
+            }
         }
     }
-    // //FUNCIÓN CARGAR IMAGEN
-    // function cargar_imagen(nombre) {
-    //     //VALIDAMOS SI LA IMÁGEN EXISTE
-    //     if (nombre == "") {
-    //         //MOSTRAR IMÁGEN SINO SE ENCONTRÓ LA SOLICITADA
-    //         $("#imagen").fileinput('refresh', {
-    //             previewFileType: "image",
-    //             allowedFileExtensions: ["jpg", "png"],
-    //             showCaption: false,
-    //             showUpload: false,
-    //             showRemove: false,
-    //             showClose: false,
-    //             initialPreview: [
-    //                 '<img src=images/no_image.png class="file-preview-image">',
-    //             ],
-    //         });
-    //     } else {
-    //         //MOSTRAR IMÁGEN SOLICITADA
-    //         $("#imagen").fileinput('refresh', {
-    //             showCaption: false,
-    //             showUpload: false,
-    //             previewFileType: "image",
-    //             allowedFileExtensions: ["jpg", "png"],
-    //             elErrorContainer: "#errorBlock",
-    //             browseClass: "btn green",
-    //             browseLabel: "",
-    //             browseIcon: "<i class=\"material-icons\">image</i> ",
-    //             removeClass: "btn red",
-    //             removeLabel: "",
-    //             removeIcon: "<i class=\"material-icons\">delete</i> ",
-    //             initialPreview: [
-    //                 '<img src="' + nombre + '" class="file-preview-image">',
-    //             ],
-    //         });
-    //     }
-    // }
-    //INICIALIZAR EL PLUGIN DE FILE-INPUT
+        //FUNCIÓN PARA LLENAR LOS SELECT DE LA VISTA	
+    function llenarCombo() {
+        var respuesta = global.buscar('ControllerProducto', 'filtro', '', '');
+
+        if (respuesta.codRetorno = '000') {
+            $("#proveedor").html(respuesta.proveedores);
+			$("#categoria").html(respuesta.categorias);
+        }
+    }
+        //FUNCIÓN CARGAR IMAGEN
+    function cargar_imagen(nombre) {
+         //VALIDAMOS SI LA IMÁGEN EXISTE
+         if (nombre == "") {
+             //MOSTRAR IMÁGEN SINO SE ENCONTRÓ LA SOLICITADA
+            $("#imagen").fileinput('refresh', {
+                previewFileType: "image",
+                allowedFileExtensions: ["jpg", "png"],
+                showCaption: false,
+                showUpload: false,
+                showRemove: false,
+                showClose: false,
+                initialPreview: [
+                    '<img src=images/no_image.png class="file-preview-image">',
+                ],
+            });
+        } else {
+            //MOSTRAR IMÁGEN SOLICITADA
+            $("#imagen").fileinput('refresh', {
+                showCaption: false,
+                showUpload: false,
+                previewFileType: "image",
+                allowedFileExtensions: ["jpg", "png"],
+                elErrorContainer: "#errorBlock",
+                browseClass: "btn green",
+                browseLabel: "",
+                browseIcon: "<i class=\"material-icons\">image</i> ",
+                removeClass: "btn red",
+                removeLabel: "",
+                removeIcon: "<i class=\"material-icons\">delete</i> ",
+                initialPreview: [
+                    '<img src="' + nombre + '" class="file-preview-image">',
+                ],
+            });
+        }
+    }
+    //INICIALIZAR EL PLUGIN DE FILE-INPUT`
     $("#imagen").fileinput({
         language: "es",
         showCaption: false,

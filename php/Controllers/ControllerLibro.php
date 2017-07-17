@@ -60,12 +60,13 @@
 		//FUNCIÓN PARA GUARDAR LIBRO
 	function guardar_libro(){	
 		$log = new Log("log", "../../log/");
-		try { 
+		try {
 			 	//DECLARACION Y ASIGNACIÓN DE VARIABLES
 			$sql = new LibroModel();
 			$rutaIMG2 = trim($_POST['img']);
 			$libro = json_decode($_POST['cadena']);
 			$libro->status = 'DISPONIBLE';
+			$libro->usuario = $_SESSION['INGRESO']['nombre'];
 				//COMPROBAMOS SI LA VARIABLE TRAE LA RUTA DE LA IMÀGEN 
 			if ($rutaIMG2 != "" || $rutaIMG2 != null) {
 				$libro->rutaIMG = $rutaIMG2;

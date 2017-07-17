@@ -7,6 +7,14 @@
 		//SE RECIBE EL NOMBRE DE LA IMÁGEN, LA CARPETA DE GUARDADO CON SUS RESPECTIVOS DATOS
 	$name = trim($_POST['name']);
 	$upload_folder = '../images';
+
+	if ($_FILES['archivo']['name'] == null || $_FILES['archivo']['name'] == "") {
+		$ruta = "images/no_image.png";
+		$return = array('codRetorno' => '001', 'imagen' => $ruta);
+		print json_encode($return);
+		exit();
+	}
+	
 	$nombre_archivo = $_FILES['archivo']['name'];
 	$tipo_archivo = $_FILES['archivo']['type'];
 	$tamano_archivo = $_FILES['archivo']['size'];

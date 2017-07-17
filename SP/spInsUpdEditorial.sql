@@ -8,7 +8,8 @@ CREATE PROCEDURE spInsUpdEditorial (
 	IN pStatus VARCHAR(15),
 	OUT CodRetorno CHAR(3),
 	OUT msg VARCHAR(100),
-	OUT msgSQL VARCHAR(100)
+	OUT msgSQL VARCHAR(100),
+	OUT id INT
 )
 -- =============================================
 -- Author:       	Pedro Ed Monzón Mendoza
@@ -49,6 +50,7 @@ BEGIN
 						UPDATE editoriales SET nombre_editorial = pNombreEditorial,fechaModificacion = NOW() WHERE codigo_editorial = pCodigo;
 						SET CodRetorno = '000';
 						SET msg = 'Editorial Actualizado con Exito';
+						SELECT codigo_editorial INTO id FROM editoriales WHERE codigo_editorial = pCodigo;
 					COMMIT; 
 				ELSE
 					SET CodRetorno = '001';
@@ -57,7 +59,7 @@ BEGIN
 				END IF;
 			ELSE
 				SET CodRetorno = '001';
-				SET msg = 'La Editorial no Éxiste';
+				SET msg = 'La Editorial no Existe';
 			END IF;
 		ELSE 
 			IF NOT EXISTS(SELECT * FROM editoriales WHERE nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci ) THEN
@@ -66,10 +68,12 @@ BEGIN
 					VALUES (pNombreEditorial, pUsuario, pStatus,NOW(), NOW() );
 					SET CodRetorno = '000';
 					SET msg = 'Editorial Guardado con Exito';
+					SET id =  LAST_INSERT_ID();
 				COMMIT;
 			ELSE
 				SET CodRetorno = '001';
-				SET msg = 'La Editorial ya Éxiste';
+				SET msg = 'La Editorial ya Existe';
+				SELECT codigo_editorial INTO id FROM editoriales WHERE nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci;
 				ROLLBACK;
 			END IF; 
 		END IF; 

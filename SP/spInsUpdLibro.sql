@@ -11,9 +11,10 @@ CREATE PROCEDURE spInsUpdLibro (
 	IN pUsuario VARCHAR(15),
 	IN pStatus VARCHAR(10),
 	IN pRutaIMG VARCHAR(50),
-	OUT CodRetorno CHAR(3),
+	OUT codRetorno CHAR(3),
 	OUT msg VARCHAR(100),
-	OUT msgSQL VARCHAR(100)	
+	OUT msgSQL VARCHAR(100),
+	OUT id INT
 )
 -- =============================================
 -- Author:       	Felipe Monzón
@@ -26,7 +27,7 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
@@ -36,44 +37,52 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
-		
-	IF (pCodigo != 0) THEN
-		IF EXISTS(SELECT * FROM libros WHERE codigo_libro = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
-				START TRANSACTION;
-					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,rutaIMG = pRutaIMG,fechaModificacion = NOW()
-					WHERE codigo_libro = pCodigo;
-					SET CodRetorno = '000';
-					SET msg = 'Libro Actualizado con Exito';
-				COMMIT; 
-			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Nombre del Libro ya fue Registrado';
-				ROLLBACK;
-			END IF;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Libro no Éxiste';
-		END IF;
+	
+	IF (pNombreLibro = '' || pISBN = 0 || pAutor = 0 || pEditorial = 0 || pUsuario = '' || pStatus = '' || pRutaIMG = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
 	ELSE 
-		IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
-			START TRANSACTION;
-				INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,rutaIMG,usuario,status,fechaCreacion,fechaModificacion)
-				VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pRutaIMG, pUsuario, pStatus,NOW(), NOW() );
-				SET CodRetorno = '000';
-				SET msg = 'Libro Guardado con Exito';
-			COMMIT;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Libro ya Éxiste';
-			ROLLBACK;
+		IF (pCodigo != 0) THEN
+			IF EXISTS(SELECT * FROM libros WHERE codigo_libro = pCodigo) THEN
+				IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
+					START TRANSACTION;
+						UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,rutaIMG = pRutaIMG,fechaModificacion = NOW()
+						WHERE codigo_libro = pCodigo;
+						SET codRetorno = '000';
+						SET msg = 'Libro Actualizado con Exito';
+						SELECT codigo_libro INTO id FROM libros WHERE codigo_libro = pCodigo;
+					COMMIT; 
+				ELSE
+					SET codRetorno = '001';
+					SET msg = 'El Nombre del Libro ya fue Registrado';
+					ROLLBACK;
+				END IF;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Libro no Existe';
+			END IF;
+		ELSE 
+			IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
+				START TRANSACTION;
+					INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,rutaIMG,usuario,status,fechaCreacion,fechaModificacion)
+					VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pRutaIMG, pUsuario, pStatus,NOW(), NOW() );
+					SET codRetorno = '000';
+					SET msg = 'Libro Guardado con Exito';
+					SET id =  LAST_INSERT_ID();
+				COMMIT;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Libro ya Existe';
+				ROLLBACK;
+				SELECT codigo_libro INTO id FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci;
+			END IF; 
 		END IF; 
-	END IF; 
+	END IF;
 END$$
 DELIMITER ;

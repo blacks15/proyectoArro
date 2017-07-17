@@ -59,6 +59,13 @@ class Login {
 
 			$stm = SQL($sql,$datos); 
 
+			$usuarioDB = $stm->fetchColumn(0);
+
+			if (strcmp($usuarioDB,$usuario) != 0) {
+				$res = false;
+				return $res;
+			}
+
 			if ($stm->fetchColumn(1) == 'BLOQUEADO') {
 				$res->Mensaje = 'Usuario Bloqueado Contacte con el Administrador';
 				return $res;

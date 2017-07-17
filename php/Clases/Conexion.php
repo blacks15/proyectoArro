@@ -15,7 +15,7 @@
 					$this->usuario,
 					$this->contrasena
 				);
-				parent::setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+				//parent::setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			} catch (PDOException $e){
 				$salidaJson = array(
 					'error' => $e->getMessage(),
