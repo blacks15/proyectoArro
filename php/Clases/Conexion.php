@@ -22,6 +22,7 @@
 					'isError' => 1
 				);
 				print ($salidaJson['isError']);
+				exit();
 			}
 		} 
 	} 

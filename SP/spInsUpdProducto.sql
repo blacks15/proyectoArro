@@ -13,6 +13,7 @@ CREATE PROCEDURE spInsUpdProducto (
 	IN pVenta DECIMAL,
 	IN pCategoria BIGINT,
 	IN pStatus VARCHAR(15),
+	IN pIsLibro INT,
 	IN pUsuario VARCHAR(15),
 	OUT codRetorno CHAR(3),
 	OUT msg VARCHAR(100),
@@ -74,9 +75,9 @@ BEGIN
 			IF NOT EXISTS(SELECT * FROM productos WHERE nombre_producto = CONVERT(pNombreProducto USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
 					INSERT INTO productos(nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,
-						venta,categoria,status,usuario,fechaCreacion,fechaModificacion)
+						venta,categoria,status,isLibro,usuario,fechaCreacion,fechaModificacion)
 					VALUES(pNombreProducto, pCodigoBarras, pProveedor, pStActual, pStMin, pStMax, pCompra, pVenta, pCategoria,
-						pStatus, pUsuario,NOW(), NOW() );
+						pStatus, pIsLibro, pUsuario,NOW(), NOW() );
 					SET codRetorno = '000';
 					SET msg = 'Producto Guardado con Exito';
 				COMMIT;

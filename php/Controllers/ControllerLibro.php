@@ -1,8 +1,9 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/libroModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'Log.php');
+	require_once(MODEL.'libroModel.php');
+
 	session_start();
 		//RECIBINMOS LA OPCIÓN Y LLAMAMOS LA FUNCIÓN
 	$opc = $_POST["opc"];
@@ -20,49 +21,48 @@
 		break;
 	}
 		//FUNCIÓN FILTRO
-	function libroFiltro(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo libroFiltro', false, true, true);	
-		try {
-			$sql = new LibroModel();
-				//VALIDAMOS LA SESSION
-			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
-				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Libro',
-					'Mensaje' => 'Sesión Caducada'
-				);
-				$log->insert('Libro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
-				print json_encode($salidaJSON);
-				exit();
-			}
+	// function libroFiltro(){
+	// 	$log = new Log("log", "../../log/");
+	// 	try {
+	// 		$sql = new LibroModel();
+	// 			//VALIDAMOS LA SESSION
+	// 		if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
+	// 			$salidaJSON = array('codRetorno' => '003',
+	// 				'form' => 'Libro',
+	// 				'Mensaje' => 'Sesión Caducada'
+	// 			);
+	// 			$log->insert('Libro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+	// 			print json_encode($salidaJSON);
+	// 			exit();
+	// 		}
 
-			$datosCombo = $sql->libroFiltro();
+	// 		$datosCombo = $sql->libroFiltro();
 
-			if ($datosCombo != "") {
-				$salidaJSON = array('codRetorno' => '000',
-					'autores' => $datosCombo->autores,
-					'editoriales' => $datosCombo->editoriales,
-					'form' => 'Libro',
-				);	
-			} else {
-				$salidaJSON = array('codRetorno' => '002',
-					'form' => 'Libro',
-					'Mensaje' => 'Ocurrio un Error ',
-				);
-			}
+	// 		if ($datosCombo != "") {
+	// 			$salidaJSON = array('codRetorno' => '000',
+	// 				'autores' => $datosCombo->autores,
+	// 				'editoriales' => $datosCombo->editoriales,
+	// 				'form' => 'Libro',
+	// 			);	
+	// 		} else {
+	// 			$salidaJSON = array('codRetorno' => '002',
+	// 				'form' => 'Libro',
+	// 				'Mensaje' => 'Ocurrio un Error ',
+	// 			);
+	// 		}
 
-			print json_encode($salidaJSON);
-		} catch (Exception $e) {
-			$log->insert('Error libroFiltro '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
-		}
-	}
+	// 		print json_encode($salidaJSON);
+	// 	} catch (Exception $e) {
+	// 		$log->insert('Error libroFiltro '.$e->getMessage(), false, true, true);	
+	// 		print('Ocurrio un Error'.$e->getMessage());	
+	// 	}
+	// }
 		//FUNCIÓN PARA GUARDAR LIBRO
 	function guardar_libro(){	
 		$log = new Log("log", "../../log/");
 		try {
 			 	//DECLARACION Y ASIGNACIÓN DE VARIABLES
-			$sql = new LibroModel();
+			$sql = new ProductoModel();
 			$rutaIMG2 = trim($_POST['img']);
 			$libro = json_decode($_POST['cadena']);
 			$libro->status = 'DISPONIBLE';
@@ -104,20 +104,24 @@
 			if ($libro->codigoAutor == "") {
 				$libro->codigoAutor = 0;
 			}
+
+			if ($libro->codigoProducto == "") {
+				$libro->codigoProducto = 0;
+			}
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$res = $sql->guardarLibro($libro);
+			$res = $sql->guardarProducto($libro);
 				//SE VALIDA EL RETORNO DEL MÉTODO
-			if ($res->CodRetorno == '000') {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
+			if ($res['codRetorno'] == '000') {
+				$salidaJSON = array('codRetorno' => $res['codRetorno'],
 					'form' => 'Libro',
 					'Titulo' => 'Éxito',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $res['msg'],
 				);
-			} else if (!empty($res->CodRetorno) ) {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
+			} else if (!empty($res['codRetorno']) ) {
+				$salidaJSON = array('codRetorno' => $res['codRetorno'],
 					'form' => 'Libro',
 					'Titulo' => 'Error',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $res['msg'],
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => '002',
@@ -127,10 +131,10 @@
 				);
 			}
 
-			$log->insert('Libro CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+			$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error Libro: '.$e->getMessage(), false, true, true);
+			$log->insert('Error guardarProducto: '.$e->getMessage(), false, true, true);
 			print('Ocurrio un Error'.$e->getMessage());					
 		}
 	}

@@ -25,7 +25,7 @@ var global = {
             global.cargarPagina(respuesta.form);
         }
     },
-    //FUNCIÓN ENVAIA AJAX POST
+    //FUNCIÓN ENVIAR DATOS POR AJAX POST
     envioAjax: function(url, parametros) {
         $.ajax({
             cache: false,
@@ -75,7 +75,7 @@ var global = {
         });
     },
     //FUNCIÓN PARA CREAR MENSAJES
-    mensajes: function(titulo, texto, tipo, url, codRetorno, form, bus) {
+    mensajes: function(titulo, texto, tipo, url, codRetorno, form, bus) { 
         swal({
             title: titulo,
             type: tipo,
@@ -88,7 +88,7 @@ var global = {
             showLoaderOnConfirm: true,
         }).then(function() {
             if (url != "" && url != undefined) {
-                if (form == 'frmLogin') {
+                if (form == 'Login') {
                     sessionStorage.usuario = texto;
                     sessionStorage.tipo = bus;
                 }
@@ -110,7 +110,7 @@ var global = {
     //FUNCIÓN PARA CARGAR LAS PÁGINAS
     cargarPagina: function(pagina) {
         $("#loader").fadeIn(500);
-        $("#pages").load('pages/' + pagina + '.html', function(responseText, statusText, xhr) {
+        $("#pages").load('pages/'+pagina+'.html', function(responseText, statusText, xhr) {
             if (statusText == "error") {
                 $("#pages").load("errores/404.html");
             }

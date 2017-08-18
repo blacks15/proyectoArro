@@ -1,103 +1,15 @@
 <?php 
-require_once('../Clases/Conexion.php');
-require_once('../Clases/Combo.php');
-session_start();
+require_once('../Clases/Constantes.php');
+require_once(CLASES.'Conexion.php');
+require_once(CLASES.'Combo.php');
 /*	
 	Clase: Model Libro
 	Autor: Felipe Monzón
 	Fecha: 30-ABR-2017
 */
 class LibroModel {
-	// public function libroFiltro(){
-	// 	try {
-	// 		$res->autores = mostrar_autor();
-	// 		$res->editoriales = mostrar_editorial();
-
-	// 		return $res; 
-	// 	} catch (Exception $e) {
-	// 		$log->insert('Error libroFiltro '.$e->getMessage(), false, true, true);	
-	// 		print('Ocurrio un Error'.$e->getMessage());
-	// 	}
-	// }
-
-	public function guardarProducto($producto){
-		$log = new Log("log", "../../log/");
-		try {
-			$sql = "";
-			$db = new Conexion();
-			$libro = new ArrayObject();
-			$retorno = new ArrayObject();
-				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if (empty($producto) ) {
-				$retorno->CodRetorno = '004';
-				$retorno->Mensaje = 'Parametros Vacios';
-
-				return $retorno;
-			}
-
-			if ($producto->tipo == 'libro') {
-				$libro->codigoLibro = $producto->codigoLibro;
-				$libro->nombreLibro = $producto->nombreLibro;
-				$libro->isbn = $producto->isbn;
-				$libro->codigoAutor = $producto->codigoAutor;
-				$libro->autor = $producto->autor;
-				$libro->codigoEditorial = $producto->codigoEditorial;
-				$libro->editorial = $producto->editorial;
-				$libro->descripcionLibro = $producto->descripcionLibro;
-				$libro->usuario = $producto->usuario;
-				$libro->status = $producto->status;
-				$libro->rutaIMG	= $producto->rutaIMG;	
-
-				$respLibro = $this->guardarLibro($libro);
-
-				if ( $respLibro['codRetorno'] == '002' ) {
-					$retorno->CodRetorno = $respLibro['codRetorno'];
-					$retorno->Mensaje = $respLibro['msg'];
-
-					return $retorno;
-				}
-			}
-
-			$sql = "CALL spInsUpdProducto(?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg,@msgSQL)";
-
-			$stm = $db->prepare($sql);
-			$stm->bindParam(1,$libro->codigoLibro,PDO::PARAM_INT);
-			$stm->bindParam(2,$libro->nombreLibro,PDO::PARAM_STR);
-			$stm->bindParam(3,$libro->isbn,PDO::PARAM_INT);
-			$stm->bindParam(4,$libro->codigoAutor,PDO::PARAM_INT);
-			$stm->bindParam(5,$libro->codigoEditorial,PDO::PARAM_INT);
-			$stm->bindParam(6,$libro->descripcionLibro,PDO::PARAM_STR);
-			$stm->bindParam(7,$libro->usuario,PDO::PARAM_STR);
-			$stm->bindParam(8,$libro->status,PDO::PARAM_STR);
-			$stm->bindParam(9,$libro->rutaIMG,PDO::PARAM_STR);
-
-			$stm->execute();
-			$stm->closeCursor();
-			
-			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
-			$error = $stm->errorInfo();
-
-			if ($error[2] != "") {
-				$log->insert('Error spInsUpdLibro: ' .$error[2] , false, true, true);
-			}
-
-			$log->insert('codRetorno SP: ' .$retorno['codRetorno'] , false, true, true);	
-
-			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
-				$log->insert('Error spInsUpdLibro: '.$retorno['msgSQL80'], false, true, true);	
-			}
-
-			$db = null;
-			
-
-		} catch (PDOException $e){
-			$log->insert('Error guardarLibro '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
-		}
-	}
-
-	private function guardarLibro($libro){
-		$log = new Log("log", "../../log/");
+	public function guardarLibro($libro){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 			$db = new Conexion();
 			$editorial = new ArrayObject();
@@ -105,8 +17,9 @@ class LibroModel {
 			$retorno = new ArrayObject();
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
 			if (empty($libro) ) {
-				$retorno->CodRetorno = '004';
-				$retorno->Mensaje = 'Parametros Vacios';
+				$retorno = array( 'codRetorno' => '004',
+					'Mensaje' => PARAM_VACIOS
+				);
 
 				return $retorno;
 			}
@@ -114,18 +27,19 @@ class LibroModel {
 			$editorial->codigoEditorial = $libro->codigoEditorial;
 			$editorial->nombreditorial = strtolower($libro->editorial);
 			$editorial->usuario = $_SESSION['INGRESO']['nombre'];
-			$editorial->status = 'DISPONIBLE';
+			$editorial->status = $libro->status;
 
 			$autor->codigoAutor = $libro->codigoAutor;
 			$autor->nombreAutor = strtolower($libro->autor) ;
 			$autor->usuario = $_SESSION['INGRESO']['nombre'];
-			$autor->status = 'DISPONIBLE';
+			$autor->status = $libro->status;
 
 			$respEdit = $this->guardarEditorial($editorial);
 
 			if ( $respEdit['codRetorno'] == '002' ) {
-				$retorno->CodRetorno = $respEdit['codRetorno'];
-				$retorno->Mensaje = $respEdit['msg'];
+				$retorno = array( 'codRetorno' => $respEdit['codRetorno'],
+					'Mensaje' => $respEdit['msg']
+				);
 
 				return $retorno;
 			} else if ($respEdit['codRetorno'] == '001') {
@@ -135,59 +49,67 @@ class LibroModel {
 			$respAutor = $this->guardarAutor($autor);
 
 			if ( $respAutor['codRetorno'] == '002' ) {
-				$retorno->CodRetorno = $respAutor['codRetorno'];
-				$retorno->Mensaje = $respAutor['msg'];
+				$retorno = array( 'codRetorno' => $respAutor['codRetorno'],
+					'Mensaje' => $respAutor['msg']
+				);
 
 				return $retorno;
 			} else if ($respAutor['codRetorno'] == '001') {
 				$libro->codigoAutor = $respAutor['id'];
 			}
 
-			$sql = "CALL spInsUpdLibro(?,?,?,?,?,?,?,?,?,@codRetorno,@msg,@msgSQL,@id)";
+			$sql = SP_INSUPDLIBROS;
 
 			$stm = $db->prepare($sql);
-			$stm->bindParam(1,$libro->codigoLibro,PDO::PARAM_INT);
-			$stm->bindParam(2,$libro->nombreLibro,PDO::PARAM_STR);
-			$stm->bindParam(3,$libro->isbn,PDO::PARAM_INT);
-			$stm->bindParam(4,$libro->codigoAutor,PDO::PARAM_INT);
-			$stm->bindParam(5,$libro->codigoEditorial,PDO::PARAM_INT);
-			$stm->bindParam(6,$libro->descripcionLibro,PDO::PARAM_STR);
-			$stm->bindParam(7,$libro->usuario,PDO::PARAM_STR);
-			$stm->bindParam(8,$libro->status,PDO::PARAM_STR);
-			$stm->bindParam(9,$libro->rutaIMG,PDO::PARAM_STR);
+			$stm->bindParam(':codigoLibro',$libro->codigoLibro,PDO::PARAM_INT);
+			$stm->bindParam(':nombreLibro',$libro->nombreLibro,PDO::PARAM_STR);
+			$stm->bindParam(':isbn',$libro->isbn,PDO::PARAM_INT);
+			$stm->bindParam(':codigoAutor',$libro->codigoAutor,PDO::PARAM_INT);
+			$stm->bindParam(':codigoEditorial',$libro->codigoEditorial,PDO::PARAM_INT);
+			$stm->bindParam(':descripcionLibro',$libro->descripcionLibro,PDO::PARAM_STR);
+			$stm->bindParam(':usuario',$libro->usuario,PDO::PARAM_STR);
+			$stm->bindParam(':status',$libro->status,PDO::PARAM_STR);
+			$stm->bindParam(':rutaIMG',$libro->rutaIMG,PDO::PARAM_STR);
 
 			$stm->execute();
 			$stm->closeCursor();
 			
-			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
 			$error = $stm->errorInfo();
 
 			if ($error[2] != "") {
-				$log->insert('Error spInsUpdLibro: ' .$error[2] , false, true, true);
+				$logger->write('spInsUpdLibro: '.$error[2], 3 );
 			}
 
-			$log->insert('codRetorno SP: ' .$retorno['codRetorno'] , false, true, true);	
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spInsUpdLibro:  '.$retorno['codRetorno'] ,6 );
 
 			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
-				$log->insert('Error spInsUpdLibro: '.$retorno['msgSQL80'], false, true, true);	
+				$logger->write('spInsUpdLibro: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
 			}
 
 			$db = null;
 
 			return $retorno; 
 		} catch (PDOException $e) {
-			$log->insert('Error guardarLibro '.$e->getMessage(), false, true, true);	
+			$logger->write('guardarLibro: '.$e->getMessage() , 3 );
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
 
 	private function guardarAutor($autor){
-		$log = new Log("log", "../../log/");
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 			$retorno = new ArrayObject();
 			$db = new Conexion();
 
-			$sql = "CALL spInsUpdAutor(:codigoAutor,:nombreAutor,:usuario,:status,@codRetorno,@msg,@msgSQL,@id)";
+			$sql = SP_INSUPDAUTOR;
 
 			$stm = $db->prepare($sql);
 			
@@ -199,35 +121,42 @@ class LibroModel {
 			$stm->execute();			
 			$stm->closeCursor();
 			
-			$retorno = $db->query('SELECT @CodRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
 			$error = $stm->errorInfo();
 
 			if ($error[2] != "") {
-				$log->insert('Error spInsUpdLibro: ' .$error[2] , false, true, true);
+				$logger->write('spInsUpdLibro: '.$error[2], 3 );
 			}
 
-			$log->insert('codRetorno spInsUpdAutor: ' .$retorno['codRetorno'] , false, true, true);	
+			$retorno = $db->query('SELECT @CodRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spInsUpdAutor:  '.$retorno['codRetorno'] ,6 );
 
 			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
-				$log->insert('Error spInsUpdAutor: '.$retorno['msgSQL80'], false, true, true);	
+				$logger->write('spInsUpdAutor: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
 			}
 
 			$db = null;
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error guardarAutor '.$e->getMessage(), false, true, true);	
+			$logger->write('guardarAutor: '.$e->getMessage() , 3 );
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
 
 	private function guardarEditorial($editorial){
-		$log = new Log("log", "../../log/");
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 			$retorno = new ArrayObject();
 			$db = new Conexion();
 
-			$sql = "CALL spInsUpdEditorial(:codigoEditorial,:nombreEditorial,:usuario,:status,@codRetorno,@msg,@msgSQL,@id)";
+			$sql = SP_INSUPDEDITORIAL;
 
 			$stm = $db->prepare($sql);
 			
@@ -239,81 +168,33 @@ class LibroModel {
 			$stm->execute();			
 			$stm->closeCursor();
 			
-			$retorno = $db->query('SELECT @CodRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
 			$error = $stm->errorInfo();
 
 			if ($error[2] != "") {
-				$log->insert('Error spInsUpdLibro: ' .$error[2] , false, true, true);
+				$logger->write('spInsUpdLibro: '.$error[2], 3 );
 			}
 
-			$log->insert('codRetorno spInsEditorial: ' .$retorno['codRetorno'] , false, true, true);	
+			$retorno = $db->query('SELECT @CodRetorno AS codRetorno, @msg AS msg, @msgSQL AS msgSQL80, @id AS id')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spInsEditorial:  '.$retorno['codRetorno'] ,6 );
 
 			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
-				$log->insert('Error spInsEditorial: '.$retorno['msgSQL80'], false, true, true);	
+				$logger->write('spInsEditorial: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
 			}
 
 			$db = null;
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error guardarEditorial '.$e->getMessage(), false, true, true);	
+			$logger->write('guardarEditorial: '.$e->getMessage() , 3 );
 			print('Ocurrio un Error'.$e->getMessage());
 		}
 	}
-
-	// public function cargarLibros($codigo,$inicio,$paginaActual,$tipobusqueda){
-	// 	$libros = new ArrayObject();
-	// 	$i = 0;
-	// 	try {
-	// 			//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-	// 		if ($codigo == "" || $paginaActual == "" || $tipobusqueda == "") {
-	// 			$retorno->CodRetorno = '004';
-	// 			$retorno->Mensaje = 'Parametros Vacios';
-
-	// 			return $retorno;
-	// 			exit();
-	// 		}
-
-	// 		$datos = array($codigo,$inicio,5,$tipobusqueda);
-	// 		$consulta = "CALL spConsultaLibros(?,?,?,?,@CodRetorno,@msg,@numFilas)";
-	// 			//EJECUTAMOS LA CONSULTA
-	// 		$stm = executeSP($consulta,$datos);
-
-	// 		if ($stm->codRetorno[0] == '000') {
-	// 			foreach ($stm->datos as $key => $value) {
-	// 				$libros[$i] = array('id' => $value['codigo_libro'],
-	// 					'nombre' => $value['nombre_libro'],
-	// 					'isbn' => $value['isbn'],
-	// 					'autor' => $value['nombre_autor'],
-	// 					'idAutor' => $value['autor'],
-	// 					'idEditorial' => $value['editorial'],
-	// 					'editorial' => $value['nombre_editorial'],
-	// 					'descripcion' => $value['descripcion'],
-	// 					'rutaIMG' => $value['rutaIMG']
-	// 				);
-	// 				$i++;
-	// 			}
-	// 				//VALIDAMOS EL NÚMERO DE FILAS
-	// 			if ($stm->numFilas[0] == 0) {
-	// 				$retorno->CodRetorno = "001";
-	// 				$retorno->Mensaje = 'No Hay Datos Para Mostrar';
-	// 			} else {
-	// 				$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
-	// 				$retorno->lista = $lista;
-	// 			}
-	// 			$retorno->CodRetorno = "000";
-	// 			$retorno->libros = $libros;
-	// 		} else {
-	// 			$retorno->CodRetorno = "002";
-	// 			$retorno->Mensaje = "Ocurrio Un Error";
-	// 		} 
-
-	// 		return $retorno;
-	// 	} catch (Exception $e) {
-	// 		$log->insert('Error cargarLibro '.$e->getMessage(), false, true, true);	
-	// 		print('Ocurrio un Error'.$e->getMessage());
-	// 	}
-	// }
 }
-
 ?>

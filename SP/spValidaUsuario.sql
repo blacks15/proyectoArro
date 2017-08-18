@@ -5,13 +5,14 @@ CREATE PROCEDURE spValidaUsuario (
 	IN pNombre VARCHAR(10),
 	IN pUsuario VARCHAR(10),
 	OUT codRetorno CHAR(3),
-	OUT msg VARCHAR(100)
+	OUT msg VARCHAR(100),
+	OUT msgSQL VARCHAR(100)
 )
--- =============================================
+-- ====================================================
 -- Author:       	Felipe Monzón Mendoza
 -- Create date: 	10/May/2017
 -- Description:   	Procedimiento para Validar Usuarios 
--- =============================================
+-- ====================================================
 BEGIN
 
 	DECLARE isAdmin INT;
@@ -22,7 +23,7 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
@@ -32,14 +33,14 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (pNombre = NULL && pUsuario = NULL) THEN
+	IF (pNombre = '' && pUsuario = '') THEN
 		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
@@ -49,7 +50,7 @@ BEGIN
 			IF (isAdmin != 1) THEN
 				SELECT status INTO vStatus FROM usuarios WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
 				IF (vStatus = 'DISPONIBLE') THEN
-					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,
+					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,u.password,
 						CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
 					FROM usuarios u
 					INNER JOIN empleados e ON e.matricula = u.matricula_empleado
@@ -61,7 +62,7 @@ BEGIN
 					SET msg = 'Usuario Bloqueado';
 				END IF;
 			ELSE
-				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,
+				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,u.password,
 					CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
 				FROM usuarios u
 				INNER JOIN empleados e ON e.matricula = u.matricula_empleado

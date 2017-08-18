@@ -1,6 +1,7 @@
 <?php 
 require_once('funciones.php');
 require_once('Usuario.php');
+require_once('UsuarioImp.php');
 session_start();
 /*
 	Clase: Login
@@ -13,23 +14,24 @@ class Login {
 		$password = limpiarCadena($password);
 		try {
 			$objUsuario = new Usuario();
+			$res = new ArrayObject();
 
 			if (!isset($_SESSION['intentos']) ) {
 				$_SESSION['intentos'] = 0; 
 				$_SESSION['usuario'] = ""; 
 			} else if ($_SESSION['intentos'] > 3 && $_SESSION['usuario'] == $nombreUsuario) {
 				$this->bloquearUsuario($nombreUsuario);
-				$res->Mensaje = 'Usuario Bloqueado Contacte con el Administrador';
+				$res->Mensaje = USUARIO_BLOQUEADO;
 				return $res;
 				exit();
 			}
 				//VALIDAMOS USUARIO Y PASSWORD
 			if ($this->validaUsuario($nombreUsuario) == false ) {
-				$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
+				$res->Mensaje = ERROR_USUARIO;
 				$_SESSION['intentos'] += 1; 
 				$_SESSION['usuario'] = $nombreUsuario;
-			} else if ($this->validaPassword($nombreUsuario,$password) == false) {
-				$res->Mensaje = 'Usuario y/o Contraseña Incorrecto';
+			} else if ($this->validaPassword($password) == false) {
+				$res->Mensaje = ERROR_USUARIO;
 				$_SESSION['intentos'] += 1; 
 				$_SESSION['usuario'] = $nombreUsuario;
 			} else {
@@ -44,108 +46,109 @@ class Login {
 
 			return $res;
 		} catch (Exception $e) {
-			$log->insert('Error Login '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());					
+			$logger->write('Login '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());					
 		}
 	}
 		//FUNCIÓN PARA VALIDAR EL USUARIO
 	private function validaUsuario($usuario){
-		try {			
-			$res = false;
-			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
-			$datos = array($usuario);
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
+		try {	
+			$respuesta = false;		
+			$usuarioIMP = new UsuarioImp();
+			$isValido = $usuarioIMP->validarUsuario($usuario);
 
-			$sql = "SELECT nombre_usuario,status FROM  usuarios WHERE nombre_usuario = ?";
-
-			$stm = SQL($sql,$datos); 
-
-			$usuarioDB = $stm->fetchColumn(0);
-
-			if (strcmp($usuarioDB,$usuario) != 0) {
-				$res = false;
-				return $res;
+			if ($isValido['codRetorno'] == '000') {
+				$_SESSION['usuario'] = $isValido['Datos'];
+				$respuesta = true;
 			}
 
-			if ($stm->fetchColumn(1) == 'BLOQUEADO') {
-				$res->Mensaje = 'Usuario Bloqueado Contacte con el Administrador';
-				return $res;
-				exit();
-			} else if ($stm->rowCount() > 0) {
-				$res = true;
-			} else {
-				$res = false;
-			}
-
-			return $res;
+			return $respuesta;
 		} catch (Exception $e) {
-			$log->insert('Error validaUsu '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());		
+			$logger->write('Login '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());		
 		}
 	}
 		//FUNCIÓN PARA VALIDAR EL PASSWORD
-	private function validaPassword($usuario,$password){
+	private function validaPassword($password){
 		try {
-			$res = false;
-			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
+			$isValido = false;
+			$objUsuario = new Usuario();
 			$password = filter_var($password,FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
-			$datos = array($usuario);
+
+			$objUsuario->setClave($_SESSION['usuario']['matricula_empleado']);
+			$objUsuario->setUsuario($_SESSION['usuario']['nombre_usuario']);
+			$objUsuario->setPassword( $_SESSION["usuario"]['password'] );
+			$objUsuario->setTipoUsuario($_SESSION['usuario']['tipo_usuario']);
+			$objUsuario->setStatus($_SESSION['usuario']['status']);
+			unset($_SESSION["usuario"]);
 
 			if (empty($password)) {
-				$res = false;
+				$isValido = false;
 			} else {
-				$sql = "SELECT nombre_usuario,tipo_usuario,matricula_empleado,password,status 
-					FROM usuarios WHERE nombre_usuario = ?";
+				if ( crypt($password,$objUsuario->getPassword() ) == $objUsuario->getPassword()  ) {
+					$ip = $this->IPuser();
+					$hora = time();
 
-				$stm = SQL($sql,$datos);
+					$_SESSION['INGRESO'] = array(
+						'id' => $objUsuario->getClave(),
+						'tipo' => $objUsuario->getTipoUsuario(),
+						'nombre' => $objUsuario->getUsuario(),
+						'status' => $objUsuario->getStatus(),
+						'hora' => $hora,
+						'ip' => $ip,
+					); 
 
-				if ($stm->rowCount() > 0) {
-					$row = $stm->fetch(PDO::FETCH_ASSOC);
-
-					if ( crypt($password,$row['password']) == $row['password'] ) {
-						$ip = $this->IPuser();
-						$hora = time();
-
-						$_SESSION['INGRESO'] = array(
-							'id' => $row['matricula_empleado'],
-							'tipo' => $row['tipo_usuario'],
-							'nombre' => $row['nombre_usuario'],
-							'status' => $row['status'],
-							'hora' => $hora,
-							'ip' => $ip,
-						); 
-
-						$res = true;
-					}
+					$isValido = true;
 				} else {
-					$res = false;
+					$isValido = false;
+					$objUsuario = null;
 				}
 			}
-			return $res;
+			return $isValido;
 		} catch (Exception $e) {
-			$log->insert('Error validaUsu '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('Login '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 		//BLOQUEAR USUARIO
 	private function bloquearUsuario($usuario){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
+			$isValido = true;
+			$db = new Conexion();
 			$usuario = filter_var($usuario, FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES|FILTER_FLAG_ENCODE_AMP);
-			$status = 'BLOQUEADO';
-			$datos = array($status,$usuario);
-			$sql = "UPDATE usuarios SET status = ? WHERE nombre_usuario = ?";
 
-			$stm = SQL($sql,$datos);
+			$sql = SP_BLOQUEA_USUARIO;;
 
-			if ($stm->rowCount() > 0) {
-				$res = true;
-			} else {
-				$res = false;
+			$stm = $db->prepare($sql);	
+			$stm->bindParam(':nombreUsuario',$usuario,PDO::PARAM_STR);
+
+			$stm->execute();
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
+
+			if ($error[2] != "") {
+				$logger->write('spBloqueaUsuario: '.$error[2], 3 );
 			}
 
-			return $res;
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spBloqueaUsuario:  '.$retorno['codRetorno'] ,6 );
+
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spBloqueaUsuario: '.$retorno['msgSQL80'] , 3 );
+			}
+
+			if ($retorno['codRetorno'] != '000' || $retorno['codRetorno'] == "" ) {
+				$isValido = false;
+				return $isValido;
+			}
+
+			return $isValido;
 		} catch (Exception $e) {
-			$log->insert('Error bloquearUsuaro '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('Login '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 		//Retorna el IP de usuario/

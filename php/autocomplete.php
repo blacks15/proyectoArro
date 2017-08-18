@@ -220,6 +220,7 @@
 			$_SESSION['expire'] = date("G:i",strtotime($start)+600); 
 				//VALIDAMOS SI LA BÚSQUEDA VIENE VACIA Y CREAMOS LA CONSULTA
 			if (!empty($buscar)) {
+				$buscar = strtolower($buscar);
 					//CREAMOS LA CONSULTA
 				$consulta = "SELECT nombre_producto,codigo_producto,venta,codigoBarras,stockActual,stockMax,status
 					FROM productos 

@@ -1,8 +1,8 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/productoModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'PHPErrorLog.php');
+	require_once(MODEL.'productoModel.php');
 	session_start();
 		//RECIBINMOS LA OPCIÓN Y LLAMAMOS LA FUNCIÓN
 	$opc = $_POST["opc"];
@@ -25,174 +25,181 @@
 	}
 		//FUNCIÓN FILTRO
 	function productoFiltro(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo productoFiltro', false, true, true);	
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-			$sql = new ProductoModel();
+			$modelo = new ProductoModel();
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Producto',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => PRODUCTO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+				$logger->write('codRetorno productoFiltro:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 
-			$datosCombo = $sql->productoFiltro();
+			$datosCombo = $modelo->productoFiltro();
 
 			if ($datosCombo != "") {
 				$salidaJSON = array('codRetorno' => '000',
 					'proveedores' => $datosCombo->proveedores,
 					'categorias' => $datosCombo->categorias,
-					'form' => 'Producto',
+					'form' => PRODUCTO,
 				);	
 			} else {
 				$salidaJSON = array('codRetorno' => '002',
-					'form' => 'Producto',
-					'Mensaje' => 'Ocurrio un Error ',
+					'form' => PRODUCTO,
+					'Mensaje' => MENSAJE_ERROR,
 				);
 			}
 
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error productoFiltro '.$e->getMessage(), false, true, true);	
+			$logger->write('productoFiltro: '.$e->getMessage() , 3 );
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}
 		//FUNCIÓN PARA GUARDAR
 	function guardarProducto(){	
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo guardarProducto', false, true, true);		
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
-			parse_str($_POST["cadena"], $_POST);
-			$sql = new ProductoModel();
-			 	//CICLO PARA LLENAR VARIABLES POR POST
-			foreach ($_POST as $clave => $valor) {
-				${$clave} = trim($_POST[$clave]);
+			 	//DECLARACION Y ASIGNACIÓN DE VARIABLES
+			$model = new ProductoModel();
+			$rutaIMG2 = trim($_POST['img']);
+			$producto = json_decode($_POST['cadena']);
+			$producto->status = 'DISPONIBLE';
+			$producto->usuario = $_SESSION['INGRESO']['nombre'];
+				//COMPROBAMOS SI LA VARIABLE TRAE LA RUTA DE LA IMÀGEN 
+			if ($rutaIMG2 != "" || $rutaIMG2 != null) {
+				$producto->rutaIMG = $rutaIMG2;
 			}
-				//VALIDAMOS EL CÓDIGO
-			if ($codigoProducto == "") {
-				$codigoProducto = 0;
-			}
-				//CALUCLAMOS EL STATUS
-			$status = calculaStatus($stActual,$stMax);
-			$nombreProducto = strtolower($nombreProducto);
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Producto',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => PRODUCTO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
 				//VALIDAMOS LOS PARAMETROS
-			if (!isset($codigoProducto,$nombreProducto,$codigoBarras,$proveedor,$stActual,$stMin,$stMax,$compra,$venta,$categoria,$status) ) {
+			if (!isset($producto) ) {
 				$salidaJSON = array('codRetorno' => '004',
-					'form' => 'Producto',
+					'form' => PRODUCTO,
 					'Titulo' => 'Advertencia',
-					'Mensaje' => 'Parametros Vacios'
+					'Mensaje' => PARAM_VACIOS
 				);
-				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
-				//SE CREA EL ARRAY CON LOS DATOS A INSERTAR
-			$datos = array($codigoProducto,$nombreProducto,$codigoBarras,$proveedor,$stActual,$stMin,$stMax,$compra,$venta,$categoria,$status,$_SESSION['INGRESO']['nombre']);
-				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$res = $sql->guardarProducto($datos);
-				//SE VALIDA EL RETORNO DEL MÉTODO
-			if ($res->CodRetorno == '000') {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Producto',
-					'Titulo' => 'Éxito',
-					'Mensaje' => $res->Mensaje,
-				);
-			} else {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Producto',
-					'Titulo' => 'Error',
-					'Mensaje' => $res->Mensaje,
-				);
+				//VALIDAMOS EL CÓDIGO
+			if ($producto->codigoLibro == "") {
+				$producto->codigoLibro = 0;
 			}
 
-			$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+			if ($producto->codigoEditorial == "") {
+				$producto->codigoEditorial = 0;
+			}
+
+			if ($producto->codigoAutor == "") {
+				$producto->codigoAutor = 0;
+			}
+
+			if ($producto->codigoProducto == "") {
+				$producto->codigoProducto = 0;
+			}
+				//EJECUTAMOS EL MÉTODO PARA GUARDAR
+			$resModel = $model->guardarProducto($producto);
+				//SE VALIDA EL RETORNO DEL MÉTODO
+			if ($resModel['codRetorno'] == '000') {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => PRODUCTO,
+					'Titulo' => 'Éxito',
+					'Mensaje' => $resModel['Mensaje'],
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => PRODUCTO,
+					'Titulo' => 'Error',
+					'Mensaje' => $resModel['Mensaje']
+				);
+			}
+			$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );		
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error guardarProducto: '.$e->getMessage(), false, true, true);
-			print('Ocurrio un Error'.$e->getMessage());					
+			$logger->write('guardarProducto: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());					
 		}
 	}
 		//FUNCIÓN PARA BUSCAR PROVEEDOR(ES)
 	function buscarProductos(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo buscarProductos', false, true, true);
-		
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();		
 		try {
 			sleep(0.5);
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			$modelo = new ProductoModel();
+			$buscarProducto = new ArrayObject();
 			parse_str($_POST["parametros"], $_POST);
-			$codigo = trim($_POST['codigo']);
-			$tipoBusqueda = trim($_POST['tipoBusqueda']);
-			$sql = new ProductoModel();
+
+			$buscarProducto->codigo = trim($_POST['codigo']);
+			$buscarProducto->tipoBusqueda = trim($_POST['tipoBusqueda']);
+			$buscarProducto->tamanioPag = TAMANIO_PAGINACION;
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Producto',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => PRODUCTO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			} 
 				//VALIDAMOS SI LA BUSQUEDA ESTA VACIA
-			if ($tipoBusqueda == "" || $tipoBusqueda == undefined) {
-				$tipoBusqueda = "0";
+			if ($buscarProducto->tipoBusqueda == "" || !isset($buscarProducto->tipoBusqueda) ) {
+				$buscarProducto->tipoBusqueda = "0";
 			} 
 
 			if (isset($_POST['partida'])) {
-				$paginaActual = $_POST['partida'];	
+				$buscarProducto->paginaActual = $_POST['partida'];	
 			}
 				//CALCULAMOS EL INICIO
-			if ($paginaActual <= 1){
-				$inicio = 0;
+			if ($buscarProducto->paginaActual <= 1){
+				$buscarProducto->inicio = 0;
 			} else {
-				$inicio = ($paginaActual - 1) * 5;
+				$buscarProducto->inicio = ($buscarProducto->paginaActual - 1) * 5;
 			}
 				//CARGAMOS LOS DATOS
-			$productos = $sql->cargarProductos($codigo,$inicio,$paginaActual,$tipoBusqueda);	
+			$resModel = $modelo->cargarProductos($buscarProducto);	
 
-			if ($productos->CodRetorno == "000") {
-				$salidaJSON = array ('codRetorno' => $productos->CodRetorno,
-					'datos' => $productos->Productos,
-					'link' => $productos->lista,
-					'form' => 'Producto',
+			if ($resModel['codRetorno'] == "000") {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'productos' => $resModel['Productos'],
+					'libros' => $resModel['Libros'],
+					'link' => $resModel['lista'],
+					'form' => PRODUCTO,
 				);
 			} else {
-				$salidaJSON = array('codRetorno' => $productos->CodRetorno,
-					'form' => 'Producto',
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => PRODUCTO,
 					'bus' => '1',
-					'Mensaje' => $productos->Mensaje,
+					'Mensaje' => $resModel['Mensaje'],
 				);
 			}
-
-			$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write(PRODUCTO.' CodRetorno: '.$salidaJSON['codRetorno'], 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error buscarProductos '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('buscarProductos: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 		//FUNCIÓN PARA ACTUALIZAR EL STOCK DE LOS PRODUCTOS
 	function acutalizarStock(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo stock', false, true, true);	
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();		
 		try {
-			$sql = new ProductoModel();
+			$modelo = new ProductoModel();
 			parse_str($_POST["parametros"], $_POST);
 			 	//CICLO PARA LLENAR VARIABLES POR POST
 			foreach ($_POST as $clave => $valor) {
@@ -201,10 +208,10 @@
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Producto',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => PRODUCTO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+				$logger->write(PRODUCTO.' CodRetorno: '.$salidaJSON['codRetorno'], 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
@@ -214,11 +221,10 @@
 			} else if ($bandera == 2) {
 				$stockActual = $stockActual-$nuevoStock;
 			}
-
 				//CALUCLAMOS EL STATUS
 			$status = calculaStatus($stockActual,$stockMax);
 				//LLAMAMOS EL MÉTODO
-			$stock = $sql->stock($codigo,$stockActual,$status);
+			$stock = $modelo->stock($codigo,$stockActual,$status);
 				//VALIDAMOS EL CODIGO DE RETORNO
 			if ($stock->CodRetorno == "000") {
 				$salidaJSON = array('codRetorno' => $stock->CodRetorno,
@@ -233,11 +239,10 @@
 					'Mensaje' => $stock->Mensaje,
 				);
 			}
-
-			$log->insert('Producto CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+			$logger->write(PRODUCTO.' CodRetorno: '.$salidaJSON['codRetorno'], 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error stcok '.$e->getMessage(), false, true, true);	
+			$logger->write('stcok: '.$e->getMessage() , 3 );
 			print('Ocurrio un Error'.$e->getMessage());	
 		}
 	}	

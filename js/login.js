@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
     $("#usuario").focus();
     /**************************
      *		BOTONOES		  *
@@ -53,11 +52,10 @@ $(document).ready(function() {
     function validarLogin() {
         var usuario = $("#usuario").val();
         var password = $("#password").val();
-        var cadena = $("#frmLogin").serialize();
+        var cadena = JSON.stringify(global.json("#frmLogin"));
         var parametros = { opc: 'login', cadena };
 
         if (usuario != "" && password != "") {
-            console.log(parametros);
             global.envioAjax('ControllerLogin', parametros);
         } else {
             global.mensajes('Advertencia', '!Debe llenar Todos los Campos', 'warning');

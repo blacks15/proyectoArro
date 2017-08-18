@@ -1,9 +1,8 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/usuarioModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
-	session_start();
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'PHPErrorLog.php');
+	require_once(MODEL.'usuarioModel.php');
 
 	$opc = $_POST["opc"];
 	switch ($opc) {
@@ -17,28 +16,32 @@
 	} 
 		//FUNCIÓN PARA LOGIN
 	function login(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo login', false, true, true);	
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
-			parse_str($_POST["cadena"], $_POST);
 				//DECLARACIÓN Y ASIGNACIÓN
-			$usuario = trim($_POST['usuario']);
-			$password = trim($_POST['password']);
+			$modelo = new UsuarioModel();
+			$login = new ArrayObject();
+			$login = json_decode($_POST['cadena']);
 
-			$password = mysql_real_escape_string($password);
-			$usuario = mysql_real_escape_string($usuario);
-
-			$usuario = addslashes($usuario);
-			$password = addslashes($password);
-
-			$sql = new UsuarioModel();
+			$login->usuario = addslashes($login->usuario);
+			$login->password = addslashes($login->password);
+				//VALIDAMOS LOS PARAMETROS
+			if (!isset($login) ) {
+				$salidaJSON = array('codRetorno' => '004',
+					'form' => LOGIN,
+					'Titulo' => 'Advertencia',
+					'Mensaje' => PARAM_VACIOS
+				);
+				$logger->write(LOGIN.'codRetorno:  '.$salidaJSON['codRetorno'] , 6 );
+				print json_encode($salidaJSON);
+				exit();
+			}
 				//CARGAMOS LOS DATOS
-			$usuario = $sql->inicioSesion($usuario,$password);	
+			$usuario = $modelo->inicioSesion($login);	
 
 			if ($usuario->CodRetorno == '000') {
 				$salidaJSON = array('codRetorno' => $usuario->CodRetorno,
-					'form' => 'frmLogin',
+					'form' => LOGIN,
 					'tipo' => $usuario->Tipo,
 					'numEmp' => $usuario->NumEmp,
 					'Titulo' => 'Bienvenido',
@@ -47,43 +50,45 @@
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => $usuario->CodRetorno,
-					'form' => 'frmLogin',
-					'Titulo' => 'Ocurrio un Error',
+					'form' => LOGIN,
+					'Titulo' => MENSAJE_ERROR,
 					'Mensaje' => $usuario->Mensaje,
 				);
 			}
-			$log->insert('Login Codigo de Retorno '.$salidaJSON['codRetorno'], false, true, true);
+			$logger->write(LOGIN.'codRetorno:  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error login '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('logOut '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 		//FUNCIÓN PARA LOGOUT
-	function logOut($usuario,$password){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo logOut', false, true, true);	
-
+	function logOut(){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {	
-
-			session_start();
-			session_unset();
-			session_destroy();
+			if (isset($_SESSION)) {
+				session_unset();
+				session_destroy();
+			}
 			
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
 				$salidaJSON = array('codRetorno' => '003',
-					'Mensaje' => 'Auf Wiedersehen'
+					'Mensaje' => MSG_CERRAR_SESSION
 				);
-				$log->insert('LogOut CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(LOGIN.'codRetorno:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
+			} else {
+				$salidaJSON = array('codRetorno' => '002',
+					'Mensaje' => MENSAJE_ERROR
+				);
 			}
 
-			$log->insert('LogOut Codigo de Retorno '.$salidaJSON['codRetorno'], false, true, true);
+			$logger->write(LOGIN.'codRetorno:  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error logOut '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('logOut '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 ?>

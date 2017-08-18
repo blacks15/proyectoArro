@@ -1,8 +1,8 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/clienteModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'PHPErrorLog.php');
+	require_once(MODEL.'clienteModel.php');
 	session_start();
 		//RECIBINMOS LA OPCIÓN Y LLAMAMOS LA FUNCIÓN
 	$opc = $_POST["opc"];
@@ -17,127 +17,116 @@
 	}
 
 	function guardarCliente(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo guardarCliente', false, true, true);
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
-			parse_str($_POST["cadena"], $_POST);
-			$sql = new ClienteModel();
-			 	//CICLO PARA LLENAR VARIABLES POR POST
-			foreach ($_POST as $clave => $valor) {
-				${$clave} = trim($_POST[$clave]);
-			}
+				//ASIGNACIÓN DE VARIABLES
+			$modelo = new ClienteModel();
+			$resModelo = new ArrayObject();
+			$cliente = json_decode($_POST['cadena']);
+			$cliente->usuario = $_SESSION['INGRESO']['nombre'];
 				//VALIDAMOS LA SESSION
-			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Cliente',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => CLIENTE,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Cliente CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write('codRetorno Cliente:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 				//VALIDAMOS LOS PARAMETROS
-			if (!isset($codigoCliente,$rfc,$nombreEmpresa,$nombreCliente,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$email) ) {
+			if (!isset($cliente->codigoCliente,$cliente->rfc,$cliente->nombreEmpresa,$cliente->nombreCliente,$cliente->apellidoPaterno,
+			$cliente->apellidoMaterno,$cliente->calle,$cliente->numExt,$cliente->numInt,$cliente->colonia,$cliente->ciudad,$cliente->estado,
+			$cliente->telefono,$cliente->celular,$cliente->email) ) {
 				$salidaJSON = array('codRetorno' => '004',
-					'form' => 'Cliente',
+					'form' => CLIENTE,
 					'Titulo' => 'Advertencia',
-					'Mensaje' => 'Parametros Vacios'
+					'Mensaje' => PARAM_VACIOS
 				);
-				$log->insert('Cliente CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(CLIENTE.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
 
-			if ($status == "") {
-				$status = 'DISPONIBLE';
+			if ($cliente->status == "") {
+				$cliente->status = 'DISPONIBLE';
 			}
-				//CREAMOS EL ARRAY CON LOS DATOS
-			$datos = array($codigoCliente,$rfc,$nombreEmpresa,$nombreCliente,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$email,$status,$_SESSION['INGRESO']['nombre']);
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$res = $sql->guardarCliente($datos);
+			$resModelo = $modelo->guardarCliente($cliente);
 				//SE VALIDA EL RETORNO DEL MÉTODO
-			if ($res->CodRetorno == '000') {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Cliente',
+			if ($resModelo['codRetorno'] == '000') {
+				$salidaJSON = array('codRetorno' => $resModelo['codRetorno'],
+					'form' => CLIENTE,
 					'Titulo' => 'Éxito',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModelo['Mensaje'],
 				);
 			} else {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Cliente',
+				$salidaJSON = array('codRetorno' => $resModelo['codRetorno'],
+					'form' => CLIENTE,
 					'Titulo' => 'Error',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModelo['Mensaje'],
 				);
 			}
-
-			$log->insert('Cliente CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write(CLIENTE.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error guardarCliente: '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('guardarCliente: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;
 		}
 	}
 		//FUNCIÓN PARA BUSCAR CLIENTE(S)
 	function buscarClientes(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo buscarClientes!', false, true, true);
-		
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			$modelo = new ClienteModel();
+ 			$buscarCliente = new ArrayObject();
 			parse_str($_POST["parametros"], $_POST);
-			$codigo = trim($_POST['codigo']);
-			$sql = new ClienteModel();
+		
+			$buscarCliente->codigo = trim($_POST['codigo']);
+			$buscarCliente->tamanioPag = TAMANIO_PAGINACION;
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Cliente',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => CLIENTE,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Cliente CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(CLIENTE.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
 			
 			if (isset($_POST['partida'])) {
-				$paginaActual = $_POST['partida'];	
+				$buscarCliente->paginaActual = $_POST['partida'];	
 			}
 				//CALCULAMOS EL INICIO
-			if ($paginaActual <= 1){
-				$inicio = 0;
+			if ($buscarCliente->paginaActual <= 1){
+				$buscarCliente->inicio = 0;
 			} else {
-				$inicio = ($paginaActual - 1) * 5;
+				$buscarCliente->inicio = ($paginaActual - 1) * TAMANIO_PAGINACION;
 			}
 				//CARGAMOS LOS DATOS
-			$clientes = $sql->cargarClientes($codigo,$inicio,$paginaActual);	
+			$resModel = $modelo->cargarClientes($buscarCliente);	
 
-			if ($clientes->CodRetorno == "000") {
-				if (count($clientes->Clientes) == 0) {
-					$salidaJSON = array ('codRetorno' => '001',
-						'form' => 'Cliente',
-						'Titulo' => 'Advertencia',
-						'Mensaje' => 'Clientes no Disponibles',
-					);
-				} else {
-					$salidaJSON = array ('codRetorno' => $clientes->CodRetorno,
-						'datos' => $clientes->Clientes,
-						'link' => $clientes->lista,
-						'form' => 'Cliente',
-					);
-				}
+			if ($resModel['codRetorno'] == "000") {
+				$salidaJSON = array ('codRetorno' => $resModel['codRetorno'],
+					'datos' => $resModel['Clientes'],
+					'link' => $resModel['lista'],
+					'form' => CLIENTE
+				);
 			} else {
-				$salidaJSON = array('codRetorno' => $clientes->CodRetorno,
-					'form' => 'Cliente',
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => CLIENTE,
 					'bus' => '1',
 					'Titulo' => 'Error',
-					'Mensaje' => $clientes->Mensaje,
+					'Mensaje' => $resModel['Mensaje']
 				);
 			}			
-			$log->insert('Cliente CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write(CLIENTE.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error buscarClientes '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('buscarClientes: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;
 		}
 	}
 ?>

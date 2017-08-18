@@ -2,24 +2,23 @@
 <html>
 
 <head>
-    <title>Productos</title>
+    <title>Libro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
 </head>
-
 <body>
-    <div class="card-panel">
-        <form id="frmAgregarPoducto">
-            <fieldset>
-                <legend class="titulo">Agregar Productos</legend>
-                <table class="table" border="0">
+	<div class="card-panel">
+		<form id="frmAgregarProducto">
+			<fieldset>
+			<legend class="titulo">Agregar Producto</legend>
+				<table class="table" border="0" style="margin-bottom: 15px;">
                     <tr class="row">
                         <td width="55%">
                             <button type="button" id="btnReporte" class="icon-reporte btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
-                            <button type="button" id="btnProductos" class="icon-busProd btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
+                            <button type="button" id="btnLibros" class="icon-searchBook btn-floating btn-large blue darken-4 waves-effect waves-light"></button>
                             <button type="button" id="btnRefresh" class="btn-floating btn-large blue darken-4 waves-effect waves-light">
-							<i class="material-icons">autorenew</i>
-						</button>
+                                <i class="material-icons">autorenew</i>
+                            </button>
                         </td>
                         <td width="45%">
                             <div class="col s9">
@@ -27,111 +26,174 @@
                             </div>
                             <div class="col s3">
                                 <button type="button" id="btnSearch" class="icon-buscar btn-floating btn-large light-blue lighten-3 waves-effect waves-light">
-							</button>
+                                </button>
                             </div>
                         </td>
                     </tr>
-                    <tr class="row">
-                        <td>
-                            <p>Tipo de Producto</p>
-                            <input type="radio" name="tipo" id="libro" value="libro"><label for="libro">Libro</label>
-                            <input type="radio" name="tipo" id="nuevo" value="nuevo"><label for="nuevo"> Nuevo Producto</label>
-                        </td>
-                    </tr>
-                </table>
-                <table class="table col s12">
-                    <tr>
-                        <div class="row">
-                            <div class="col s12" style="margin-bottom: 25px;">
-                                <ul class="tabs">
-                                    <li class="tab col s5"><a href="#datosProducto" class="active">Datos Producto</a></li>
-                                    <li class="tab col s5"><a href="#inventario">Inventario</a></li>
-                                </ul>
-                            </div>
-                            <div class="col s12" id="datosProducto">
-                                <div class="row">
-                                    <div class="col s5">
-                                        <input type="hidden" name="codigoProducto" id="codigoProducto">
-                                        <label>*Nombre Producto</label>
-                                        <input type="text" name="nombreProducto" id="nombreProducto" maxlength="50">
-                                        <div class="row">
-                                            <div class="col s5">
-                                                <label>*Código Barras</label>
-                                                <input type="text" name="codigoBarras" id="codigoBarras" maxlength="20">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col s5">
-                                        <label>*Proveedor</label>
-                                        <select class="browser-default" id="proveedor" name="proveedor">
-										<option value="0">SELECCIONE</option>
-									</select>
-                                        <p>Los Campos con * son Obligatorios</p>
-                                    </div>
-                                    <div class="col s2" align="center">
-                                        <button type="button" id="btnSig" class="arrow_right btn-floating blue darken-4 waves-effect waves-light" style="margin-top: 0px"><i class="material-icons">arrow_forward</i>
-									</button>
-                                    </div>
+	            </table>		
+                <div style="margin-top: 20px;"> 
+                    <div class="row">
+                        <div class="col s8">
+                            <ul class="tabs">
+                                <li class="tab col s3"><a class="active" href="#tipo">Tipo Producto</a></li>
+                                <li class="tab col s3 disabled"><a href="#producto">Producto</a></li>
+                                <li class="tab col s3 disabled"><a href="#inventario">Inventario</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 2%;">
+                        <div id="tipo" class="col s6 animated bounceInRight">
+                            <div class="row">
+                                <div class="col s6">
+                                    <p style="position: relative; left: 30%; margin-top: 12%; margin-right: 5%;">
+                                        <label style="font-size: 16px;" for="textfield">Tipo Producto</label><br>
+                                        <input type="radio" name="tipo" id="libro" value="libro"><label for="libro">Libro</label>
+                                        <input type="radio" name="tipo" id="nuevo" value="nuevo"><label for="nuevo"> Nuevo Producto</label>
+                                    </p>
                                 </div>
-                            </div>
-                            <div class="col s12" id="inventario">
-                                <div class="row">
-                                    <div class="col s2">
-                                        <button type="button" id="btnAnt" class="arrow_left btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
-									</button>
-                                    </div>
-                                    <div class="col s4">
-                                        <div class="row">
-                                            <div class="col s7">
-                                                <label for="textfield">*Stock Mínimo: </label>
-                                                <input type="text" name="stMin" id="stMin" maxlength="6">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col s7">
-                                                <label for="textfield">*Stock Máximo: </label>
-                                                <input type="text" name="stMax" id="stMax" maxlength="6">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col s7">
-                                                <label for="textfield">*Stock Actual: </label>
-                                                <input type="text" name="stActual" id="stActual" maxlength="6">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col s4">
-                                        <div class="row">
-                                            <div class="col s7">
-                                                <label for="textfield">*Precio Compra: </label>
-                                                <input type="text" name="compra" id="compra" maxlength="6">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col s7">
-                                                <label for="textfield">*Precio Venta: </label>
-                                                <input type="text" name="venta" id="venta" maxlength="6">
-                                            </div>
-                                        </div>
-                                        <label>*Categoria</label>
-                                        <select class="browser-default" id="categoria" name="categoria">
-										<option value="0">SELECCIONE</option>
-									</select>
-                                    </div>
-                                    <div class="col s2" align="center">
-                                        <button type="button" class="icon-save btn blue darken-1" id="btnSave" disabled="true"></button><br><br>
-                                        <button type="button" class="icon-editar btn green" id="btnUpdate" disabled="true"></button><br><br>
-                                        <button type="button" class="icon-borrar btn red" id="btnDelete" disabled="true"></button>
-                                    </div>
+                                <div class="col s2" style="margin-left: 5%;">
+                                    <button type="button" id="btnSigPaso2" class="arrow_left btn-floating blue darken-4 waves-effect waves-light" disabled="true">
+                                        <i class="material-icons">arrow_forward</i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </tr>
-                </table>
-            </fieldset>
-        </form>
+                        <div class="col s12 animated bounceInRight" id="producto">
+                            <div class="row">
+                                <div class="col s2">
+                                    <button type="button" id="btnAntPaso1" class="arrow_left btn-floating blue darken-4 waves-effect waves-light">
+                                        <i class="material-icons">arrow_back</i>
+                                    </button>
+                                </div>
+                                <div class="col s3">
+                                    <input type="hidden" name="rutaIMG" id="rutaIMG">
+                                    <input type="file" class="file-loading" name="imagen" id="imagen">
+                                    <div id="errorBlock" class="help-block"></div>
+                                </div>
+                                <div class="col s5">
+                                    <div class="row">
+                                        <div class="col s10">
+                                            <input type="hidden" id="codigoLibro" name="codigoLibro">
+                                            <label for="nombreLibro">Nombre Libro: </label>
+                                            <input type="text" id="nombreLibro" name="nombreLibro" maxlength="50">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s6">
+                                            <label for="isbn">ISBN: </label>
+                                            <input type="text" id="isbn" name="isbn" maxlength="13">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s8">
+                                            <label>Autor: </label>
+                                            <input type="hidden" id="codigoAutor" name="codigoAutor">
+                                            <input type="text" id="autor" name="autor" maxlength="50">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s8">
+                                            <label>Editorial: </label>
+                                            <input type="hidden" id="codigoEditorial" name="codigoEditorial">
+                                            <input type="text" id="editorial" name="editorial" maxlength="50">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s12">
+                                            <label>Descripción: </label>
+                                            <textarea id="descripcionLibro" name="descripcionLibro" class="swal2-textarea" maxlength="500" style="font-size: 12px;"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col s2">
+                                    <button type="button" id="btnSigPaso3" class="arrow_left btn-floating blue darken-4 waves-effect waves-light" disabled="true">
+                                        <i class="material-icons">arrow_forward</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="inventario" class="col s12 animated bounceInRight">
+                            <div class="row">
+                                <div class="col s2">
+                                    <button type="button" id="btnAntPaso2" class="arrow_left btn-floating blue darken-4 waves-effect waves-light">
+                                        <i class="material-icons">arrow_back</i>
+                                    </button>
+                                </div>
+                                <div class="col s4">
+                                    <div class="row" id="np">
+                                        <div class="col s10">
+                                            <label for="textfield">*Nombre Producto: </label>
+                                            <input type="hidden" id="codigoProducto" name="codigoProducto">
+                                            <input type="text" name="nombreProducto" id="nombreProducto" maxlength="30">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s8">
+                                            <label>*Código Barras</label>
+                                            <input type="text" name="codigoBarras" id="codigoBarras" maxlength="15">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s10">
+                                            <label for="textfield">Provvedor</label>
+                                            <select class="browser-default" id="proveedor" name="proveedor">
+                                                <option value="0" >SELECCIONE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s10">
+                                            <label for="textfield">Categoria</label>
+                                            <select class="browser-default" id="categoria" name="categoria">
+                                                <option value="0">SELECCIONE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col s4">
+                                    <div class="row">
+                                        <div class="col s7">
+                                            <label for="textfield">*Stock Mínimo: </label>
+                                            <input type="text" name="stMin" id="stMin" maxlength="6">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s7">
+                                            <label for="textfield">*Stock Máximo: </label>
+                                            <input type="text" name="stMax" id="stMax" maxlength="6">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s7">
+                                            <label for="textfield">*Stock Actual: </label>
+                                            <input type="text" name="stActual" id="stActual" maxlength="6">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s7">
+                                            <label for="textfield">*Precio Compra: </label>
+                                            <input type="text" name="compra" id="compra" maxlength="8">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col s7">
+                                            <label for="textfield">*Precio Venta: </label>
+                                            <input type="text" name="venta" id="venta" maxlength="8">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col s2" align="center">
+                                    <button type="button" class="icon-save btn blue darken-1" id="btnSave" disabled="true"></button><br><br>
+                                    <button type="button" class="icon-editar btn green" id="btnUpdate" disabled="true"></button><br><br>
+                                    <button type="button" class="icon-borrar btn red" id="btnDelete" disabled="true"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>			
+        </form>		
     </div>
-    <script type="text/javascript" src="js/producto.js"></script>
+    <script src="js/libro.js" type="text/javascript"></script>
 </body>
-
 </html>

@@ -32,7 +32,7 @@ $(document).ready(function(){
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		var cadena = $("#frmCambiarPassword").serialize();
+		var cadena = JSON.stringify(global.json("#frmCambiarPassword"));
 		var parametros = {opc: 'cambiarContrasenia',cadena };
 
 		if (cadena == "") {

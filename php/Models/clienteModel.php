@@ -1,66 +1,140 @@
 <?php 
-require_once('../Clases/funciones.php');
-
-session_start();
+require_once(CLASES.'Conexion.php');
+require_once(CLASES.'funciones.php');
 /*	
 	Clase: Model Proveedor
 	Autor: Felipe Monzón
 	Fecha: 08-MAY-2017
 */
 class ClienteModel {
-	public function guardarCliente($datos){
+	public function guardarCliente($cliente){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
+			$sql = "";
+			$retorno = array();
+			$db = new Conexion();
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if (empty($datos) ) {
-				$retorno->CodRetorno = '004';
-				$retorno->Mensaje = 'Parametros Vacios';
+			if (empty($cliente) ) {
+				$retorno = array( 'codRetorno' => '004',
+					'Mensaje' => PARAM_VACIOS
+				);
 
 				return $retorno;
 			}
 
-			$consulta = "CALL spInsUpdCliente(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,@codRetorno,@msg)";
+			$sql = SP_INSUPDCLIENTE;
+			
+			$stm = $db->prepare($sql);	
+			$stm->bindParam(':codigoCliente',$cliente->codigoCliente,PDO::PARAM_INT);
+			$stm->bindParam(':rfc',$cliente->rfc,PDO::PARAM_INT);
+			$stm->bindParam(':nombreEmpresa',$cliente->nombreEmpresa,PDO::PARAM_STR);
+			$stm->bindParam(':nombreCliente',$cliente->nombreCliente,PDO::PARAM_STR);
+			$stm->bindParam(':apellidoPaterno',$cliente->apellidoPaterno,PDO::PARAM_STR);
+			$stm->bindParam(':apellidoMaterno',$cliente->apellidoMaterno,PDO::PARAM_STR);
+			$stm->bindParam(':calle',$cliente->calle,PDO::PARAM_STR);
+			$stm->bindParam(':numExt',$cliente->numExt,PDO::PARAM_INT);
+			$stm->bindParam(':numInt',$cliente->numInt,PDO::PARAM_INT);
+			$stm->bindParam(':colonia',$cliente->colonia,PDO::PARAM_STR);
+			$stm->bindParam(':ciudad',$cliente->ciudad,PDO::PARAM_STR);
+			$stm->bindParam(':estado',$cliente->estado,PDO::PARAM_STR);
+			$stm->bindParam(':telefono',$cliente->telefono,PDO::PARAM_INT);
+			$stm->bindParam(':celular',$cliente->celular,PDO::PARAM_INT);
+			$stm->bindParam(':email',$cliente->email,PDO::PARAM_INT);
+			$stm->bindParam(':status',$cliente->status,PDO::PARAM_STR);
+			$stm->bindParam(':usuario',$cliente->usuario,PDO::PARAM_STR);
+			
+			$stm->execute();
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
 
-			$stm = executeSP($consulta,$datos);
-
-			if ($stm->codRetorno[0] == '000') {
-				$retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = $stm->Mensaje[0];
-			} else if ($stm->codRetorno[0] == '001') {
-				$retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = $stm->Mensaje[0];
-			} else {
-				$retorno->CodRetorno = '002';
-				$retorno->Mensaje = 'Ocurrio un Error';
+			if ($error[2] != "") {
+				$logger->write('spInsUpdCliente: '.$error[2], 3 );
 			}
+
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spInsUpdCliente:  '.$retorno['codRetorno'] ,6 );
+
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spInsUpdCliente: '.$retorno['msgSQL80'] , 3 );
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
+			}
+
+			$db = null;
 
 			return $retorno; 
 		} catch (Exception $e) {
-			$log->insert('Error guardarCliente '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
+			$logger->write('guardarCliente: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;
 		}
 	}
 
-	public function cargarClientes($codigo,$inicio,$paginaActual){
-		$clientes = new ArrayObject();
-		$clientesDisp = new ArrayObject();
-		$i = 0;
+	public function cargarClientes($buscarCliente){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
+			$i = 0;
+			$sql = "";
+			$retorno = array();
+			$clientes = array();
+			$db = new Conexion();
+			$clientesDisp = array();
+			$datos = new ArrayObject();
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if ($codigo == "" || $paginaActual == "") {
-				$retorno->CodRetorno = '004';
-				$retorno->Mensaje = 'Parametros Vacios';
+			if ($buscarCliente->codigo == "" || $buscarCliente->paginaActual == "") {
+				$retorno = array( 'codRetorno' => '004',
+					'Mensaje' => PARAM_VACIOS
+				);
 
 				return $retorno;
-				exit();
 			}
 
-			$datos = array($codigo,$inicio,5);
-			$consulta = "CALL spConsultaClientes(?,?,?,@CodRetorno,@msg,@numFilas)";
+			$sql = Sp_CONSULTA_CLIENTES;
 				//EJECUTAMOS LA CONSULTA
-			$stm = executeSP($consulta,$datos);
+			$stm = $db->prepare($sql);	
+			$stm->bindParam(':codigoCliente',$buscarCliente->codigo,PDO::PARAM_INT);
+			$stm->bindParam(':inicio',$buscarCliente->inicio,PDO::PARAM_INT);
+			$stm->bindParam(':limite',$buscarCliente->tamanioPag,PDO::PARAM_INT);
+			
+			$stm->execute();
+			$datos = $stm->fetchAll(PDO::FETCH_ASSOC);
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
 
-			if ($stm->codRetorno[0] == '000') {
-				foreach ($stm->datos as $key => $value) {
+			if ($error[2] != "") {
+				$logger->write('spConsultaClientes: '.$error[2], 3 );
+			}
+
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @numFilas AS numFilas, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spConsultaClientes:  '.$retorno['codRetorno'] ,6 );
+
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spConsultaClientes: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
+			}
+
+			if ($retorno['codRetorno'] == '000') {
+					//CREAMOS LA LISTA DE PAGINACIÓN
+				if ($retorno['numFilas'] > 0) {
+					$retorno['lista'] = paginacion($retorno['numFilas'],TAMANIO_PAGINACION,$buscarCliente->paginaActual);	
+				} else {
+					$retorno['codRetorno'] = '001';
+					$retorno['Mensaje'] = SIN_DATOS;
+					return $retorno;
+				}
+
+				foreach ($datos as $value) {
 					if ($_SESSION['INGRESO']['tipo'] == 1) {
 						$clientes[$i] = array('id' => $value['matricula'],
 							'rfc' => $value['rfc'],
@@ -105,32 +179,18 @@ class ClienteModel {
 
 					$i++;
 				}
-					//VALIDAMOS EL NÚMERO DE FILAS
-				if ($stm->numFilas[0] == 0) {
-					$retorno->CodRetorno = $stm->codRetorno[0];
-					$retorno->Mensaje = $stm->Mensaje[0];
-				} else {
-					$lista = paginacion($stm->numFilas[0],5,$paginaActual);	
-					$retorno->lista = $lista;
-				}
-
+					//ASIGNAMOS DATOS
 				if (count($clientes) > 0) {
-					$retorno->Clientes = $clientes;
+					$retorno['Clientes'] = $clientes;
 				} else {
-					$retorno->Clientes = $clientesDisp;
+					$retorno['Clientes'] = $clientesDisp;
 				}
-
-				$retorno->CodRetorno = "000";
-				$retorno->numFilas = $stm->numFilas[0];
-			} else {
-				$retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = $stm->Mensaje[0];
-			} 
+			}
 
 			return $retorno;
 		} catch (Exception $e) {
-			$log->insert('Error cargarProveedores '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
+			$logger->write('buscarClientes: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;
 		}
 	}
 }

@@ -58,7 +58,7 @@ class VentaModel {
 
             $stm = $this->insertaVenta($venta);
 
-			if ($stm->codRetorno[0] == '000') {  
+			if ($stm->codRetorno[0] == '000') { 
                 for ($i = 0; $i < count($detalleVenta); $i++) {
                     $stm = $this->insertaDetalle($detalleVenta[$i]);
 

@@ -1,10 +1,13 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/usuarioModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
-	session_start();
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'PHPErrorLog.php');
+	require_once(MODEL.'usuarioModel.php');
 
+	if (!isset($_SESSION)) {
+		session_start();
+	}
+	
 	$opc = $_POST["opc"];
 	switch ($opc) {
 		case 'guardar':
@@ -12,7 +15,7 @@
 		break;
 
 		case 'validaUsuario':
-			validaUsu();
+			validaUsuario();
 		break;
 
 		case 'buscar':
@@ -20,7 +23,7 @@
 		break;
 
 		case 'eliminar':
-			eliminarUsuario();
+			desasociarUsuario();
 		break;
 
 		case 'cambiarContrasenia':
@@ -32,109 +35,167 @@
 		break;
 	}
 
-	function guardarUsuario(){
-		$log = new Log("log", "../../log/");
-		$bandera = trim($_POST['bandera']);
-		parse_str($_POST["cadena"], $_POST);
-		$log->insert('Entro metodo guardarUsuario', false, true, true);	
-		try {
-			$status = "";
-			$sql = new UsuarioModel();
-				//CICLO PARA LLENAR VARIABLES POR POST
-			foreach ($_POST as $clave => $valor) {
-				${$clave} = trim($_POST[$clave]);
-			}
+	function desasociarUsuario(){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
+		try{
+			$respuesta = new ArrayObject();
+			$modelo = new UsuarioModel();
+			$usuario = json_decode($_POST['cadena']);
+			$usuario->bandera = ELIMINAR_USUARIO;
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Usuario',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => USUARIO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 				//VALIDAMOS LA SESSION
 			if ($_SESSION['INGRESO']['tipo'] != 1 ) {
 				$salidaJSON = array('codRetorno' => '002',
-					'form' => 'Usuario',
-					'Titulo' => 'Éxito',
-					'Mensaje' => 'No Cuenta con los Permisos Suficientes'
+					'form' => USUARIO,
+					'Titulo' => 'Advertencia',
+					'Mensaje' => SIN_PERMISOS
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
-				//VALIDAMOS EL CÓDIGO
-			if ($codigoEmpleado == "") {
-				$codigoEmpleado = 0;
-			}	
-				//VALIDAMOS EL STATUS
-			if ($status == "") {
-				$status = 'DISPONIBLE';
-			}
-				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$res = $sql->guardarUsuario($codigoEmpleado,$nombreUsuario,$contrasenia,$tipo,$status,$bandera);
 
-			if ($res->CodRetorno == '000') {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Usuario',
+			if (!isset($usuario) || empty($usuario->codigoEmpleado)) {
+				$salidaJSON = array('codRetorno' => '004',
+					'form' => USUARIO,
+					'Mensaje' => PARAM_VACIOS
+				);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
+				print json_encode($salidaJSON);
+				exit();
+			}
+
+			$resModelo = $modelo->eliminarUsuario($usuario);
+
+			if ($resModelo->CodRetorno == '000') {
+				$salidaJSON = array('codRetorno' => $resModelo->CodRetorno,
+					'form' => USUARIO,
 					'Titulo' => 'Éxito',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModelo->Mensaje,
 				);
 			} else {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Usuario',
+				$salidaJSON = array('codRetorno' => $resModelo->CodRetorno,
+					'form' => USUARIO,
 					'Titulo' => 'Error',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModelo->Mensaje,
 				);
 			}
-
-			$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error guardarUsuario '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('desasociarUsuario: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
+		}
+	}
+
+	function guardarUsuario(){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
+		try {
+			$respuesta = new ArrayObject();
+			$modelo = new UsuarioModel();
+			$usuario = json_decode($_POST['cadena']);
+			$usuario->bandera = ACTIVAR_USUARIO;
+			$usuario->status = "ACTIVO";
+				//VALIDAMOS LA SESSION
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
+				$salidaJSON = array('codRetorno' => '003',
+					'form' => USUARIO,
+					'Mensaje' => SESSION_CADUCADA
+				);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//VALIDAMOS LA SESSION
+			if ($_SESSION['INGRESO']['tipo'] != 1 ) {
+				$salidaJSON = array('codRetorno' => '002',
+					'form' => USUARIO,
+					'Titulo' => 'Advertencia',
+					'Mensaje' => SIN_PERMISOS
+				);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
+				print json_encode($salidaJSON);
+				exit();
+			}
+
+			if (!isset($usuario)) {
+				$salidaJSON = array('codRetorno' => '004',
+					'form' => USUARIO,
+					'Mensaje' => PARAM_VACIOS
+				);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
+				print json_encode($salidaJSON);
+				exit();
+			}
+				//EJECUTAMOS EL MÉTODO PARA GUARDAR
+			$respuesta = $modelo->guardarUsuario($usuario);
+
+			if ($respuesta->CodRetorno == '000') {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => USUARIO,
+					'Titulo' => 'Éxito',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			} else {
+				$salidaJSON = array('codRetorno' => $respuesta->CodRetorno,
+					'form' => USUARIO,
+					'Titulo' => 'Error',
+					'Mensaje' => $respuesta->Mensaje,
+				);
+			}
+			$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
+			print json_encode($salidaJSON);
+		} catch (Exception $e) {
+			$logger->write('guardarUsuario: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 		//FUNCIÓN PARA VALIDAR USUARIO
-	function validaUsu(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo validaUsu', false, true, true);	
+	function validaUsuario(){
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		parse_str($_POST["parametros"], $_POST);
 		try {
 			$usuario = trim($_POST['codigo']);
 			$matricula = trim($_POST['tipoBusqueda']);
 
-			$sql = new UsuarioModel();
+			$modelo = new UsuarioModel();
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Usuario',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => USUARIO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 
 			if (!isset($usuario) || empty($matricula)) {
 				$salidaJSON = array('codRetorno' => '004',
-					'form' => 'Usuario',
-					'Mensaje' => 'Parametros Vacios'
+					'form' => USUARIO,
+					'Mensaje' => PARAM_VACIOS
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 
-			$usuarios = $sql->validaUsuario($usuario); 
+			$usuarios = $modelo->validaUsuario($usuario); 
 
 			if ($usuarios->CodRetorno == "000") {
-				$salidaJSON['form'] = 'Usuario';
+				$salidaJSON['form'] = USUARIO;
 				if ($matricula != $usuarios->Id) {
 					$salidaJSON['codRetorno'] = '001';
-					$salidaJSON['Mensaje'] = 'Usuario no disponible';
+					$salidaJSON['Mensaje'] = USUARIO_NO_DISP;
 				} else {
 					$salidaJSON['codRetorno'] = '000';
 				}
@@ -142,39 +203,37 @@
 				$salidaJSON['codRetorno'] = '000';
 			} else {
 				$salidaJSON = array('codRetorno' => $usuarios->CodRetorno,
-					'form' => 'Usuario',
+					'form' => USUARIO,
 					'bus' => '1',
 					'Mensaje' => $usuarios->Mensaje,
 				);
 			}
-
-			$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error validaUsu '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('validaUsuario: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 
 	function buscarUsuarios(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo buscarUsuarios', false, true, true);	
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		parse_str($_POST["parametros"], $_POST);
 		try {
 			$usuario = trim($_POST['codigo']);
-			$sql = new UsuarioModel();
+			$modelo = new UsuarioModel();
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Usuario',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => USUARIO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
 
-			$usuarios = $sql->validaUsuario($usuario); 
+			$usuarios = $modelo->validaUsuario($usuario); 
 
 			if ($usuarios->CodRetorno == "000") {
 				$salidaJSON = array ('codRetorno' => $usuarios->CodRetorno,
@@ -183,123 +242,115 @@
 					'matricula' => $usuarios->Id,
 					'usuario' => $usuarios->Usuario,
 					'status' => $usuarios->Status,
-					'form' => 'Usuario',
+					'form' => USUARIO,
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => $usuarios->CodRetorno,
-					'form' => 'Usuario',
+					'form' => USUARIO,
 					'bus' => '1',
 					'Mensaje' => $usuarios->Mensaje,
 				);
 			}
-
-			$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );		
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error buscarUsuario '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('usuario: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 
 	function cambiarContrasenia(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo cambiarContrasenia', false, true, true);	
-		parse_str($_POST["cadena"], $_POST);
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-			$usuario = trim($_POST['codigo']);
-			$sql = new UsuarioModel();
-				//CICLO PARA LLENAR VARIABLES POR POST
-			foreach ($_POST as $clave => $valor) {
-				${$clave} = trim($_POST[$clave]);
-			}
+			$res = new ArrayObject();
+			$modelo = new UsuarioModel();
+			$usuario = json_decode($_POST['cadena']);
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Usuario',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => USUARIO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
 				//VALIDAMOS EL PERFIL
 			if ($_SESSION['INGRESO']['tipo'] != 1 ) {
 				$salidaJSON = array('codRetorno' => '002',
-					'form' => 'Usuario',
+					'form' => USUARIO,
 					'Titulo' => 'Éxito',
-					'Mensaje' => 'No Cuenta con los Permisos Suficientes'
+					'Mensaje' => SIN_PERMISOS
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}	
 				//VALIDAMOS la contraseña
-			if ($contrasenia != $repContrasenia) {
+			if ($usuario->contrasenia != $usuario->repContrasenia) {
 				$salidaJSON = array('codRetorno' => '001',
-					'form' => 'Usuario',
+					'form' => USUARIO,
 					'Titulo' => 'Advertencia',
-					'Mensaje' => 'La contraeña y la confirmación de la contraseña no son iguales',
+					'Mensaje' => ERROR_CONTRASEÑA
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			} 
 
-			$res = $sql->cambiarPassword($codigoEmpleado,$nombreUsuario,$contrasenia); 
+			$res = $modelo->cambiarPassword($usuario); 
 
 			if ($res->CodRetorno == '000') {
 				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Usuario',
+					'form' => USUARIO,
 					'Titulo' => 'Éxito',
 					'Mensaje' => $res->Mensaje,
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Usuario',
+					'form' => USUARIO,
 					'Titulo' => 'Error',
 					'Mensaje' => $res->Mensaje,
 				);
 			} 
-
-			$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );		
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error cambiarContrasenia '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('usuario: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 
 	function validaAdmin(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo validaAdmin', false, true, true);	
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Usuario',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => USUARIO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			} else if ($_SESSION['INGRESO']['tipo'] != 1) {
 				$salidaJSON = array('codRetorno' => '001',
 					'form' => 'Inicio',
 					'bus' => '1',
-					'Mensaje' => 'No Cuenta con los permisos necesarios'
+					'Mensaje' => SIN_PERMISOS
 				);
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			} else {
 				$salidaJSON = array('codRetorno' => '000');
-				$log->insert('Usuario CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write('codRetorno Usuario:  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
 		} catch (Exception $e){
-			$log->insert('Error validaAdmin '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('usuario: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());	
 		}
 	}
 ?>

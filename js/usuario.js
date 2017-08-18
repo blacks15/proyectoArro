@@ -32,6 +32,7 @@ $(document).ready(function(){
 				$("#nombreEmpleado").val(respuesta.nombreEmpleado);
 				$("#nombreUsuario").val(respuesta.usuario);
 				$("#tipo").val(respuesta.tipo_usuario).prop('selected','selected');
+				$("#nombre").val(respuesta.usuario);	
 
 				if ($("#tipoUsuario").val() == 1) {
 					$("#statusUsu").show();
@@ -49,8 +50,8 @@ $(document).ready(function(){
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		var cadena = $("#frmAgregarUsuario").serialize();
-		var parametros = {opc: 'guardar',bandera: '1',cadena };
+		var cadena = JSON.stringify(global.json("#frmAgregarUsuario"));
+		var parametros = {opc: 'guardar',cadena };
 
 		if (cadena == "") {
 			global.messajes('Error','!Debe llenar Todos los Campos','warning','','','','');
@@ -63,8 +64,8 @@ $(document).ready(function(){
 		//BOTÓN BORRAR
 	$("#btnDelete").on('click',function(e){
 		e.preventDefault();
-		var codigoEmpleado = $("#codigoEmpleado").val();
-		var parametros = {opc: 'eliminar','codigo': codigoEmpleado,bandera: '1' };
+		var cadena = JSON.stringify(global.json("#frmAgregarUsuario"));
+		var parametros = {opc: 'eliminar',cadena };
 
 		$(this).prop('disabled',true);
 		
@@ -73,6 +74,7 @@ $(document).ready(function(){
 		} else {
 			global.envioAjax('ControllerUsuario',parametros);
 		}
+		$(this).prop('disabled',false);
 	});
 		//BOTÓN CAMBIAR NOMBRE
 	$("#btnCanNom").on('click',function(){
@@ -250,7 +252,7 @@ $(document).ready(function(){
 		var tipo = $("#tipo").val();
 
 		if (matricula != "") {
-			if (matricula != "" && usuario != "" && contrasenia != "" && repContrasenia != "" && tipo != "" ) {
+			if (matricula != "" && usuario != "" && contrasenia != "" && repContrasenia != "" && tipo != 0 ) {
 				$("#btnSave").prop('disabled',false);
 			} else {
 				$("#btnSave").prop('disabled',true);

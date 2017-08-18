@@ -7,13 +7,15 @@
 class Usuario {
 	private $clave;
 	private $usuario;
+	private $password;
 	private $empleado;
 	private $tipoUsuario;
 	private $status;
 
-	function __construct($clave,$usuario,$tipoUsuario,$status,$empleado) {
+	function __construct($clave = null,$usuario = null,$password = null ,$tipoUsuario = null,$status = null,$empleado = null) {
 		$this->clave = $clave;
 		$this->usuario = $usuario;
+		$this->password = $password;
 		$this->tipoUsuario = $tipoUsuario;
 		$this->status = $status;
 		$this->empleado = $empleado;
@@ -33,6 +35,14 @@ class Usuario {
 
 	public function setUsuario($usuario){
 		$this->usuario = $usuario;
+	}
+
+	public function getPassword() {
+		return $this->password;
+	}
+
+	public function setPassword($password){
+		$this->password = $password;
 	}
 
 	public function getTipoUsuario(){

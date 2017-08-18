@@ -8,6 +8,9 @@ $(document).ready(function(){
 	$('ul.tabs').tabs();
 	$("#nombreEmpleado").focus();
 	actualizarEmpleado();
+	    //MASCARA DE PESOS
+	$('#sueldo').mask("#,##0.00", {reverse: true});
+	$('.tel').mask('(000) 000-0000');
 		/**************************
 	     *		BOTONOES		  *
 	     **************************/
@@ -21,25 +24,11 @@ $(document).ready(function(){
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		var cadena = $("#frmAgregarEmpleado").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.messajes('Error','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('ControllerEmpleado',parametros);
-		}
+		enviarDatos();
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
-		var cadena = $("#frmAgregarEmpleado").serialize();
-		var parametros = {opc: 'guardar',cadena };
-		
-		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
-		} else {
-			global.envioAjax('ControllerEmpleado',parametros);
-		}	
+		enviarDatos();
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
@@ -109,7 +98,7 @@ $(document).ready(function(){
 	$("#apellidoPaterno").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 3 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#apellidoMaterno").focus();
 		} else {
 			global.letras(evt);
@@ -123,7 +112,7 @@ $(document).ready(function(){
 	$("#apellidoMaterno").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 3 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#telefono").focus();
 		} else {
 			global.letras(evt);
@@ -165,7 +154,7 @@ $(document).ready(function(){
 	$("#puesto").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 4 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#sueldo").focus();
 		} else {
 			global.letras(evt);
@@ -193,7 +182,7 @@ $(document).ready(function(){
 	$("#calle").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#numExt").focus();
 		} else {
 			global.numerosLetras(evt);
@@ -235,7 +224,7 @@ $(document).ready(function(){
 	$("#colonia").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#ciudad").focus();
 		} else {
 			global.numerosLetras(evt);
@@ -249,7 +238,7 @@ $(document).ready(function(){
 	$("#ciudad").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 5 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#estado").focus();
 		} else {
 			global.letras(evt);
@@ -263,7 +252,7 @@ $(document).ready(function(){
 	$("#estado").on('keypress',function(evt){
 		var charCode = evt.which || evt.keyCode;
 
-		if ( $(this).val().length > 3 && charCode == 13) {
+		if ( $(this).val().length > 0 && charCode == 13) {
 			$("#btnSave").focus();
 		} else {
 			global.letras(evt);
@@ -298,6 +287,17 @@ $(document).ready(function(){
 			} 
 		}
 	});
+		//FUNCIÓN PARA ENVIAR DATOS POR AJAX
+	function enviarDatos(){
+		var cadena = JSON.stringify(global.json("#frmAgregarEmpleado"));
+		var parametros = {opc: 'guardar',cadena };
+		
+		if (cadena == "") {
+			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning');
+		} else {
+			global.envioAjax('ControllerEmpleado',parametros);
+		}	
+	}
 		//FUNCIÓN PARA VALIDAR DATOS
     function validarDatos(){
     	var nombreEmpresa = $("#nombreEmpresa").val();
@@ -312,16 +312,16 @@ $(document).ready(function(){
     	var ciudad = $("#ciudad").val();
     	var estado = $("#estado").val();
 
-    	if (nombreEmpresa == "" && nombreContacto == ""  &&  email == "" && telefono == "" && celular == "" && 
-    	puesto == "" && calle == "" && numExt == "" && colonia == "" && ciudad == "" && estado == "") {
-    		$("#btnSave").prop('disabled',true);
-    		$("#btnUpdate").prop('disabled',true);
-    	} else {
-    		if ( $("#codigoEmpleado").val() == "") {
+    	if (nombreEmpresa != "" && nombreContacto != ""  &&  email != "" && telefono != "" && celular != "" && puesto != "" && calle != "" && 
+		numExt != "" && colonia != "" && ciudad != "" && estado != "") {
+			if ( $("#codigoEmpleado").val() == "") {
     			$("#btnSave").prop('disabled',false);
     		} else {
     			$("#btnUpdate").prop('disabled',false);
     		}
+    	} else {
+			$("#btnSave").prop('disabled',true);
+    		$("#btnUpdate").prop('disabled',true);
     	}
     }
 		//FUNCIÓN PARA ENTRAR DESDE BUSCAREMPLEADO Y MODIFICAR EL EMPLEADO	

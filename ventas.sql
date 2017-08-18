@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-05-2017 a las 01:06:23
+-- Tiempo de generación: 18-08-2017 a las 00:57:57
 -- Versión del servidor: 10.1.19-MariaDB
 -- Versión de PHP: 5.6.28
 
@@ -24,14 +24,14 @@ DELIMITER $$
 --
 -- Procedimientos
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spCambiarPassword` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pContrasenia` VARCHAR(100), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spBloqueaUsuario` (IN `pUsuario` VARCHAR(10), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
-		SET CodRetorno = '002';
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -40,25 +40,66 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spCambiarPassword` (IN `pCodigo` BI
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
-		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreUsuario,'') = '' && COALESCE(pContrasenia,'') = ''  ) THEN
-		SET CodRetorno = '004';
+	IF (pUsuario = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE		
+		IF EXISTS (SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci) THEN
+			START TRANSACTION;
+                UPDATE usuarios SET status = 'BLOQUEADO' WHERE nombre_usuario = CONVERT(pUsuario USING utf8) COLLATE utf8_general_ci;
+                SET CodRetorno = '000';
+                SET msg = 'SP Ejecutado Correctamente';
+            COMMIT; 
+		ELSE 
+            ROLLBACK;
+			SET codRetorno = '001';
+			SET msg = 'El Usuario no Existe';
+		END IF;
+	END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spCambiarPassword` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pContrasenia` VARCHAR(100), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (pCodigo = 0 || pNombreUsuario = '' || pContrasenia = '') THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
 		IF EXISTS (SELECT * FROM usuarios WHERE matricula_empleado = pCodigo AND nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
 				UPDATE usuarios SET password = pContrasenia WHERE nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci AND matricula_empleado = pCodigo;
-				SET CodRetorno = '000';
+				SET codRetorno = '000';
 				SET msg = 'Contraseña Actualizada con Exito';
 			COMMIT; 
 		ELSE
-			SET CodRetorno = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Usuario no Existe';
 			ROLLBACK;
 		END IF;
@@ -99,13 +140,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaAutores` (IN `pCodigo` BI
         END IF;
     END IF$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT, OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -114,14 +156,15 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` B
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
-		SET CodRetorno = '004';
+	IF (pTamanio = 0) THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
 		IF (pCodigo = 0 ) THEN
@@ -129,15 +172,16 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` B
 			 	SELECT COUNT(*) INTO numFilas FROM clientes;
 
 				SELECT matricula,rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
-					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt) AS direccion,
+					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt,' ',colonia) AS direccion,
 					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos
 				FROM clientes
+				WHERE matricula != 1
 				ORDER BY apellidos ASC
 				LIMIT pInicio, pTamanio;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		ELSE
@@ -145,15 +189,15 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaClientes` (IN `pCodigo` B
 				SELECT COUNT(*) INTO numFilas FROM clientes WHERE matricula = pCodigo;
 
 				SELECT matricula,rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
-					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt) AS direccion,
+					colonia,ciudad,estado,telefono,celular,email,status,CONCAT(calle,' ',numExt,' ',numInt,' ',colonia) AS direccion,
 					CONCAT(apellido_paterno,' ',apellido_materno) AS apellidos
 				FROM clientes
-				WHERE matricula = pCodigo
+				WHERE matricula = pCodigo AND matricula != 1
 				ORDER BY apellidos ASC;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		END IF;
@@ -218,13 +262,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEditoriales` (IN `pCodigo
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEmpleados` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEmpleados` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT, OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -233,12 +278,13 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEmpleados` (IN `pCodigo` 
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
+	IF (pTamanio = 0) THEN
 		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
@@ -254,9 +300,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEmpleados` (IN `pCodigo` 
 				ORDER BY apellidos ASC
 				LIMIT pInicio, pTamanio;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		ELSE
@@ -270,22 +316,23 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaEmpleados` (IN `pCodigo` 
 				WHERE status = 'DISPONIBLE' AND matricula = pCodigo
 				ORDER BY apellidos ASC;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		END IF;
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, IN `pBusqueda` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, IN `pBusqueda` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT, OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -294,12 +341,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIG
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET CodRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
+	SET msgSQL = '';
+	IF (pTamanio = 0) THEN
 		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
@@ -311,7 +360,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIG
 				 IF EXISTS (SELECT * FROM libros WHERE status = 'DISPONIBLE') THEN
 				 	SELECT COUNT(*) INTO numFilas FROM libros WHERE status = 'DISPONIBLE';
 
-					SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor
+					SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor,rutaIMG
 					FROM libros l
 					INNER JOIN autores a ON a.codigo_autor = l.autor
 					INNER JOIN editoriales e ON e.codigo_editorial = l.editorial 
@@ -329,7 +378,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIG
 					IF EXISTS (SELECT * FROM libros WHERE status = 'DISPONIBLE' AND codigo_libro = pCodigo) THEN
 						SELECT COUNT(*) INTO numFilas FROM libros WHERE status = 'DISPONIBLE' AND codigo_libro = pCodigo;
 
-						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor
+						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor,rutaIMG
 						FROM libros l
 						INNER JOIN autores a ON a.codigo_autor = l.autor
 						INNER JOIN editoriales e ON e.codigo_editorial = l.editorial 
@@ -345,7 +394,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIG
 					IF EXISTS (SELECT * FROM libros WHERE status = 'DISPONIBLE' AND autor = pCodigo) THEN
 						SELECT COUNT(*) INTO numFilas FROM libros WHERE status = 'DISPONIBLE' AND autor = pCodigo;
 					
-						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor
+						SELECT codigo_libro,nombre_libro,isbn,autor,editorial,descripcion,l.status,e.nombre_editorial,a.nombre_autor,rutaIMG
 						FROM libros l
 						INNER JOIN autores a ON a.codigo_autor = l.autor
 						INNER JOIN editoriales e ON e.codigo_editorial = l.editorial 
@@ -363,13 +412,15 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaLibros` (IN `pCodigo` BIG
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProductos` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, IN `pBusqueda` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProductos` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, IN `pBusqueda` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT, OUT `msgSQL` VARCHAR(100))  BEGIN
+	DECLARE isLibro INT;
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -378,7 +429,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProductos` (IN `pCodigo` 
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
@@ -389,27 +441,41 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProductos` (IN `pCodigo` 
 		 	SELECT COUNT(*) INTO numFilas FROM productos;
 
 			SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
-				p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+				p.stockMax,p.compra,p.venta,p.categoria,p.status,p.isLibro,prv.nombre_proveedor AS nombreProveedor,
 				cp.nombre_categoria AS nombreCategoria
 			FROM productos p
 			INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
 			INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
+			WHERE p.isLibro = 0
+			ORDER BY nombre_producto ASC
+			LIMIT pInicio, pTamanio;
+
+			SELECT p.codigo_producto, p.nombre_producto, p.codigoBarras, p.proveedor, p.stockActual, p.stockMin,
+				p.stockMax, p.compra, p.venta, p.categoria, p.status, p.isLibro, prv.nombre_proveedor AS nombreProveedor,
+				cp.nombre_categoria AS nombreCategoria, l.codigo_libro, l.nombre_libro, l.isbn, l.autor AS codigoAutor, au.nombre_autor,
+				l.editorial AS codigoEditorial, ed.nombre_editorial, l.descripcion, l.rutaIMG
+			FROM productos p
+			INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
+			INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
+			INNER JOIN libros l ON p.isLibro = l.codigo_libro
+			INNER JOIN autores au ON l.autor = au.codigo_autor
+			INNER JOIN editoriales ed ON l.editorial = ed.codigo_editorial
 			ORDER BY nombre_producto ASC
 			LIMIT pInicio, pTamanio;
 
 			SET msg = 'SP Ejecutado Correctamente';
-			SET CodRetorno = '000'; 
+			SET codRetorno = '000'; 
 		ELSE
-			SET CodRetorno = '001'; 
+			SET codRetorno = '001'; 
 			SET msg = 'No Hay Datos Para Mostrar';
 		END IF;
 	ELSE								
 		IF (pBusqueda = 1) THEN			
-				SELECT COUNT(*) INTO numFilas FROM productos WHERE codigoBarras = pCodigo;
+			SELECT COUNT(*) INTO numFilas FROM productos WHERE codigoBarras = pCodigo;
 			IF EXISTS (SELECT * FROM productos WHERE codigoBarras = pCodigo) THEN
 
 				SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
-					p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+					p.stockMax,p.compra,p.venta,p.categoria,p.status,p.isLibro,prv.nombre_proveedor AS nombreProveedor,
 					cp.nombre_categoria AS nombreCategoria
 				FROM productos p
 				INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
@@ -419,37 +485,52 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProductos` (IN `pCodigo` 
 				LIMIT pInicio, pTamanio;
 
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF; 
-		ELSEIF (pBusqueda = 2) THEN
-				SELECT COUNT(*) INTO numFilas FROM productos WHERE codigo_producto = pCodigo;
+		ELSEIF (pBusqueda = 2) THEN 	
+			SELECT COUNT(*) INTO numFilas FROM productos WHERE codigo_producto = pCodigo;
+			SELECT isLibro INTO isLibro FROM productos WHERE codigo_producto = pCodigo;
 			IF EXISTS (SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
+				IF (isLibro = 0) THEN
+					SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
+						p.stockMax,p.compra,p.venta,p.categoria,p.status,p.isLibro,prv.nombre_proveedor AS nombreProveedor,
+						cp.nombre_categoria AS nombreCategoria
+					FROM productos p
+					INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
+					INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
+					WHERE codigo_producto = pCodigo;
 
-				SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
-					p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
-					cp.nombre_categoria AS nombreCategoria
-				FROM productos p
-				INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
-				INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
-				WHERE codigo_producto = pCodigo
-				ORDER BY nombre_producto ASC
-				LIMIT pInicio, pTamanio;
+					SET msg = 'SP Ejecutado Correctamente';
+					SET codRetorno = '000'; 
+				ELSE 
+					SELECT p.codigo_producto, p.nombre_producto, p.codigoBarras, p.proveedor, p.stockActual, p.stockMin,
+						p.stockMax, p.compra, p.venta, p.categoria, p.status, p.isLibro, prv.nombre_proveedor AS nombreProveedor,
+						cp.nombre_categoria AS nombreCategoria, l.codigo_libro, l.nombre_libro, l.isbn, l.autor AS codigoAutor, au.nombre_autor,
+						l.editorial AS codigoEditorial, ed.nombre_editorial, l.descripcion, l.rutaIMG
+					FROM productos p
+					INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
+					INNER JOIN proveedores prv ON prv.codigo_proveedor = p.proveedor
+					INNER JOIN libros l ON p.isLibro = l.codigo_libro
+					INNER JOIN autores au ON l.autor = au.codigo_autor
+					INNER JOIN editoriales ed ON l.editorial = ed.codigo_editorial
+					WHERE codigo_producto = pCodigo;
 
-				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+					SET msg = 'SP Ejecutado Correctamente';
+					SET codRetorno = '000'; 
+				END IF;
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF; 
-		ELSEIF (pBusqueda = 3) THEN
-				SELECT COUNT(*) INTO numFilas FROM productos WHERE proveedor = pCodigo;
+		ELSEIF (pBusqueda = 3) THEN		
+			SELECT COUNT(*) INTO numFilas FROM productos WHERE proveedor = pCodigo;
 			IF EXISTS (SELECT * FROM productos WHERE proveedor = pCodigo) THEN
 
 				SELECT p.codigo_producto,p.nombre_producto,p.codigoBarras,p.proveedor,p.stockActual,p.stockMin,
-					p.stockMax,p.compra,p.venta,p.categoria,p.status,prv.nombre_proveedor AS nombreProveedor,
+					p.stockMax,p.compra,p.venta,p.categoria,p.status,p.isLibro,prv.nombre_proveedor AS nombreProveedor,
 					cp.nombre_categoria AS nombreCategoria
 				FROM productos p
 				INNER JOIN categorias_producto cp ON cp.codigo_catpro = p.categoria
@@ -459,22 +540,23 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProductos` (IN `pCodigo` 
 				LIMIT pInicio, pTamanio;
 
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF; 
 		END IF;	
 	END IF;	
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo` BIGINT, IN `pInicio` INT, IN `pTamanio` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `numFilas` INT, OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -483,12 +565,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
+
+	IF (pTamanio = 0) THEN
 		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
@@ -496,31 +580,33 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaProveedores` (IN `pCodigo
 			 IF EXISTS (SELECT * FROM proveedores WHERE status = 'DISPONIBLE') THEN
 			 	SELECT COUNT(*) INTO numFilas FROM proveedores WHERE status = 'DISPONIBLE';
 
-				SELECT codigo_proveedor,nombre_proveedor,contacto,calle,num_ext,num_int,colonia,ciudad,estado,
-					telefono,celular,email,web,usuario,status,CONCAT(calle,' ',num_ext,' ',num_int) AS direccion
+				SELECT codigo_proveedor,nombre_proveedor,CONCAT(contacto,' ',apellido_paterno,' ',apellido_materno) AS nombreContacto,calle,
+					num_ext,num_int,colonia,ciudad,estado,telefono,celular,email,web,usuario,status,contacto,apellido_materno,apellido_paterno,
+					CONCAT(calle,' ',num_ext,' ',num_int) AS direccion
 				FROM proveedores
 				WHERE status = 'DISPONIBLE' 
 				ORDER BY nombre_proveedor ASC
 				LIMIT pInicio, pTamanio;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		ELSE
 			IF EXISTS (SELECT * FROM proveedores WHERE status = 'DISPONIBLE' AND codigo_proveedor = pCodigo) THEN
 				SELECT COUNT(*) INTO numFilas FROM proveedores WHERE status = 'DISPONIBLE' AND codigo_proveedor = pCodigo;
 
-				SELECT codigo_proveedor,nombre_proveedor,contacto,calle,num_ext,num_int,colonia,ciudad,estado,
-					telefono,celular,email,web,usuario,status,CONCAT(calle,' ',num_ext,' ',num_int) AS direccion
+				SELECT codigo_proveedor,nombre_proveedor,CONCAT(contacto,' ',apellido_paterno,' ',apellido_materno) AS nombreContacto,calle,
+					num_ext,num_int,colonia,ciudad,estado,telefono,celular,email,web,usuario,status,contacto,apellido_materno,apellido_paterno,
+					CONCAT(calle,' ',num_ext,' ',num_int) AS direccion
 				FROM proveedores
 				WHERE status = 'DISPONIBLE' AND codigo_proveedor = pCodigo
 				ORDER BY nombre_proveedor ASC;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		END IF;
@@ -621,6 +707,48 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spConsultaRetiros` (IN `pCodigo` BI
 	END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spDelFolios` (IN `pTabla` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE vAnio INT;
+    DECLARE vConsecutivo INT;
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msg = @full_error;
+		SHOW WARNINGS LIMIT 1;
+		SET CodRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END;
+
+	IF (COALESCE(pTabla,'') = '') THEN
+		SET CodRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		SELECT YEAR(NOW()) INTO vAnio;
+		SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
+
+    	START TRANSACTION;
+    	UPDATE folios SET consecutivo = vConsecutivo-1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
+    	COMMIT;
+
+        SET CodRetorno = '000';
+		SET msg = 'SP Ejecutado Correctamente';
+END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spDelRetiro` (IN `pCodigo` BIGINT, IN `pStatus` VARCHAR(15), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
     DECLARE vPerfil INT;
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -670,13 +798,51 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spDelRetiro` (IN `pCodigo` BIGINT, 
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelUsuarios` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pPaswword` VARCHAR(100), IN `pTipo` BIGINT, IN `pStatus` VARCHAR(15), IN `pBandera` INT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spDelVenta` (IN `pFolio` BIGINT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET codRetorno = '002';
+        SET msg = @full_error;
+        RESIGNAL;
+        ROLLBACK;
+    END; 
+
+    DECLARE EXIT HANDLER FOR SQLWARNING
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET codRetorno = '002';
+        SET msg = @full_error;
+        SHOW WARNINGS LIMIT 1;
+        RESIGNAL;
+        ROLLBACK;
+    END;
+
+    IF (pFolio = 0) THEN
+        SET codRetorno = '004';
+        SET msg = 'Parametros Vacios';
+    ELSE 
+        START TRANSACTION; 
+            DELETE FROM ventas WHERE folio = pFolio;
+            CALL spDelFolios('ventas',@codRetorno,@msg);
+            SET codRetorno = '000';
+            SET msg = 'SP Ejecutado Correctamente';
+        COMMIT; 
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelUsuarios` (IN `pCodigo` BIGINT, IN `pNombreUsuario` VARCHAR(10), IN `pPaswword` VARCHAR(100), IN `pTipo` BIGINT, IN `pStatus` VARCHAR(15), IN `pBandera` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -685,55 +851,104 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelUsuarios` (IN `pCodigo` BIG
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 			
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreUsuario,'') = '' && COALESCE(pPaswword,'') = '' && COALESCE(pStatus,'') = ''   && pTipo = 0) THEN
+	IF (pCodigo = 0 || pBandera = 0 || pNombreUsuario = '') THEN
 		SET msg = 'Parametros Vacios';
+		SET CodRetorno = '002';
 	ELSE
 		IF (pBandera = 2 ) THEN
 			IF EXISTS(SELECT * FROM usuarios WHERE matricula_empleado = pCodigo) THEN
                 START TRANSACTION;
                     DELETE FROM usuarios WHERE matricula_empleado = pCodigo AND nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci ;
                     UPDATE empleados SET isUsu = '0' WHERE matricula = pCodigo AND status = 'DISPONIBLE';
-                    SET CodRetorno = '000';
+                    SET codRetorno = '000';
                     SET msg = 'Usuario Desasociado con Exito';
                 COMMIT; 
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Usuario no Éxiste';
+				SET codRetorno = '001';
+				SET msg = 'El Usuario no Existe';
 				ROLLBACK;
 			END IF;
 		ELSEIF (pBandera = 1) THEN 
-			IF NOT EXISTS(SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci) THEN
-				START TRANSACTION;
-					INSERT INTO usuarios (nombre_usuario,password,tipo_usuario,matricula_empleado,status,fechaCreacion,fechaModificacion)
-					VALUES (pNombreUsuario, pPaswword, pTipo, pCodigo, pStatus,NOW(), NOW() );
-					SET CodRetorno = '000';
-					SET msg = 'Usuario Guardado con Exito';
-				COMMIT;
+			IF ( pNombreUsuario = '' || pPaswword = '' || pStatus = '' || pTipo = 0) THEN
+				SET msg = 'Parametros Vacios';
+				SET CodRetorno = '002';
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Usuario ya Existe';
-				ROLLBACK;
-			END IF; 
-		ELSE 
-			SET CodRetorno = '002';
-			SET msg = 'Ocurrio un Error';
-		END IF; 
+				IF NOT EXISTS(SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pNombreUsuario USING utf8) COLLATE utf8_general_ci) THEN
+					START TRANSACTION;
+						INSERT INTO usuarios (nombre_usuario,password,tipo_usuario,matricula_empleado,status,fechaCreacion,fechaModificacion)
+						VALUES (pNombreUsuario, pPaswword, pTipo, pCodigo, pStatus,NOW(), NOW() );
+						SET codRetorno = '000';
+						SET msg = 'Usuario Guardado con Exito';
+					COMMIT;
+				ELSE
+					SET codRetorno = '001';
+					SET msg = 'El Usuario ya Existe';
+					ROLLBACK;
+				END IF; 
+			END IF;
+		END IF;
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdAutor` (IN `pCodigo` BIGINT, IN `pNombreAutor` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDetalleVenta` (IN `pFolio` BIGINT, IN `pIdProducto` BIGINT, IN `pCantidad` INT, IN `pPrecio` DECIMAL(10,2), IN `pSubTotal` DECIMAL(10,2), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET CodRetorno = '002';
+        SET msg = @full_error;
+        RESIGNAL;
+        ROLLBACK;
+    END; 
+
+    DECLARE EXIT HANDLER FOR SQLWARNING
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET CodRetorno = '002';
+        SET msg = @full_error;
+        SHOW WARNINGS LIMIT 1;
+        RESIGNAL;
+        ROLLBACK;
+    END;
+
+    IF (pFolio = 0 || pIdProducto = 0 || pCantidad = 0 || pPrecio = 0.00 || pSubTotal = 0.00) THEN
+        SET CodRetorno = '004';
+        SET msg = 'Parametros Vacios';
+    ELSE 
+        IF NOT EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio AND clave_producto = pIdProducto) THEN
+            START TRANSACTION;
+                INSERT INTO detalle_venta (folio,clave_producto,cantidad,precio,subtotal)
+                VALUES(pFolio,pIdProducto,pCantidad,pPrecio,pSubTotal);
+
+                SET CodRetorno = '000';
+                SET msg = 'Venta Guardada con Exito';
+            COMMIT; 
+        ELSE 
+            SET CodRetorno = '001';
+            SET msg = 'El Folio ya fue Registrado';
+            ROLLBACK;
+        END IF;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsEditorial` (IN `pNombreEditorial` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -742,57 +957,106 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdAutor` (IN `pCodigo` BIGINT
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 			
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreAutor,'') = '' && COALESCE(pUsuario,'') = ''  && COALESCE(pStatus,'') = '' ) THEN
+	IF (pNombreEditorial = '' && pUsuario = '' && pStatus = '' ) THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
-		IF (pCodigo != 0 || COALESCE(pCodigo,'') = '') THEN
+        IF NOT EXISTS(SELECT * FROM editoriales WHERE nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci ) THEN
+            START TRANSACTION;
+                INSERT INTO editoriales(nombre_editorial,usuario,status,fechaCreacion,fechaModificacion)
+                VALUES (pNombreEditorial, pUsuario, pStatus, NOW(), NOW() );
+                SET codRetorno = '000';
+                SET msg = 'Editorial Guardado con Exito';
+            COMMIT;
+        ELSE
+            SET codRetorno = '001';
+            SET msg = 'La Editorial ya Existe';
+            ROLLBACK;
+        END IF; 
+	END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdAutor` (IN `pCodigo` BIGINT, IN `pNombreAutor` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100), OUT `id` INT)  BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
+		RESIGNAL;
+		ROLLBACK;
+	END; 
+	DECLARE EXIT HANDLER FOR SQLWARNING
+	BEGIN
+		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
+		SHOW WARNINGS LIMIT 1;
+		RESIGNAL;
+		ROLLBACK;
+	END;
+			
+	IF (pNombreAutor = '' && pUsuario = ''  && pStatus = '' ) THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF (pCodigo != 0) THEN
 			IF EXISTS(SELECT * FROM autores WHERE codigo_autor = pCodigo) THEN
 				IF NOT EXISTS(SELECT * FROM autores WHERE codigo_autor != pCodigo AND nombre_autor = CONVERT(pNombreAutor USING utf8) COLLATE utf8_general_ci ) THEN
 					START TRANSACTION;
 						UPDATE autores SET nombre_autor = pNombreAutor,fechaModificacion = NOW() WHERE codigo_autor = pCodigo;
-						SET CodRetorno = '000';
+						SET codRetorno = '000';
 						SET msg = 'Autor Actualizado con Exito';
+						SELECT codigo_autor INTO id FROM autores WHERE codigo_autor = pCodigo;
 					COMMIT; 
 				ELSE 
-					SET CodRetorno = '001';
+					SET codRetorno = '001';
 					SET msg = 'El Nombre del Autor ya fue Registrado';
 					ROLLBACK;
 				END IF;
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Autor no Éxiste';
+				SET codRetorno = '001';
+				SET msg = 'El Autor no Existe';
 				ROLLBACK;
 			END IF;
 		ELSE 
-			IF NOT EXISTS(SELECT * FROM autores WHERE nombre_autor = pNombreAutor) THEN
+			IF NOT EXISTS(SELECT * FROM autores WHERE nombre_autor = CONVERT(pNombreAutor USING utf8) COLLATE utf8_general_ci) THEN
 				START TRANSACTION;
 					INSERT INTO autores (nombre_autor,usuario,status,fechaCreacion,fechaModificacion)
 					VALUES (pNombreAutor, pUsuario, pStatus,NOW(), NOW() );
-					SET CodRetorno = '000';
+					SET codRetorno = '000';
 					SET msg = 'Autor Guardado con Exito';
+
+					SET id =  LAST_INSERT_ID();
 				COMMIT;
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Autor ya Éxiste';
+				SET codRetorno = '001';
+				SET msg = 'El Autor ya Existe';
+				SELECT codigo_autor INTO id FROM autores WHERE nombre_autor = CONVERT(pNombreAutor USING utf8) COLLATE utf8_general_ci;
 				ROLLBACK;
 			END IF; 
 		END IF; 
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdCliente` (IN `pCodigo` BIGINT, IN `pRFC` CHAR(13), IN `pEmpresa` VARCHAR(30), IN `pNombreContacto` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pEmail` VARCHAR(30), IN `pStatus` VARCHAR(10), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdCliente` (IN `pCodigo` BIGINT, IN `pRFC` CHAR(13), IN `pEmpresa` VARCHAR(30), IN `pNombreContacto` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pEmail` VARCHAR(30), IN `pStatus` VARCHAR(10), IN `pUsuario` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -801,70 +1065,76 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdCliente` (IN `pCodigo` BIGI
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
-		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
-		IF EXISTS(SELECT * FROM clientes WHERE matricula = pCodigo) THEN
-			IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci) = 0 ) THEN
-				IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) = 0 ) THEN
-					START TRANSACTION;
-						UPDATE clientes SET rfc = pRFC, empresa = pEmpresa, nombre_contacto = pNombreContacto, 
-							apellido_paterno = pAPaterno, apellido_materno = pAMaterno, calle = pCalle, numExt = pNumExt,
-							numInt = pNumInt, colonia = pColonia, ciudad = pCiudad, estado = pEstado, telefono = pTelefono,
-							celular = pCelular, email = pEmail, fechaModificacion = NOW()
-						WHERE matricula = pCodigo;
-						SET CodRetorno = '000';
-						SET msg = 'Cliente Actualizado con Exito';
-					COMMIT; 
+	IF (pEmpresa = '' ||  pNombreContacto = '' || pAPaterno = '' || pAMaterno =  '' || pNumExt = 0 || pColonia = '' || pCiudad = '' || pEstado = '' || pEmail = '' || pStatus = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF (pCodigo != 0) THEN
+			IF EXISTS(SELECT * FROM clientes WHERE matricula = pCodigo) THEN
+				IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci) = 0 ) THEN
+					IF ( (SELECT COUNT(*) FROM clientes WHERE matricula != pCodigo AND  rfc = pRFC) = 0 ) THEN
+						START TRANSACTION;
+							UPDATE clientes SET rfc = pRFC, empresa = pEmpresa, nombre_contacto = pNombreContacto, 
+								apellido_paterno = pAPaterno, apellido_materno = pAMaterno, calle = pCalle, numExt = pNumExt,
+								numInt = pNumInt, colonia = pColonia, ciudad = pCiudad, estado = pEstado, telefono = pTelefono,
+								celular = pCelular, email = pEmail, fechaModificacion = NOW()
+							WHERE matricula = pCodigo;
+							SET codRetorno = '000';
+							SET msg = 'Cliente Actualizado con Exito';
+						COMMIT; 
+					ELSE
+						SET codRetorno = '001';
+						SET msg = 'El RFC del Cliente ya fue Registrado';
+						ROLLBACK;
+					END IF;
 				ELSE
-					SET CodRetorno = '001';
+					SET codRetorno = '001';
+					SET msg = 'El Nombre del Cliente ya fue Registrado';
+					ROLLBACK;
+				END IF;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Cliente no Existe';
+			END IF;
+		ELSE 
+			IF NOT EXISTS(SELECT * FROM clientes WHERE empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci ) THEN
+				IF NOT EXISTS (SELECT * FROM clientes WHERE rfc = pRFC) THEN
+					START TRANSACTION;
+						INSERT INTO clientes(rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
+							colonia,ciudad,estado,telefono,celular,email,status,usuario,fechaCreacion,fechaModificacion)
+						VALUES (pRFC, pEmpresa, pNombreContacto, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia,
+							pCiudad, pEstado, pTelefono, pCelular, pEmail, pStatus, pUsuario, NOW(), NOW() );
+						SET codRetorno = '000';
+						SET msg = 'Cliente Guardado con Exito';
+					COMMIT;
+				ELSE
+					SET codRetorno = '001';
 					SET msg = 'El RFC del Cliente ya fue Registrado';
 					ROLLBACK;
 				END IF;
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Nombre del Cliente ya fue Registrado';
+				SET codRetorno = '001';
+				SET msg = 'El Client ya fue Registrado';
 				ROLLBACK;
-			END IF;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Cliente no Existe';
-		END IF;
-	ELSE 
-		IF NOT EXISTS(SELECT * FROM clientes WHERE empresa = CONVERT(pEmpresa USING utf8) COLLATE utf8_general_ci ) THEN
-			IF NOT EXISTS (SELECT * FROM clientes WHERE rfc = pRFC) THEN
-				START TRANSACTION;
-					INSERT INTO clientes(rfc,empresa,nombre_contacto,apellido_paterno,apellido_materno,calle,numExt,numInt,
-						colonia,ciudad,estado,telefono,celular,email,status,usuario,fechaCreacion,fechaModificacion)
-					VALUES (pRFC, pEmpresa, pNombreContacto, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia,
-						pCiudad, pEstado, pTelefono, pCelular, pEmail, pStatus, pUsuario, NOW(), NOW() );
-					SET CodRetorno = '000';
-					SET msg = 'Cliente Guardado con Exito';
-				COMMIT;
-			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El RFC del Cliente ya fue Registrado';
-				ROLLBACK;
-			END IF;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Client ya fue Registrado';
-			ROLLBACK;
+			END IF; 
 		END IF; 
-	END IF; 
+	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BIGINT, IN `pNombreEditorial` VARCHAR(50) COLLATE utf8_spanish2_ci, IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BIGINT, IN `pNombreEditorial` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100), OUT `id` INT)  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET CodRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -873,22 +1143,25 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BI
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET CodRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 			
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pNombreEditorial,'') = '' && COALESCE(pUsuario,'') = ''  && COALESCE(pStatus,'') = '' ) THEN
+	IF (pNombreEditorial = '' && pUsuario = '' && pStatus = '' ) THEN
+		SET CodRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
-		IF (pCodigo != 0 || COALESCE(pCodigo,'') = '') THEN
+		IF (pCodigo != 0 ) THEN
 			IF EXISTS(SELECT * FROM editoriales WHERE codigo_editorial = pCodigo) THEN
 				IF NOT EXISTS(SELECT * FROM editoriales WHERE codigo_editorial != pCodigo AND nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci ) THEN
 					START TRANSACTION;
 						UPDATE editoriales SET nombre_editorial = pNombreEditorial,fechaModificacion = NOW() WHERE codigo_editorial = pCodigo;
 						SET CodRetorno = '000';
 						SET msg = 'Editorial Actualizado con Exito';
+						SELECT codigo_editorial INTO id FROM editoriales WHERE codigo_editorial = pCodigo;
 					COMMIT; 
 				ELSE
 					SET CodRetorno = '001';
@@ -897,32 +1170,35 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEditorial` (IN `pCodigo` BI
 				END IF;
 			ELSE
 				SET CodRetorno = '001';
-				SET msg = 'La Editorial no Éxiste';
+				SET msg = 'La Editorial no Existe';
 			END IF;
 		ELSE 
-			IF NOT EXISTS(SELECT * FROM editoriales WHERE nombre_editorial = pNombreEditorial) THEN
+			IF NOT EXISTS(SELECT * FROM editoriales WHERE nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
 					INSERT INTO editoriales(nombre_editorial,usuario,status,fechaCreacion,fechaModificacion)
 					VALUES (pNombreEditorial, pUsuario, pStatus,NOW(), NOW() );
 					SET CodRetorno = '000';
 					SET msg = 'Editorial Guardado con Exito';
+					SET id =  LAST_INSERT_ID();
 				COMMIT;
 			ELSE
 				SET CodRetorno = '001';
-				SET msg = 'La Editorial ya Éxiste';
+				SET msg = 'La Editorial ya Existe';
+				SELECT codigo_editorial INTO id FROM editoriales WHERE nombre_editorial = CONVERT(pNombreEditorial USING utf8) COLLATE utf8_general_ci;
 				ROLLBACK;
 			END IF; 
 		END IF; 
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIGINT, IN `pNombreEmpleado` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pSueldo` DECIMAL, IN `pPuesto` VARCHAR(30), IN `pUsuario` VARCHAR(15), IN `pISUsu` INT, IN `pStatus` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIGINT, IN `pNombreEmpleado` VARCHAR(20), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pSueldo` DECIMAL, IN `pPuesto` VARCHAR(30), IN `pStatus` VARCHAR(10), IN `pISUsu` INT, IN `pUsuario` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -931,57 +1207,65 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdEmpleado` (IN `pCodigo` BIG
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
-		IF EXISTS(SELECT * FROM empleados WHERE matricula = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM empleados WHERE matricula != pCodigo AND nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci ) THEN
-				START TRANSACTION;
-					UPDATE empleados SET nombre_empleado = pNombreEmpleado, apellido_paterno = pAMaterno,apellido_materno = pAMaterno,
-						calle = pCalle,	numExt = pNumExt,numInt = numInt,colonia = pColonia, ciudad = pCiudad, estado = pEstado, 
-						telefono = pTelefono, celular = pCelular, sueldo = pSueldo, puesto = pPuesto,fechaModificacion = NOW()
-					WHERE matricula = pCodigo;
-					SET CodRetorno = '000';
-					SET msg = 'Empleado Actualizado con Exito';
-				COMMIT; 
+	IF (pNombreEmpleado = '' || pAPaterno = '' || pAMaterno =  '' || pNumExt = 0 || pColonia = '' || pCiudad = '' || pEstado = '' || pSueldo = 0.00 || pPuesto = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF (pCodigo != 0) THEN
+			IF EXISTS (SELECT * FROM empleados WHERE matricula = pCodigo) THEN
+				IF NOT EXISTS (SELECT * FROM empleados WHERE matricula != pCodigo AND nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci 
+				AND apellido_paterno = CONVERT(pAPaterno USING utf8) COLLATE utf8_general_ci AND apellido_materno = CONVERT(pAMaterno USING utf8) COLLATE utf8_general_ci ) THEN
+					START TRANSACTION;
+						UPDATE empleados SET nombre_empleado = pNombreEmpleado, apellido_paterno = pAPaterno,apellido_materno = pAMaterno,
+							calle = pCalle,	numExt = pNumExt,numInt = numInt,colonia = pColonia, ciudad = pCiudad, estado = pEstado, 
+							telefono = pTelefono, celular = pCelular, sueldo = pSueldo, puesto = pPuesto,fechaModificacion = NOW()
+						WHERE matricula = pCodigo;
+						SET codRetorno = '000';
+						SET msg = 'Empleado Actualizado con Exito';
+					COMMIT; 
+				ELSE
+					SET codRetorno = '001';
+					SET msg = 'El Nombre del Empleado ya fue Registrado';
+					ROLLBACK;
+				END IF;
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Nombre del Empleado ya fue Registrado';
-				ROLLBACK;
+				SET codRetorno = '001';
+				SET msg = 'El Empleado no Existe';
 			END IF;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Empleado no Existe';
-		END IF;
-	ELSE 
-		IF NOT EXISTS(SELECT * FROM empleados WHERE nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci ) THEN
-			START TRANSACTION;
-				INSERT INTO empleados(nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,colonia,ciudad,estado,
-					telefono,celular,sueldo,puesto,status,usuario,fechaCreacion,fechaModificacion)
-				VALUES (pNombreEmpleado, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
-					pCelular, pSueldo, pPuesto, pStatus, pUsuario,NOW(), NOW() );
-				SET CodRetorno = '000';
-				SET msg = 'Empleado Guardado con Exito';
-			COMMIT;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Empleado ya Existe';
-			ROLLBACK;
+		ELSE 
+			IF NOT EXISTS(SELECT * FROM empleados WHERE nombre_empleado = CONVERT(pNombreEmpleado USING utf8) COLLATE utf8_general_ci ) THEN
+				START TRANSACTION;
+					INSERT INTO empleados(nombre_empleado,apellido_paterno,apellido_materno,calle,numExt,numInt,colonia,ciudad,estado,
+						telefono,celular,sueldo,puesto,status,isUsu,usuario,fechaCreacion,fechaModificacion)
+					VALUES (pNombreEmpleado, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
+						pCelular, pSueldo, pPuesto, pStatus, pISUsu, pUsuario,NOW(), NOW() );
+					SET codRetorno = '000';
+					SET msg = 'Empleado Guardado con Exito';
+				COMMIT;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Empleado ya Existe';
+				ROLLBACK;
+			END IF; 
 		END IF; 
-	END IF; 
+	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT, IN `pNombreLibro` VARCHAR(50), IN `pISBN` VARCHAR(13), IN `pAutor` BIGINT, IN `pEditorial` BIGINT, IN `pDescripcion` VARCHAR(500), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT, IN `pNombreLibro` VARCHAR(50), IN `pISBN` VARCHAR(13), IN `pAutor` BIGINT, IN `pEditorial` BIGINT, IN `pDescripcion` VARCHAR(500), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(10), IN `pRutaIMG` VARCHAR(50), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100), OUT `id` INT)  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -990,53 +1274,58 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdLibro` (IN `pCodigo` BIGINT
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
+	IF (pCodigo != 0) THEN
 		IF EXISTS(SELECT * FROM libros WHERE codigo_libro = pCodigo) THEN
 			IF NOT EXISTS(SELECT * FROM libros WHERE codigo_libro != pCodigo AND nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
-					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,fechaModificacion = NOW()
-					 WHERE codigo_libro = pCodigo;
-					SET CodRetorno = '000';
+					UPDATE libros SET nombre_libro = pNombreLibro,isbn = pISBN,autor = pAutor,editorial = pEditorial,descripcion = pDescripcion,rutaIMG = pRutaIMG,fechaModificacion = NOW()
+					WHERE codigo_libro = pCodigo;
+					SET codRetorno = '000';
 					SET msg = 'Libro Actualizado con Exito';
+					SELECT codigo_libro INTO id FROM libros WHERE codigo_libro = pCodigo;
 				COMMIT; 
 			ELSE
-				SET CodRetorno = '001';
+				SET codRetorno = '001';
 				SET msg = 'El Nombre del Libro ya fue Registrado';
 				ROLLBACK;
 			END IF;
 		ELSE
-			SET CodRetorno = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Libro no Existe';
 		END IF;
 	ELSE 
-		IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci) THEN
+		IF NOT EXISTS(SELECT * FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci ) THEN
 			START TRANSACTION;
-				INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,usuario,status,fechaCreacion,fechaModificacion)
-				VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pUsuario, pStatus,NOW(), NOW() );
-				SET CodRetorno = '000';
+				INSERT INTO libros(nombre_libro,isbn,autor,editorial,descripcion,rutaIMG,usuario,status,fechaCreacion,fechaModificacion)
+				VALUES (pNombreLibro, pISBN, pAutor, pEditorial, pDescripcion, pRutaIMG, pUsuario, pStatus,NOW(), NOW() );
+				SET codRetorno = '000';
 				SET msg = 'Libro Guardado con Exito';
+				SET id =  LAST_INSERT_ID();
 			COMMIT;
 		ELSE
-			SET CodRetorno = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Libro ya Existe';
 			ROLLBACK;
+			SELECT codigo_libro INTO id FROM libros WHERE nombre_libro = CONVERT(pNombreLibro USING utf8) COLLATE utf8_general_ci;
 		END IF; 
 	END IF; 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProducto` (IN `pCodigo` BIGINT, IN `pNombreProducto` VARCHAR(50), IN `pCodigoBarras` BIGINT, IN `pProveedor` BIGINT, IN `pStActual` INT, IN `pStMin` INT, IN `pStMax` INT, IN `pCompra` DECIMAL, IN `pVenta` DECIMAL, IN `pCategoria` BIGINT, IN `pStatus` VARCHAR(15), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProducto` (IN `pCodigo` BIGINT, IN `pNombreProducto` VARCHAR(50), IN `pCodigoBarras` BIGINT, IN `pProveedor` BIGINT, IN `pStActual` INT, IN `pStMin` INT, IN `pStMax` INT, IN `pCompra` DECIMAL, IN `pVenta` DECIMAL, IN `pCategoria` BIGINT, IN `pStatus` VARCHAR(15), IN `pIsLibro` INT, IN `pUsuario` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -1045,57 +1334,64 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProducto` (IN `pCodigo` BIG
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
-		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
-		IF EXISTS(SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
-			IF NOT EXISTS(SELECT * FROM productos WHERE codigo_producto != pCodigo AND nombre_producto = CONVERT(pNombreProducto USING utf8) COLLATE utf8_general_ci ) THEN
-				START TRANSACTION;
-					UPDATE productos SET nombre_producto = pNombreProducto, codigoBarras = pCodigoBarras, proveedor = pProveedor,
-						stockActual = pStActual, stockMin = pStMin, stockMax = pStMax, compra = pCompra, venta = pVenta,
-						categoria = pCategoria, status = pStatus, fechaModificacion = NOW()
-					WHERE codigo_producto = pCodigo;
-					SET CodRetorno = '000';
-					SET msg = 'Proveedor Actualizado con Exito';
-				COMMIT; 
-			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Nombre del Proveedor ya fue Registrado';
-				ROLLBACK;
-			END IF;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Proveedor no Éxiste';
-		END IF;
+	
+	IF (pNombreProducto = '' || pCodigoBarras = 0 || pProveedor = 0 || pStActual = 0 || pStMin = 0 || pStMax = 0 || pCompra = 0 || pVenta = 0 || pCategoria = 0 || pStatus = '' || pUsuario = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
 	ELSE 
-		IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
-			START TRANSACTION;
-				INSERT INTO proveedores(nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,
-					venta,categoria,status,usuario,fechaCreacion,fechaModificacion)
-				VALUES(pNombreProducto, pCodigoBarras, pProveedor, pStActual, pStMin, pStMax, pCompra, pVenta, pCategoria,
-					pStatus, pUsuario,NOW(), NOW() );
-				SET CodRetorno = '000';
-				SET msg = 'Proveedor Guardado con Exito';
-			COMMIT;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Proveedor ya Éxiste';
-			ROLLBACK;
+		IF (pCodigo != 0) THEN
+			IF EXISTS(SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
+				IF NOT EXISTS(SELECT * FROM productos WHERE codigo_producto != pCodigo AND nombre_producto = CONVERT(pNombreProducto USING utf8) COLLATE utf8_general_ci ) THEN
+					START TRANSACTION;
+						UPDATE productos SET nombre_producto = pNombreProducto, codigoBarras = pCodigoBarras, proveedor = pProveedor,
+							stockActual = pStActual, stockMin = pStMin, stockMax = pStMax, compra = pCompra, venta = pVenta,
+							categoria = pCategoria, status = pStatus, fechaModificacion = NOW()
+						WHERE codigo_producto = pCodigo;
+						SET codRetorno = '000';
+						SET msg = 'Producto Actualizado con Exito';
+					COMMIT; 
+				ELSE
+					SET codRetorno = '001';
+					SET msg = 'El Nombre del Producto ya fue Registrado';
+					ROLLBACK;
+				END IF;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Producto no Existe';
+			END IF;
+		ELSE 
+			IF NOT EXISTS(SELECT * FROM productos WHERE nombre_producto = CONVERT(pNombreProducto USING utf8) COLLATE utf8_general_ci ) THEN
+				START TRANSACTION;
+					INSERT INTO productos(nombre_producto,codigoBarras,proveedor,stockActual,stockMin,stockMax,compra,
+						venta,categoria,status,isLibro,usuario,fechaCreacion,fechaModificacion)
+					VALUES(pNombreProducto, pCodigoBarras, pProveedor, pStActual, pStMin, pStMax, pCompra, pVenta, pCategoria,
+						pStatus, pIsLibro, pUsuario,NOW(), NOW() );
+					SET codRetorno = '000';
+					SET msg = 'Producto Guardado con Exito';
+				COMMIT;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Producto ya Existe';
+				ROLLBACK;
+			END IF; 
 		END IF; 
-	END IF; 
+	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BIGINT, IN `pNombreProveedor` VARCHAR(50), IN `pContacto` VARCHAR(50), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pEmail` VARCHAR(40), IN `pWeb` VARCHAR(50), IN `pUsuario` VARCHAR(15), IN `pStatus` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BIGINT, IN `pNombreProveedor` VARCHAR(50), IN `pContacto` VARCHAR(50), IN `pAPaterno` VARCHAR(30), IN `pAMaterno` VARCHAR(30), IN `pCalle` VARCHAR(30), IN `pNumExt` INT, IN `pNumInt` VARCHAR(5), IN `pColonia` VARCHAR(30), IN `pCiudad` VARCHAR(30), IN `pEstado` VARCHAR(30), IN `pTelefono` VARCHAR(10), IN `pCelular` VARCHAR(10), IN `pEmail` VARCHAR(40), IN `pWeb` VARCHAR(50), IN `pStatus` VARCHAR(10), IN `pUsuario` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -1104,48 +1400,54 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdProveedor` (IN `pCodigo` BI
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
-		IF EXISTS(SELECT * FROM proveedores WHERE codigo_proveedor = pCodigo) THEN
+	IF (pNombreProveedor = '' || pAPaterno = '' || pAMaterno =  '' || pNumExt = 0 || pColonia = '' || pCiudad = '' || pEstado = '' || pTelefono = '' || pCelular = '' || pEmail = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF (pCodigo != 0) THEN
+			IF EXISTS(SELECT * FROM proveedores WHERE codigo_proveedor = pCodigo) THEN
+				IF NOT EXISTS(SELECT * FROM proveedores WHERE codigo_proveedor != pCodigo AND nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
+					START TRANSACTION;
+						UPDATE proveedores SET nombre_proveedor = pNombreProveedor, contacto = pContacto, apellido_paterno = pAPaterno,
+							apellido_materno = pAMaterno, calle = pCalle, num_ext = pNumExt, num_int = pNumInt, colonia = pColonia, 
+							ciudad = pCiudad, estado = pEstado,	telefono = pTelefono, celular = pCelular, email = pEmail, web = pWeb, fechaModificacion = NOW()
+						WHERE codigo_proveedor = pCodigo;
+						SET codRetorno = '000';
+						SET msg = 'Proveedor Actualizado con Exito';
+					COMMIT; 
+				ELSE
+					SET codRetorno = '001';
+					SET msg = 'El Nombre del Proveedor ya fue Registrado';
+					ROLLBACK;
+				END IF;
+			ELSE
+				SET codRetorno = '001';
+				SET msg = 'El Proveedor no Existe';
+			END IF;
+		ELSE 
 			IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
 				START TRANSACTION;
-					UPDATE proveedores SET nombre_proveedor = pNombreProveedor, contacto = pContacto, calle = pCalle,
-						num_ext = pNumExt, num_int = pNumInt, colonia = pColonia, ciudad = pCiudad, estado = pEstado,
-						telefono = pTelefono, celular = pCelular, email = pEmail, web = pWeb, fechaModificacion = NOW()
-					WHERE codigo_proveedor = pCodigo;
-					SET CodRetorno = '000';
-					SET msg = 'Proveedor Actualizado con Exito';
-				COMMIT; 
+					INSERT INTO proveedores(nombre_proveedor,contacto,apellido_paterno,apellido_materno,calle,num_ext,num_int,colonia,
+						ciudad,estado,telefono,celular,email,web,usuario,status,fechaCreacion,fechaModificacion)
+					VALUES (pNombreProveedor, pContacto, pAPaterno, pAMaterno, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, 
+						pTelefono, pCelular, pEmail, pWeb, pUsuario, pStatus, NOW(), NOW() );
+					SET codRetorno = '000';
+					SET msg = 'Proveedor Guardado con Exito';
+				COMMIT;
 			ELSE
-				SET CodRetorno = '001';
-				SET msg = 'El Nombre del Proveedor ya fue Registrado';
+				SET codRetorno = '001';
+				SET msg = 'El Proveedor ya Existe';
 				ROLLBACK;
-			END IF;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Proveedor no Éxiste';
-		END IF;
-	ELSE 
-		IF NOT EXISTS(SELECT * FROM proveedores WHERE nombre_proveedor = CONVERT(pNombreProveedor USING utf8) COLLATE utf8_general_ci ) THEN
-			START TRANSACTION;
-				INSERT INTO proveedores(nombre_proveedor,contacto,calle,num_ext,num_int,colonia,
-					ciudad,estado,telefono,celular,email,web,usuario,status,fechaCreacion,fechaModificacion)
-				VALUES (pNombreProveedor, pContacto, pCalle, pNumExt, pNumInt, pColonia, pCiudad, pEstado, pTelefono,
-					pCelular, pEmail, pWeb, pUsuario, pStatus,NOW(), NOW() );
-				SET CodRetorno = '000';
-				SET msg = 'Proveedor Guardado con Exito';
-			COMMIT;
-		ELSE
-			SET CodRetorno = '001';
-			SET msg = 'El Proveedor ya Éxiste';
-			ROLLBACK;
+			END IF; 
 		END IF; 
-	END IF; 
+	END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdRetiro` (IN `pCodigo` BIGINT, IN `pFolio` BIGINT, IN `pNombreEmpleado` VARCHAR(50), IN `pCantidad` DECIMAL, IN `pDescripcion` VARCHAR(100), IN `pStatus` VARCHAR(15), IN `pUsuario` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
@@ -1203,6 +1505,50 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsUpdRetiro` (IN `pCodigo` BIGIN
 			END IF; 
 		END IF; 
 	END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsVenta` (IN `pFolio` BIGINT, IN `pNumEmpleado` BIGINT, IN `pNumCliente` BIGINT, IN `pTotal` DECIMAL(10,2), IN `pIsTarjeta` INT, IN `pFolioTarjeta` INT, IN `pStatus` CHAR(15), IN `pUsuario` CHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET CodRetorno = '002';
+        SET msg = @full_error;
+        RESIGNAL;
+        ROLLBACK;
+    END; 
+
+    DECLARE EXIT HANDLER FOR SQLWARNING
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET CodRetorno = '002';
+        SET msg = @full_error;
+        SHOW WARNINGS LIMIT 1;
+        RESIGNAL;
+        ROLLBACK;
+    END;
+
+    IF (pFolio = 0 || pNumEmpleado = 0 || pNumCliente = 0 || pTotal = 0.00 || pIsTarjeta = 0 || pStatus = '' || pUsuario = '') THEN
+        SET CodRetorno = '004';
+        SET msg = 'Parametros Vacios';
+    ELSE 
+        IF NOT EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN 
+            START TRANSACTION;
+                INSERT INTO ventas (folio,fecha_venta,empleado,cliente,total,isTarjeta,folioTarjeta,status,usuario,fechaCreacion,fechaModificacion) 
+                VALUES (pFolio, NOW(), pNumEmpleado, pNumCliente, pTotal, pIsTarjeta, pFolioTarjeta, pStatus, pUsuario, NOW(), NOW());
+                CALL spUpdFolios('ventas',@codRetorno,@msg);
+                SET CodRetorno = '000';
+                SET msg = 'SP Ejecutado con Exito';
+            COMMIT; 
+        ELSE
+            SET CodRetorno = '001';
+            SET msg = 'El Folio ya fue Registrado';
+            ROLLBACK;  
+        END IF;
+    END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCHAR(10), IN `pCodigo` BIGINT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
@@ -1348,7 +1694,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, I
 	END IF; 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARCHAR(10), IN `pUsuario` VARCHAR(10), OUT `codRetono` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARCHAR(10), IN `pUsuario` VARCHAR(10), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 
 	DECLARE isAdmin INT;
 	DECLARE vStatus VARCHAR(15);
@@ -1358,7 +1704,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARC
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -1367,14 +1714,15 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARC
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (pNombre = NULL && pUsuario = NULL) THEN
-		SET codRetono = '004';
+	IF (pNombre = '' && pUsuario = '') THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
 		IF EXISTS (SELECT * FROM usuarios WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci) THEN
@@ -1383,28 +1731,28 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spValidaUsuario` (IN `pNombre` VARC
 			IF (isAdmin != 1) THEN
 				SELECT status INTO vStatus FROM usuarios WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
 				IF (vStatus = 'DISPONIBLE') THEN
-					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,
+					SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,u.password,
 						CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
 					FROM usuarios u
 					INNER JOIN empleados e ON e.matricula = u.matricula_empleado
 					WHERE u.status = 'DISPONIBLE' AND nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
-					SET codRetono = '000';
+					SET codRetorno = '000';
 					SET msg = 'SP Ejecutado Correcamente';
 				ELSE 
-					SET codRetono = '001';
+					SET codRetorno = '001';
 					SET msg = 'Usuario Bloqueado';
 				END IF;
 			ELSE
-				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,
+				SELECT u.matricula_empleado,u.tipo_usuario,u.nombre_usuario,u.status,u.password,
 					CONCAT(e.nombre_empleado,' ',e.apellido_paterno,' ',e.apellido_materno) AS nombreEmpleado
 				FROM usuarios u
 				INNER JOIN empleados e ON e.matricula = u.matricula_empleado
 				WHERE nombre_usuario = CONVERT(pNombre USING utf8) COLLATE utf8_general_ci;
-				SET codRetono = '000';
+				SET codRetorno = '000';
 				SET msg = 'SP Ejecutado Correcamente';
 			END IF;
 		ELSE 
-			SET codRetono = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Usuario no Existe';
 		END IF;
 	END IF;
@@ -1432,14 +1780,14 @@ CREATE TABLE `autores` (
 --
 
 INSERT INTO `autores` (`codigo_autor`, `nombre_autor`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'J. K. Rowling', '1', 'DISPONIBLE', '2016-08-17 00:00:00', '2016-08-17 00:00:00'),
-(2, 'Gabriel Marquez', '1', 'DISPONIBLE', '2016-08-17 00:00:00', '2016-08-17 00:00:00'),
+(1, 'j. k. rowling', '1', 'DISPONIBLE', '2016-08-17 00:00:00', '2017-08-04 14:28:46'),
+(2, 'gabriel marquez', '1', 'DISPONIBLE', '2016-08-17 00:00:00', '2017-08-04 11:08:42'),
 (3, 'Dante Alighieri''s', 'felipe', 'DISPONIBLE', '2016-08-27 00:00:00', '2016-08-27 00:00:00'),
 (4, 'paulo cohelo', 'felipe', 'DISPONIBLE', '2016-09-11 02:21:00', '2016-09-11 02:21:00'),
-(5, 'hiro fujiwara', 'felipe', 'DISPONIBLE', '2016-09-11 02:27:00', '2017-05-01 01:38:14'),
+(5, 'hiro fujiwara', 'felipe', 'DISPONIBLE', '2016-09-11 02:27:00', '2017-08-04 11:50:11'),
 (6, 'arre lulu', 'felipe', 'DISPONIBLE', '2016-09-11 02:31:00', '2016-09-11 02:31:00'),
 (7, 'shiro', 'felipe', 'DISPONIBLE', '2016-09-15 11:06:00', '2016-09-15 11:06:00'),
-(8, 'vina jackson', 'felipe', 'DISPONIBLE', '2016-09-15 11:09:00', '2017-01-12 08:14:00'),
+(8, 'vina jackson', 'felipe', 'DISPONIBLE', '2016-09-15 11:09:00', '2017-08-04 10:00:11'),
 (9, 'juan manuel', 'felipe', 'DISPONIBLE', '2016-12-29 04:17:00', '2017-01-11 09:26:00'),
 (10, 'juan rulfo', 'felipe', 'DISPONIBLE', '2017-01-11 09:17:00', '2017-01-11 09:25:00'),
 (11, 'max lhew', 'felipe', 'DISPONIBLE', '2017-01-11 09:26:00', '2017-01-11 09:26:00'),
@@ -1447,7 +1795,8 @@ INSERT INTO `autores` (`codigo_autor`, `nombre_autor`, `usuario`, `status`, `fec
 (13, 'juan rulfo', 'felipe', 'DISPONIBLE', '2017-03-23 09:29:00', '2017-03-23 09:29:00'),
 (14, 'steve job', 'felipe', 'DISPONIBLE', '2017-03-23 09:30:00', '2017-03-23 09:30:00'),
 (15, 'jshwj', 'felipe', 'DISPONIBLE', '2017-03-23 09:34:00', '2017-03-23 09:34:00'),
-(16, 'sie mash', 'felipe', 'DISPONIBLE', '2017-03-23 09:36:00', '2017-03-23 09:40:00');
+(16, 'sie mash', 'felipe', 'DISPONIBLE', '2017-03-23 09:36:00', '2017-03-23 09:40:00'),
+(17, 'dcdcdcd', 'felipe', 'DISPONIBLE', '2017-07-13 11:59:56', '2017-07-13 11:59:56');
 
 -- --------------------------------------------------------
 
@@ -1467,8 +1816,9 @@ CREATE TABLE `categorias_producto` (
 INSERT INTO `categorias_producto` (`codigo_catpro`, `nombre_categoria`) VALUES
 (1, 'LIBROS'),
 (2, 'DIDACTICOS'),
-(3, 'COMIC/MANGA'),
-(4, 'OTROS');
+(3, 'COMIC'),
+(4, 'MANGA'),
+(5, 'OTROS');
 
 -- --------------------------------------------------------
 
@@ -1511,8 +1861,8 @@ INSERT INTO `clientes` (`matricula`, `rfc`, `empresa`, `nombre_contacto`, `apell
 (7, 'oslr740537123', 'libreria mexico', 'rosa', 'osuna', 'lopez', 'grande', '1515', '', 'centro', 'los mochis', 'sinaloa', '2147483647', '2147483647', 'yo@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2017-05-23 15:21:02'),
 (8, '1vwd1d15s3sds', 'libreria Buen libro', 'ruben Alfonso', 'mendoza', 'mendoza', 'perrona', '152', '4', 'las vegas', 'tepito', 'CDMX', '5507862', '6675084532', 'tepito@gmail.com', 'DISPONIBLE', '', '0000-00-00 00:00:00', '2016-08-31 09:47:00'),
 (9, 'rolj953245646', 'librerÃ­a del sol 2', 'juan', 'rojo', 'lugo', 'camarÃ³n', '457', '5', 'las palmas', 'mazatlan', 'sinaloa', '6677154812', '2147483647', 'libreriadelsol@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:25:00', '2017-05-23 15:24:48'),
-(10, 'lolj910245123', 'librerÃ­a del sol', 'juan luis', 'lopez', 'lopez', 'camarones', '452', '6', 'las palmas', 'mazatlan', 'sinalo', '6787481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2017-05-23 15:19:37'),
-(11, 'CUPU800825569', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', '4818', 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-02-07 03:28:00');
+(10, 'lolj910245123', 'librerÃ­a del sol', 'juan luis', 'lopez', 'lopez', 'camarones', '452', '6', 'las palmas', 'mazatlan', 'sinaloa', '6787481526', '2147483647', 'juan@gmail.com', 'DISPONIBLE', 'felipe', '2016-08-29 09:29:00', '2017-08-17 11:27:57'),
+(11, 'jsal850412002', 'librerÃ­a estrella', 'juan Ernesto', 'sanches', 'lopez', 'sindicalsimo', '4818', 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6671568899', 'felipe_borre@hotmail.com', 'DISPONIBLE', 'felipe', '2017-02-07 03:28:00', '2017-08-17 11:26:17');
 
 -- --------------------------------------------------------
 
@@ -1668,7 +2018,7 @@ CREATE TABLE `editoriales` (
   `codigo_editorial` bigint(20) NOT NULL,
   `nombre_editorial` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `status` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
-  `usuario` bigint(20) NOT NULL,
+  `usuario` varchar(15) NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1678,20 +2028,21 @@ CREATE TABLE `editoriales` (
 --
 
 INSERT INTO `editoriales` (`codigo_editorial`, `nombre_editorial`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'Oceano', 'DISPONIBLE', 1, '2016-08-17 00:00:00', '2016-08-17 17:00:00'),
-(2, 'Tomo', 'DISPONIBLE', 1, '2016-08-17 00:00:00', '2016-08-17 17:00:00'),
-(3, 'mega', 'DISPONIBLE', 0, '2016-09-16 02:22:00', '2016-09-16 02:22:00'),
-(4, 'larousse', 'DISPONIBLE', 0, '2016-09-16 02:23:00', '2016-09-16 02:23:00'),
-(5, 'mexicana', 'DISPONIBLE', 0, '2017-01-11 07:36:00', '2017-01-11 07:36:00'),
-(6, 'mega', 'DISPONIBLE', 0, '2017-01-11 07:38:00', '2017-04-30 19:34:24'),
-(7, 'panini manga', 'DISPONIBLE', 0, '2017-01-11 07:40:00', '2017-05-01 18:35:49'),
-(8, 'linea roja mexicana', 'DISPONIBLE', 0, '2017-01-11 08:26:00', '2017-01-11 08:47:00'),
-(9, 'max', 'DISPONIBLE', 0, '2017-01-11 08:27:00', '2017-01-11 08:27:00'),
-(10, 'mÃ¡xima espaÃ±ola', 'DISPONIBLE', 0, '2017-01-11 09:16:00', '2017-01-11 09:26:00'),
-(11, 'rusa unida', 'DISPONIBLE', 0, '2017-01-11 09:27:00', '2017-01-11 09:27:00'),
-(12, 'maeva', 'DISPONIBLE', 0, '2017-01-12 08:14:00', '2017-01-12 08:14:00'),
-(13, 'salamandra', 'DISPONIBLE', 0, '2017-03-12 10:21:00', '2017-03-12 10:21:00'),
-(14, 'nueva imagen', 'DISPONIBLE', 0, '2017-03-23 09:57:00', '2017-03-23 09:57:00');
+(1, 'oceano', 'DISPONIBLE', '1', '2016-08-17 00:00:00', '2017-08-04 11:05:23'),
+(2, 'tomo', 'DISPONIBLE', '1', '2016-08-17 00:00:00', '2017-08-04 11:08:42'),
+(3, 'mega', 'DISPONIBLE', '0', '2016-09-16 02:22:00', '2016-09-16 02:22:00'),
+(4, 'larousse', 'DISPONIBLE', '0', '2016-09-16 02:23:00', '2016-09-16 02:23:00'),
+(5, 'mexicana', 'DISPONIBLE', '0', '2017-01-11 07:36:00', '2017-01-11 07:36:00'),
+(6, 'mega', 'DISPONIBLE', '0', '2017-01-11 07:38:00', '2017-04-30 19:34:24'),
+(7, 'panini manga', 'DISPONIBLE', '0', '2017-01-11 07:40:00', '2017-08-04 11:49:30'),
+(8, 'linea roja mexicana', 'DISPONIBLE', '0', '2017-01-11 08:26:00', '2017-01-11 08:47:00'),
+(9, 'max', 'DISPONIBLE', '0', '2017-01-11 08:27:00', '2017-01-11 08:27:00'),
+(10, 'mÃ¡xima espaÃ±ola', 'DISPONIBLE', '0', '2017-01-11 09:16:00', '2017-01-11 09:26:00'),
+(11, 'rusa unida', 'DISPONIBLE', '0', '2017-01-11 09:27:00', '2017-01-11 09:27:00'),
+(12, 'maeva', 'DISPONIBLE', '0', '2017-01-12 08:14:00', '2017-08-04 10:00:11'),
+(13, 'salamandra', 'DISPONIBLE', '0', '2017-03-12 10:21:00', '2017-08-04 14:28:31'),
+(14, 'nueva imagen', 'DISPONIBLE', '0', '2017-03-23 09:57:00', '2017-03-23 09:57:00'),
+(15, 'cdcdcd', 'DISPONIBLE', 'felipe', '2017-07-13 16:54:35', '2017-07-13 16:54:35');
 
 -- --------------------------------------------------------
 
@@ -1726,13 +2077,15 @@ CREATE TABLE `empleados` (
 --
 
 INSERT INTO `empleados` (`matricula`, `nombre_empleado`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `sueldo`, `puesto`, `status`, `isUsu`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'juan', 'martinez', 'lopez', 'muy larga', 4815, 'B', 'la mas peligrosa 2', 'juarez', 'sinaloa', '7105452', '6673031398', '1100', 'cajero', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2017-04-10 07:22:00'),
+(1, 'juan', 'martinez', 'lopez', 'muy larga', 4815, 'B', 'la mas peligrosa 2', 'juarez', 'sinaloa', '6677105452', '6673031398', '1100', 'cajero', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2017-08-16 11:45:27'),
 (2, 'felipe', 'monzon', 'mendoza', 'siempre viva', 1234, '5', 'alegre', 'springfield', 'california', '7106788', '6671234567', '4957', 'capturista', 'DISPONIBLE', 1, 'felipe', '0000-00-00 00:00:00', '2016-09-01 10:18:00'),
 (3, 'luis', 'oso', 'oso', 'quinta av.', 4215, '', 'diaz ordaz', 'culiacan', 'sinaloa', '7154824', '6672051684', '1100', '', 'BAJA', 0, 'felipe', '0000-00-00 00:00:00', '2016-09-16 09:33:00'),
 (4, 'jose', 'lopez', 'lopez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinalos', '6677106788', '6673031398', '400', 'vendedor', 'DISPONIBLE', 1, 'felipe', '2016-08-27 03:19:00', '2017-05-08 18:05:48'),
 (5, 'juan', 'perez', 'lopez', 'corta', 4452, 'A', 'peligrosa', 'culiacan', 'sinaloa', '7106788', '6673031398', '400', 'vendedor', 'DISPONIBLE', 0, 'felipe', '2016-09-01 10:05:00', '2016-09-01 10:05:00'),
 (6, 'felipe de jesus', 'monzon', 'mendoza', 'sindicalsimo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677606060', '6673031398', '$3150.50', 'cajero', 'DISPONIBLE', 1, 'felipe', '2017-01-19 05:09:00', '2017-01-21 12:24:00'),
-(7, 'paola', 'lopez', 'mendoza', 'muy lejana', 7584, 'X', 'las vegas', 'pequeÃ±a', 'grande', '6671548278', '6673021548', '3500', 'cajera', 'felipe', 0, 'DISPONIBLE', '2017-05-11 10:02:17', '2017-05-11 10:02:17');
+(7, 'paola', 'lopez', 'mendoza', 'muy lejana', 7584, 'X', 'las vegas', 'pequeÃ±a', 'grande', '6671548278', '6673021548', '3500', 'cajera', 'felipe', 0, 'DISPONIBLE', '2017-05-11 10:02:17', '2017-05-11 10:02:17'),
+(8, 'xssssssssss', 'xsxsxsxsx', 'sxsxsxsxsx', 'swxsxsxs', 22222, '222', 'xsxsxs', 'xssxsxsx', 'sxsxsxsxsxs', '(667) 710-', '(667) 303-', '22', 'sxsxsx', 'DISPONIBLE', 0, 'felipe', '2017-08-15 12:11:47', '2017-08-15 12:11:47'),
+(9, 'zzzzzzzzzzz', 'zzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzzzzzzzzz', 'ssssssssss', 22222, '222', 'sssssssssss', 'sssssssss', 'ssssssssssssssssssssssss', '3333333333', '3333333333', '2', 'dddddddddddddd', 'DISPONIBLE', 0, 'felipe', '2017-08-15 17:19:00', '2017-08-15 17:19:00');
 
 -- --------------------------------------------------------
 
@@ -1801,6 +2154,7 @@ CREATE TABLE `libros` (
   `autor` bigint(20) NOT NULL,
   `editorial` bigint(20) NOT NULL,
   `descripcion` varchar(500) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
+  `rutaIMG` varchar(100) NOT NULL,
   `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `status` varchar(10) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `fechaCreacion` datetime NOT NULL,
@@ -1811,21 +2165,22 @@ CREATE TABLE `libros` (
 -- Volcado de datos para la tabla `libros`
 --
 
-INSERT INTO `libros` (`codigo_libro`, `nombre_libro`, `isbn`, `autor`, `editorial`, `descripcion`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'el principito', '14287596', 2, 2, 'la historia de un prÃ­ncipe chiquito que se perdiÃ³ en un desierto muy peligroso que no le gustan los dibujos feos', '1', 'DISPONIBLE', '2016-08-19 08:52:00', '2016-09-01 11:27:00'),
-(2, 'ochenta melodÃ­as de pasiÃ³n en amarillo', '9786074009811', 8, 12, 'libro de pasiÃ³n y mÃºsica sobre violinistas', '1', 'DISPONIBLE', '2016-08-20 04:27:00', '2017-03-24 08:17:00'),
-(3, 'la divina comedia infierno', '9706664581', 3, 2, 'primer libro de la saga ', 'felipe', 'DISPONIBLE', '2016-08-27 11:12:00', '2016-08-27 12:05:00'),
-(4, 'las aventuras de tom sayer', '1542478522111', 5, 4, 'cuenta la historia de un niÃ±o travieso', 'felipe', 'DISPONIBLE', '2016-09-16 02:41:00', '2016-09-16 02:41:00'),
-(5, '404', '1111111111111', 6, 4, '', 'felipe', 'DISPONIBLE', '2016-12-31 07:37:00', '2016-12-31 07:37:00'),
-(6, 'ochenta melodias de pasiÃ³n en azul', '1111111111111', 8, 12, 'Recientemente instalada en Nueva York, la pelirroja Summer Zahova estÃ¡ disfrutando de su vida como violinista en una orquesta importante. Bajo la atenta mirada de SimÃ³n, su impresionante director venezolano, su carrera, y la propia Summer, florecerÃ¡n. Pero una nueva ciudad, un Ã©xito reciente, le deparan nuevas tentaciones, y muy pronto Summer se ve arrastrada de nuevo a un peligroso mundo ilÃ­cito y peligroso de intriga y deseo que creÃ­a haber dejado atrÃ¡s para siempre.', 'felipe', 'DISPONIBLE', '2017-01-12 08:24:00', '2017-01-13 06:11:00'),
-(7, 'ochenta melodias de pasion en rojo', '1215451054151', 8, 12, 'La renombrada violinista Summer Zahova regresa a Londres, la ciudad donde todo empezÃ³ para ella. Libre y soltera en la hedonista capital, Summer se embarca e una serie de ardientes aventuras, aceptando las excitantes y nuevas oportunidades y viajando a Europa para cumplir sus sueÃ±os.', 'felipe', 'DISPONIBLE', '2017-01-12 08:28:00', '2017-02-06 02:52:00'),
-(8, 'harry potter y la piedra filosofal', '9788478887590', 1, 13, 'harry ha quedado huÃ©rfano y vive con sus abdominales tios', 'felipe', 'DISPONIBLE', '2017-03-08 04:56:00', '2017-03-12 10:21:00'),
-(9, 'harry potter y el prisionero de azkaban', '9788478887613', 1, 13, 'por la cicatriz que lleva en la frente ', 'felipe', 'DISPONIBLE', '2017-03-12 10:20:00', '2017-03-12 10:21:00'),
-(10, 'harry potter y la camara de los secretos', '9788478887606', 1, 13, 'tras derrotar una vez mÃ s a lord voldemort', 'felipe', 'DISPONIBLE', '2017-03-12 10:23:00', '2017-03-12 10:24:00'),
-(11, 'harry potter y el cÃ¡liz de fuego', '9788478887620', 1, 1, 'tras otro abominable verano con los Dursley harry se dispone a cursar el cuarto aÃ±o en hogwarts la famosa escuela de magia y hechicerÃ­a', 'felipe', 'DISPONIBLE', '2017-03-24 08:36:00', '2017-03-24 10:21:00'),
-(12, 'harry potter y la orden del fÃ©nix', '9788478887446', 1, 1, 'las tediosas vacaciones de verano en casa de sus tios todavia no han acabado y harry se encuentra mÃ¡s inquieto que nunca', 'felipe', 'DISPONIBLE', '2017-03-24 08:54:00', '2017-03-24 10:20:00'),
-(14, 'maid sama tomo 1', '9781401236960', 5, 7, 'en la secundaria seika misaki es la presidenta', 'felipe', 'DISPONIBLE', '2017-05-01 13:52:41', '2017-05-01 22:08:55'),
-(15, 'maid sama tomo 2', '9781401236960', 5, 7, 'Hoy en caffe maid latte es dÃ­a de disfrazarse de hombre, ademÃ¡s la preparatoria seika tiene conflictos con la prestigiosa escuela miyabigaoka', 'felipe', 'DISPONIBLE', '2017-05-01 18:40:51', '2017-05-01 21:37:10');
+INSERT INTO `libros` (`codigo_libro`, `nombre_libro`, `isbn`, `autor`, `editorial`, `descripcion`, `rutaIMG`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
+(1, 'el principito', '14287596', 2, 2, 'la historia de un prÃ­ncipe chiquito que se perdiÃ³ en un desierto muy peligroso que no le gustan los dibujos feos', 'images/elprincipito.jpg', '1', 'DISPONIBLE', '2016-08-19 08:52:00', '2017-08-04 11:08:42'),
+(2, 'ochenta melodÃ­as de pasiÃ³n en amarillo', '9786074009811', 8, 12, 'libro de pasiÃ³n y mÃºsica sobre violinistas', 'images/ochentamelodiasdepasionenamarillo.jpg', '1', 'DISPONIBLE', '2016-08-20 04:27:00', '2017-07-31 15:29:51'),
+(3, 'la divina comedia infierno', '9706664581', 3, 2, 'primer libro de la saga ', '', 'felipe', 'DISPONIBLE', '2016-08-27 11:12:00', '2016-08-27 12:05:00'),
+(4, 'las aventuras de tom sayer', '1542478522111', 5, 4, 'cuenta la historia de un niÃ±o travieso', '', 'felipe', 'DISPONIBLE', '2016-09-16 02:41:00', '2016-09-16 02:41:00'),
+(5, '404', '1111111111111', 6, 4, '', '', 'felipe', 'DISPONIBLE', '2016-12-31 07:37:00', '2016-12-31 07:37:00'),
+(6, 'ochenta melodias de pasiÃ³n en azul', '1111111111111', 8, 12, 'Recientemente instalada en Nueva York, la pelirroja Summer Zahova estÃ¡ disfrutando de su vida como violinista en una orquesta importante. Bajo la atenta mirada de SimÃ³n, su impresionante director venezolano, su carrera, y la propia Summer, florecerÃ¡n. Pero una nueva ciudad, un Ã©xito reciente, le deparan nuevas tentaciones, y muy pronto Summer se ve arrastrada de nuevo a un peligroso mundo ilÃ­cito y peligroso de intriga y deseo que creÃ­a haber dejado atrÃ¡s para siempre.', 'images/ochentamelodiasdepasionenazul.jpg', 'felipe', 'DISPONIBLE', '2017-01-12 08:24:00', '2017-07-31 15:36:10'),
+(7, 'ochenta melodias de pasion en rojo', '1215451054151', 8, 12, 'La renombrada violinista Summer Zahova regresa a Londres, la ciudad donde todo empezÃ³ para ella. Libre y soltera en la hedonista capital, Summer se embarca e una serie de ardientes aventuras, aceptando las excitantes y nuevas oportunidades y viajando a Europa para cumplir sus sueÃ±os.', 'images/ochentamelodiasdepasionenrojo.jpg', 'felipe', 'DISPONIBLE', '2017-01-12 08:28:00', '2017-08-04 10:00:11'),
+(8, 'harry potter y la piedra filosofal', '9788478887590', 1, 13, 'harry ha quedado huÃ©rfano y vive con sus abdominales tios', 'images/harrypotterylapiedrafilosofal.jpg', 'felipe', 'DISPONIBLE', '2017-03-08 04:56:00', '2017-08-04 11:07:30'),
+(9, 'harry potter y el prisionero de azkaban', '9788478887613', 1, 13, 'por la cicatriz que lleva en la frente ', 'images/harrypotteryelprisionerodeazkaban.jpg', 'felipe', 'DISPONIBLE', '2017-03-12 10:20:00', '2017-08-04 14:28:55'),
+(10, 'harry potter y la camara de los secretos', '9788478887606', 1, 13, 'tras derrotar una vez mÃ s a lord voldemort', 'images/harrypotterylacamaradelossecretos.jpg', 'felipe', 'DISPONIBLE', '2017-03-12 10:23:00', '2017-08-03 12:48:06'),
+(11, 'harry potter y el cÃ¡liz de fuego', '9788478887620', 1, 1, 'tras otro abominable verano con los Dursley harry se dispone a cursar el cuarto aÃ±o en hogwarts la famosa escuela de magia y hechicerÃ­a', '', 'felipe', 'DISPONIBLE', '2017-03-24 08:36:00', '2017-03-24 10:21:00'),
+(12, 'harry potter y la orden del fÃ©nix', '9788478887446', 1, 1, 'las tediosas vacaciones de verano en casa de sus tios todavia no han acabado y harry se encuentra mÃ¡s inquieto que nunca', 'images/harrypotterylaordendelfenix.jpg', 'felipe', 'DISPONIBLE', '2017-03-24 08:54:00', '2017-08-04 11:05:23'),
+(14, 'maid sama tomo 1', '9781401236960', 5, 7, 'en la secundaria seika misaki es la presidenta', 'images/maidsamatomo1.jpg', 'felipe', 'DISPONIBLE', '2017-05-01 13:52:41', '2017-06-09 17:30:48'),
+(15, 'maid sama tomo 2', '9781401236960', 5, 7, 'Hoy en caffe maid latte es dÃ­a de disfrazarse de hombre, ademÃ¡s la preparatoria seika tiene conflictos con la prestigiosa escuela miyabigaoka', 'images/maidsamatomo2.jpg', 'felipe', 'DISPONIBLE', '2017-05-01 18:40:51', '2017-08-04 11:50:11'),
+(20, 'cdcdcdcddcc', '5555555555555', 17, 15, '', 'images/cdcdcdcddcc', 'felipe', 'DISPONIBLE', '2017-07-13 17:39:20', '2017-07-13 17:39:20');
 
 -- --------------------------------------------------------
 
@@ -1845,6 +2200,7 @@ CREATE TABLE `productos` (
   `venta` decimal(10,2) NOT NULL,
   `categoria` bigint(20) NOT NULL,
   `status` varchar(15) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `isLibro` int(11) NOT NULL DEFAULT '0',
   `usuario` varchar(15) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaModificacion` datetime NOT NULL
@@ -1854,21 +2210,22 @@ CREATE TABLE `productos` (
 -- Volcado de datos para la tabla `productos`
 --
 
-INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `proveedor`, `stockActual`, `stockMin`, `stockMax`, `compra`, `venta`, `categoria`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
-(3, 1, 'huevo grande dinosuario', 3, 0, 1, 20, '15.00', '20.00', 3, 'AGOTADO', '', '0000-00-00 00:00:00', '2017-01-17 06:49:00'),
-(4, 2, 'huevo chico dinosaurio', 3, 0, 1, 10, '20.00', '25.50', 3, 'AGOTADO', '', '0000-00-00 00:00:00', '2017-01-17 06:47:00'),
-(5, 3, 'animales magicos', 5, 0, 1, 0, '30.00', '50.00', 0, 'AGOTADO', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(6, 4, 'bolsa emoji', 3, 0, 1, 30, '5.00', '10.00', 3, 'AGOTADO', '', '0000-00-00 00:00:00', '2017-01-17 06:48:00'),
-(9, 9786074009811, 'ochenta melodias de pasion en amarillo', 1, 5, 1, 10, '185.00', '250.00', 1, 'DISPONIBLE', 'felipe', '2016-09-02 11:00:00', '2017-05-04 11:01:33'),
-(10, 5, 'el principito', 1, 0, 1, 4, '15.00', '25.00', 1, 'AGOTADO', 'felipe', '2016-09-03 07:31:00', '2016-09-03 07:31:00'),
-(11, 6, 'ochenta melodias de pasion en azul', 1, 14, 1, 10, '100.00', '180.00', 1, 'SOBRESTOCK', 'felipe', '2017-01-17 04:54:00', '2017-03-15 05:24:00'),
-(12, 8, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 'felipe', '2017-01-17 04:55:00', '2017-03-16 04:01:00'),
-(13, 7, 'las aventuras de tom sayer', 2, 0, 1, 5, '30.00', '60.00', 1, 'AGOTADO', 'felipe', '2017-01-17 04:57:00', '2017-01-17 06:49:00'),
-(14, 9788478887590, 'harry potter y la piedra filosofal', 4, 1, 1, 15, '100.00', '150.00', 1, 'DISPONIBLE', 'felipe', '2017-03-08 05:48:00', '2017-03-13 03:39:00'),
-(15, 9788478887613, 'harry potter y el prisionero de azkaban', 4, 5, 1, 10, '200.00', '300.00', 1, 'DISPONIBLE', 'felipe', '2017-03-12 10:26:00', '2017-03-13 03:40:00'),
-(16, 9788478887606, 'harry potter y la camara de los secretos', 4, 4, 1, 10, '150.00', '300.00', 1, 'DISPONIBLE', 'felipe', '2017-03-12 10:27:00', '2017-03-13 03:40:00'),
-(17, 9788478887446, 'harry potter y la orden del fÃ©nix', 4, 15, 1, 10, '100.00', '157.00', 1, 'SOBRESTOCK', 'felipe', '2017-04-01 01:29:00', '2017-04-01 01:29:00'),
-(18, 9781401236960, 'maid sama tomo 2', 5, 15, 1, 10, '80.00', '99.00', 3, 'SOBRESTOCK', 'felipe', '2017-04-09 12:05:00', '2017-05-05 15:23:27');
+INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `proveedor`, `stockActual`, `stockMin`, `stockMax`, `compra`, `venta`, `categoria`, `status`, `isLibro`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
+(3, 1, 'huevo grande dinosuario', 3, 0, 1, 20, '15.00', '20.00', 3, 'AGOTADO', 0, '', '0000-00-00 00:00:00', '2017-01-17 06:49:00'),
+(4, 2, 'huevo chico dinosaurio', 3, 0, 1, 10, '20.00', '25.50', 3, 'AGOTADO', 0, '', '0000-00-00 00:00:00', '2017-01-17 06:47:00'),
+(5, 3, 'animales magicos', 5, 0, 1, 0, '30.00', '50.00', 0, 'AGOTADO', 0, '', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(6, 4, 'bolsa emoji', 3, 0, 1, 30, '5.00', '10.00', 3, 'AGOTADO', 0, '', '0000-00-00 00:00:00', '2017-01-17 06:48:00'),
+(9, 9786074009811, 'ochenta melodÃ­as de pasiÃ³n en amarillo', 1, 5, 1, 10, '185.00', '250.00', 1, 'DISPONIBLE', 2, 'felipe', '2016-09-02 11:00:00', '2017-07-31 15:30:33'),
+(10, 5, 'el principito', 1, 2, 1, 4, '15.00', '25.00', 1, 'DISPONIBLE', 1, 'felipe', '2016-09-03 07:31:00', '2017-08-04 11:08:42'),
+(11, 6, 'ochenta melodias de pasiÃ³n en azul', 1, 14, 1, 10, '100.00', '180.00', 1, 'SOBRESTOCK', 6, 'felipe', '2017-01-17 04:54:00', '2017-07-31 15:36:32'),
+(12, 8, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 7, 'felipe', '2017-01-17 04:55:00', '2017-08-04 10:00:11'),
+(13, 7, 'las aventuras de tom sayer', 2, 0, 1, 5, '30.00', '60.00', 1, 'AGOTADO', 4, 'felipe', '2017-01-17 04:57:00', '2017-01-17 06:49:00'),
+(14, 9788478887590, 'harry potter y la piedra filosofal', 4, 1, 1, 15, '100.00', '150.00', 1, 'DISPONIBLE', 8, 'felipe', '2017-03-08 05:48:00', '2017-08-04 11:07:30'),
+(15, 9788478887613, 'harry potter y el prisionero de azkaban', 4, 5, 1, 10, '200.00', '300.00', 1, 'DISPONIBLE', 9, 'felipe', '2017-03-12 10:26:00', '2017-08-04 11:54:40'),
+(16, 9788478887606, 'harry potter y la camara de los secretos', 4, 15, 1, 10, '150.00', '300.00', 1, 'SOBRESTOCK', 10, 'felipe', '2017-03-12 10:27:00', '2017-08-03 12:48:06'),
+(17, 9788478887446, 'harry potter y la orden del fÃ©nix', 4, 15, 1, 10, '100.00', '157.00', 1, 'SOBRESTOCK', 12, 'felipe', '2017-04-01 01:29:00', '2017-08-04 11:05:23'),
+(18, 9781401236960, 'maid sama tomo 2', 5, 15, 1, 10, '80.00', '99.00', 3, 'SOBRESTOCK', 15, 'felipe', '2017-04-09 12:05:00', '2017-08-04 11:50:11'),
+(19, 9781401236960, 'maid sama tomo 1', 5, 3, 2, 5, '50.00', '85.00', 4, 'DISPONIBLE', 14, 'felipe', '2017-07-17 11:48:32', '2017-07-17 11:48:32');
 
 -- --------------------------------------------------------
 
@@ -1880,6 +2237,8 @@ CREATE TABLE `proveedores` (
   `codigo_proveedor` bigint(20) NOT NULL,
   `nombre_proveedor` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `contacto` varchar(50) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
+  `apellido_paterno` varchar(30) NOT NULL,
+  `apellido_materno` varchar(30) NOT NULL,
   `calle` varchar(30) CHARACTER SET utf8 COLLATE utf8_spanish_ci NOT NULL,
   `num_ext` int(5) NOT NULL,
   `num_int` varchar(5) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -1900,13 +2259,13 @@ CREATE TABLE `proveedores` (
 -- Volcado de datos para la tabla `proveedores`
 --
 
-INSERT INTO `proveedores` (`codigo_proveedor`, `nombre_proveedor`, `contacto`, `calle`, `num_ext`, `num_int`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `web`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
-(1, 'Grupo Editorial Tomo S.A de C.V', 'pamela silva', 'NicolÃ¡s San Juan', 1043, '5', 'del valle', 'benito juarez', 'CDMX', '5555750186', '6673031398', 'pamelas@grupotomo.com.mx', 'www.grupotomo.com.mx', '1', 'DISPONIBLE', '2016-08-22 10:50:00', '2017-01-16 05:57:00'),
-(2, 'librerÃ­a mÃ©xico', 'luis lopez sanchez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'luis_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-01-16 05:55:00'),
-(3, 'materiales didacticos roggers', 'maria lopez', 'av obregon', 7852, '52', 'centro', 'tlaquepalque', 'guadalajara', '5555750186', '6674568266', 'malo@hotmail.com', '', 'felipe', 'DISPONIBLE', '2017-01-17 05:36:00', '2017-01-17 05:36:00'),
-(4, 'editorial Oceano de Mexico SA de CV', 'lorena montes', 'eugenio sue', 5500, '0', 'miguel hidalgo', 'polanco chapultepec', 'CDMX', '5591785100', '', 'lorena.montes@editorialoceano.com', 'www.oceano.com.mx', 'felipe', 'DISPONIBLE', '2017-03-13 03:37:00', '2017-03-13 03:37:00'),
-(5, 'grupo editorial panini', 'juan panini', 'benito juarez', 61, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-04-09 12:05:00'),
-(6, 'mas libros s A de C v', 'silvia Rodriguez', 'av siempre viva', 6666, '', 'las vegas', 'springfield', 'chico', '6781457828', '2758152433', 'silvi@maslibros.com', '', 'felipe', 'DISPONIBLE', '2017-05-02 16:53:03', '2017-05-02 16:53:03');
+INSERT INTO `proveedores` (`codigo_proveedor`, `nombre_proveedor`, `contacto`, `apellido_paterno`, `apellido_materno`, `calle`, `num_ext`, `num_int`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `web`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
+(1, 'Grupo Editorial Tomo S.A de C.V', 'pamela silva', '', '', 'NicolÃ¡s San Juan', 1043, '5', 'del valle', 'benito juarez', 'CDMX', '5555750186', '6673031398', 'pamelas@grupotomo.com.mx', 'www.grupotomo.com.mx', '1', 'DISPONIBLE', '2016-08-22 10:50:00', '2017-01-16 05:57:00'),
+(2, 'librerÃ­a mÃ©xico', 'luis lopez sanchez', '', '', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'luis_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-01-16 05:55:00'),
+(3, 'materiales didacticos roggers', 'maria lopez', '', '', 'av obregon', 7852, '52', 'centro', 'tlaquepalque', 'guadalajara', '5555750186', '6674568266', 'malo@hotmail.com', '', 'felipe', 'DISPONIBLE', '2017-01-17 05:36:00', '2017-01-17 05:36:00'),
+(4, 'editorial Oceano de Mexico SA de CV', 'lorena montes', '', '', 'eugenio sue', 5500, '0', 'miguel hidalgo', 'polanco chapultepec', 'CDMX', '5591785100', '', 'lorena.montes@editorialoceano.com', 'www.oceano.com.mx', 'felipe', 'DISPONIBLE', '2017-03-13 03:37:00', '2017-03-13 03:37:00'),
+(5, 'grupo editorial panini', 'juan panini', '', '', 'benito juarez', 61, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-04-09 12:05:00'),
+(6, 'mas libros s A de C v', 'silvia Rodriguez', '', '', 'av siempre viva', 6666, '', 'las vegas', 'springfield', 'chico', '6781457828', '2758152433', 'silvi@maslibros.com', '', 'felipe', 'DISPONIBLE', '2017-05-02 16:53:03', '2017-05-02 16:53:03');
 
 -- --------------------------------------------------------
 
@@ -2195,12 +2554,12 @@ ALTER TABLE `ventas`
 -- AUTO_INCREMENT de la tabla `autores`
 --
 ALTER TABLE `autores`
-  MODIFY `codigo_autor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `codigo_autor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 --
 -- AUTO_INCREMENT de la tabla `categorias_producto`
 --
 ALTER TABLE `categorias_producto`
-  MODIFY `codigo_catpro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `codigo_catpro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 --
 -- AUTO_INCREMENT de la tabla `clientes`
 --
@@ -2215,12 +2574,12 @@ ALTER TABLE `deudas`
 -- AUTO_INCREMENT de la tabla `editoriales`
 --
 ALTER TABLE `editoriales`
-  MODIFY `codigo_editorial` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `codigo_editorial` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 --
 -- AUTO_INCREMENT de la tabla `empleados`
 --
 ALTER TABLE `empleados`
-  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 --
 -- AUTO_INCREMENT de la tabla `folios`
 --
@@ -2235,12 +2594,12 @@ ALTER TABLE `generos`
 -- AUTO_INCREMENT de la tabla `libros`
 --
 ALTER TABLE `libros`
-  MODIFY `codigo_libro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `codigo_libro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `codigo_producto` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `codigo_producto` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
@@ -2260,7 +2619,7 @@ ALTER TABLE `tipo_usuarios`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 --
 -- Restricciones para tablas volcadas
 --

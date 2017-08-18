@@ -1,9 +1,13 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/empleadoModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
-	session_start();
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'PHPErrorLog.php');
+	require_once(CLASES.'funciones.php');
+	require_once(MODEL.'empleadoModel.php');
+	
+	if (!isset($_SESSION)) {
+		session_start();
+	}
 		//RECIBINMOS LA OPCIÓN Y LLAMAMOS LA FUNCIÓN
 	$opc = $_POST["opc"];
 	switch ($opc) {
@@ -15,121 +19,128 @@
 			buscarEmpleados();
 		break;
 	}
-
+	
 	function guardarEmpleado(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo guardarProducto', false, true, true);
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
-			parse_str($_POST["cadena"], $_POST);
-			$sql = new EmpleadoModel();
-			$status = 'DISPONIBLE';
-			 	//CICLO PARA LLENAR VARIABLES POR POST
-			foreach ($_POST as $clave => $valor) {
-				${$clave} = trim($_POST[$clave]);
-			}
+				//ASIGNAMOS A VARIABLES
+			$empleado = json_decode($_POST['cadena']);
+			$modelo = new EmpleadoModel();
+			$resModelo = new ArrayObject();
+			$empleado->status = 'DISPONIBLE';
+			$empleado->usuario = $_SESSION['INGRESO']['nombre'];
+
+			$replace = array(
+				'(' => '',
+				')' => '',
+				'-' => '',
+				' ' => ''
+			);
+
+			$empleado->celular = strReplaceAssoc($replace,$empleado->celular);
+			$empleado->telefono = strReplaceAssoc($replace,$empleado->telefono);
 				//VALIDAMOS LA SESSION
-			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Empleado',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => EMPLEADO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Empleado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write('codRetorno Empleado:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 
-			if ($isUsu == "") {
-				$isUsu = 0;
+			if ($empleado->isUsu == "") {
+				$empleado->isUsu = 0;
 			}
 				//VALIDAMOS LOS PARAMETROS
-			if (!isset($codigoEmpleado,$nombreEmpleado,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$colonia,$ciudad,$estado,$celular,$sueldo,$puesto,$status,$_SESSION['INGRESO']['nombre'],$isUsu )) {
+			if (!isset($empleado->codigoEmpleado,$empleado->nombreEmpleado,$empleado->apellidoPaterno,$empleado->apellidoMaterno,$empleado->calle,
+				$empleado->numExt,$empleado->colonia,$empleado->ciudad,$empleado->estado,$empleado->celular,$empleado->sueldo,$empleado->puesto,
+				$empleado->status,$empleado->isUsu )) {
 				$salidaJSON = array('codRetorno' => '004',
-					'form' => 'Empleado',
+					'form' => EMPLEADO,
 					'Titulo' => 'Advertencia',
-					'Mensaje' => 'Parametros Vacios'
+					'Mensaje' => PARAM_VACIOS
 				);
-				$log->insert('Empleado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(EMPLEADO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
-				//CREAMOS EL ARRAY CON LOS DATOS
-			$datos = array($codigoEmpleado,$nombreEmpleado,$apellidoPaterno,$apellidoMaterno,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$sueldo,$puesto,$status,$isUsu,$_SESSION['INGRESO']['nombre']);
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$res = $sql->guardarEmpleado($datos);
+			$resModelo = $modelo->guardarEmpleado($empleado);
 				//SE VALIDA EL RETORNO DEL MÉTODO
-			if ($res->CodRetorno == '000') {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Empleado',
+			if ($resModelo['codRetorno'] == '000') {
+				$salidaJSON = array('codRetorno' => $resModelo['codRetorno'],
+					'form' => EMPLEADO,
 					'Titulo' => 'Éxito',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModelo['Mensaje'],
 				);
 			} else {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Empleado',
+				$salidaJSON = array('codRetorno' => $resModelo['codRetorno'],
+					'form' => EMPLEADO,
 					'Titulo' => 'Error',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModelo['Mensaje'],
 				);
 			}
-
-			$log->insert('Empleado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write('codRetorno Empleado:  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error guardarEmpleado: '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('guardarEmpleado: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;
 		}
 	}
 		//FUNCIÓN PARA BUSCAR EMPLEADO(ES)
 	function buscarEmpleados(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo buscarEmpleados!', false, true, true);
-		
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+			$modelo = new EmpleadoModel();
+			$buscarEmpleado = new ArrayObject();
 			parse_str($_POST["parametros"], $_POST);
-			$codigo = trim($_POST['codigo']);
-			$sql = new EmpleadoModel();
+
+			$buscarEmpleado->codigo = trim($_POST['codigo']);
+			$buscarEmpleado->tamanioPag = TAMANIO_PAGINACION;
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Empelado',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => EMPLEADO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Empelado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write('codRetorno Empleado:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 			
 			if (isset($_POST['partida'])) {
-				$paginaActual = $_POST['partida'];	
+				$buscarEmpleado->paginaActual = $_POST['partida'];	
 			}
 				//CALCULAMOS EL INICIO
-			if ($paginaActual <= 1){
-				$inicio = 0;
+			if ($buscarEmpleado->paginaActual <= 1){
+				$buscarEmpleado->inicio = 0;
 			} else {
-				$inicio = ($paginaActual - 1) * 5;
+				$buscarEmpleado->inicio = ($buscarEmpleado->paginaActual - 1) * 5;
 			}
 				//CARGAMOS LOS DATOS
-			$empleados = $sql->cargarEmpleados($codigo,$inicio,$paginaActual);	
+			$resModel = $modelo->cargarEmpleados($buscarEmpleado);	
 
-			if ($empleados->CodRetorno == "000") {
-				$salidaJSON = array ('codRetorno' => $empleados->CodRetorno,
-					'datos' => $empleados->Empleados,
-					'link' => $empleados->lista,
-					'form' => 'Empleado',
+			if ($resModel['codRetorno'] == "000") {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'datos' => $resModel['Empleados'],
+					'link' => $resModel['lista'],
+					'form' => EMPLEADO,
 				);
 			} else {
-				$salidaJSON = array('codRetorno' => $empleados->CodRetorno,
-					'form' => 'Empleado',
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => EMPLEADO,
 					'bus' => '1',
-					'Mensaje' => $empleados->Mensaje,
+					'Mensaje' => $resModel['Mensaje']
 				);
 			}			
-			$log->insert('Empleado CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write('codRetorno Empleado:  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error buscarEmpleados '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('buscarEmpleado: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;
 		}
 	}
 ?>

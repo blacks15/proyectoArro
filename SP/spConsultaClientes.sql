@@ -5,23 +5,24 @@ CREATE PROCEDURE spConsultaClientes (
 	IN pCodigo BIGINT,
 	IN pInicio INT,
 	IN pTamanio INT,
-	OUT CodRetorno CHAR(3),
+	OUT codRetorno CHAR(3),
 	OUT msg VARCHAR(100),
-	OUT numFilas INT
+	OUT numFilas INT,
+	OUT msgSQL VARCHAR(100)
 )
--- =============================================
+-- ======================================================
 -- Author:       	Felipe Monzón
 -- Create date: 	09/May/2017
 -- Description:   	Procedimiento para Consultar Clientes
--- =============================================
+-- ======================================================
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET CodRetorno = '002';
-		SET msg = @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -30,15 +31,15 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET CodRetorno = '002';
-		SET msg = @full_error;
+		SET codRetorno = '002';
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pInicio,'') = '' && COALESCE(pTamanio,'') = '') THEN
-		SET CodRetorno = '004';
+	IF (pTamanio = 0) THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE		
 		IF (pCodigo = 0 ) THEN
@@ -53,9 +54,9 @@ BEGIN
 				ORDER BY apellidos ASC
 				LIMIT pInicio, pTamanio;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		ELSE
@@ -69,9 +70,9 @@ BEGIN
 				WHERE matricula = pCodigo AND matricula != 1
 				ORDER BY apellidos ASC;
 				SET msg = 'SP Ejecutado Correctamente';
-				SET CodRetorno = '000'; 
+				SET codRetorno = '000'; 
 			ELSE
-				SET CodRetorno = '001'; 
+				SET codRetorno = '001'; 
 				SET msg = 'No Hay Datos Para Mostrar';
 			END IF;
 		END IF;

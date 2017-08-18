@@ -38,12 +38,12 @@
 	}	
 		//FUNCIÓN PARA INSERTAR DATOS
 	function SQL($sql,$datos){ 
-		$log = new Log("log", "../../log/");
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 			$db = new Conexion();
 				//CREAMOS LA TRAMA Y ESCRIBIMOS EN EL LOG
 			$trama = debug($sql,$datos);
-			$log->insert('trama: '.$trama, false, true, true);
+			$logger->write(' trama: '.$trama,6 );
 				//SE PREPARA Y SE EJECUTA LA sql
 			$stm = $db->prepare($sql);
 				//SE EJECUTA LA CONSULTA CON EL ARRAY DE LOS DATOS Y SE REGRESA EL ÚLTIMO ID INSERTADO
@@ -59,11 +59,12 @@
 				//RETORNAMOS LA RESPUESTA
 			return $stm;
 		} catch (Exception $e) {
-			$log->insert('Error SQL' .$e->getMessage(), false, true, true);
+			$logger->write($e->getMessage(),3 );
 		}
 	}
 		//FUNCIÓN PARA CREAR LISTA DE PAGINACIÓN
 	function paginacion($numFilas,$tamañoPagina,$paginaActual){
+		$lista = "";
 			//OBTENEMOS EL TOTAL DE PÁGINAS
 		$total_paginas  = ceil($numFilas/$tamañoPagina);
 			//CREAMOS EL APARTADO ANTERIOR
@@ -113,4 +114,8 @@
 		);
 		return $statement;
 	}	
+		//FUNCIÓN PARA REEMPLAZAR CARACTERES EN CADENA
+	function strReplaceAssoc(array $replace, $cadena) { 
+		return str_replace(array_keys($replace), array_values($replace), $cadena);    
+	} 
 ?>

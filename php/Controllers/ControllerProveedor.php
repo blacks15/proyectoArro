@@ -1,8 +1,8 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/proveedorModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
+	require_once('../Clases/Constantes.php');
+	require_once(CLASES.'PHPErrorLog.php');
+	require_once(MODEL.'proveedorModel.php');
 	session_start();
 		//RECIBINMOS LA OPCIÓN Y LLAMAMOS LA FUNCIÓN
 	$opc = $_POST["opc"];
@@ -17,120 +17,120 @@
 	}
 		//FUNCIÓN PARA GUARDAR
 	function guardarProveedor(){	
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo guardarProveedor', false, true, true);		
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
-			$sql = new ProveedorModel();
-				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
-			parse_str($_POST["cadena"], $_POST);
-			 	//DECLARACION Y ASIGNACIÓN DE VARIABLES
-			$status = 'DISPONIBLE';
-			 	//CICLO PARA LLENAR VARIABLES POR POST
-			foreach ($_POST as $clave => $valor) {
-				${$clave} = trim($_POST[$clave]);
-			}
+			//ASIGNACIÓN DE VARIABLES
+			$modelo = new ProveedorModel();
+			$resModel = new ArrayObject();
+			$proveedor = json_decode($_POST['cadena']);
+			$proveedor->usuario = $_SESSION['INGRESO']['nombre'];
 				//VALIDAMOS EL CÓDIGO
-			if ($codigoEmpresa == "") {
-				$codigoEmpresa = 0;
+			if ($proveedor->codigoEmpresa == "") {
+				$proveedor->codigoEmpresa = 0;
+			}
+			if ($proveedor->status == "") {
+				$proveedor->status = 'DISPONIBLE';
 			}
 				//VALIDAMOS LA SESSION
-			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Proveedor',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => PROVEEDOR,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Proveedor CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write('codRetorno Proveedor:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 				//VALIDAMOS LOS PARAMETROS
-			if (!isset($codigoEmpresa,$nombreEmpresa,$nombreContacto,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$email,$web,$status) ) {
+			if (!isset($proveedor->codigoEmpresa,$proveedor->nombreEmpresa,$proveedor->nombreContacto,$proveedor->apellidoPaterno,
+			$proveedor->apellidoMaterno,$proveedor->calle,$proveedor->numExt,$proveedor->colonia,$proveedor->ciudad,$proveedor->estado,
+			$proveedor->telefono,$proveedor->celular,$proveedor->email,$proveedor->web,$proveedor->status) ) {
 				$salidaJSON = array('codRetorno' => '004',
-					'form' => 'Proveedor',
+					'form' => PROVEEDOR,
 					'Titulo' => 'Advertencia',
-					'Mensaje' => 'Parametros Vacios'
+					'Mensaje' => PARAM_VACIOS
 				);
 				$log->insert('Proveedor CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
 				print json_encode($salidaJSON);
 				exit();
 			}
-				//SE CREA EL ARRAY CON LOS DATOS A INSERTAR
-			$datos = array($codigoEmpresa,$nombreEmpresa,$nombreContacto,$calle,$numExt,$numInt,$colonia,$ciudad,$estado,$telefono,$celular,$email,$web,$_SESSION['INGRESO']['nombre'],$status);
 				//EJECUTAMOS EL MÉTODO PARA GUARDAR
-			$res = $sql->guardarProveedor($datos);
+			$resModel = $modelo->guardarProveedor($proveedor);
 				//SE VALIDA EL RETORNO DEL MÉTODO
-			if ($res->CodRetorno == '000') {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Proveedor',
+			if ($resModel['codRetorno'] == '000') {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => PROVEEDOR,
 					'Titulo' => 'Éxito',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModel['Mensaje']
 				);	
 			} else {
-				$salidaJSON = array('codRetorno' => $res->CodRetorno,
-					'form' => 'Proveedor',
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => PROVEEDOR,
 					'Titulo' => 'Error',
-					'Mensaje' => $res->Mensaje,
+					'Mensaje' => $resModel['Mensaje']
 				);
 			}
-
-			$log->insert('Proveedor CodRetorno: '.$salidaJSON['codRetorno'], false, true, true);	
+			$logger->write(PROVEEDOR.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error Proveedor: '.$e->getMessage(), false, true, true);
-			print('Ocurrio un Error'.$e->getMessage());					
+			$logger->write('guardarProveedor: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;				
 		}
 	}
 		//FUNCIÓN PARA BUSCAR PROVEEDOR(ES)
 	function buscarProveedor(){
-		$log = new Log("log", "../../log/");
-		$log->insert('Entro metodo buscarProveedores!', false, true, true);
-		
+		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();		
 		try {
-				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
+				//ASIGNACIÓN DE VARIABLES
+			$modelo = new ProveedorModel();
+			$resModel = new ArrayObject();
+			$buscarProveedor = new ArrayObject();
+
 			parse_str($_POST["parametros"], $_POST);
-			$codigo = trim($_POST['codigo']);
-			$sql = new ProveedorModel();
+			$buscarProveedor->codigo = trim($_POST['codigo']);
+			$buscarProveedor->tamanioPag = TAMANIO_PAGINACION;
 				//VALIDAMOS LA SESSION
 			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Proveedor',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => PROVEEDOR,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Proveedor CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write('codRetorno Proveedor:  '.$salidaJSON['codRetorno'] , 6 );
 				print json_encode($salidaJSON);
 				exit();
 			}
 			
 			if (isset($_POST['partida'])) {
-				$paginaActual = $_POST['partida'];	
+				$buscarProveedor->paginaActual = $_POST['partida'];	
 			}
 				//CALCULAMOS EL INICIO
-			if ($paginaActual <= 1){
-				$inicio = 0;
+			if ($buscarProveedor->paginaActual <= 1){
+				$buscarProveedor->inicio = 0;
 			} else {
-				$inicio = ($paginaActual - 1) * 5;
+				$buscarProveedor->inicio = ($buscarProveedor->paginaActual - 1) * TAMANIO_PAGINACION;
 			}
 				//CARGAMOS LOS DATOS
-			$proveedores = $sql->cargarProveedores($codigo,$inicio,$paginaActual);	
+			$resModel = $modelo->cargarProveedores($buscarProveedor);	
 
-			if ($proveedores->CodRetorno == "000") {
-				$salidaJSON = array ('codRetorno' => $proveedores->CodRetorno,
-					'datos' => $proveedores->proveedores,
-					'link' => $proveedores->lista,
-					'form' => 'Proveedor',
+			if ($resModel['codRetorno'] == "000") {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'datos' => $resModel['Proveedores'],
+					'link' => $resModel['lista'],
+					'form' => PROVEEDOR
 				);
 			} else {
-				$salidaJSON = array('codRetorno' => $proveedores->CodRetorno,
-					'form' => 'Proveedor',
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'form' => PROVEEDOR,
 					'bus' => '1',
-					'Mensaje' => $proveedores->Mensaje,
+					'Titulo' => 'Error',
+					'Mensaje' => $resModel['Mensaje']
 				);
 			}			
-			$log->insert('Proveedor CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+			$logger->write(PROVEEDOR.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
-			$log->insert('Error buscarProveedores '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('buscarProveedor: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage() ) ;	
 		}
 	}
 ?>

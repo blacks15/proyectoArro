@@ -21,7 +21,6 @@
         //FUNCIÓN PARA GUARDAR LA VENTA
     function guardar_venta(){
         $log = new Log("log", "../../log/");
-		$log->insert('Entro metodo guardarVenta', false, true, true);	
         try { 
 			$i = 0;
 			$j = 0;

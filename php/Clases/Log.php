@@ -17,13 +17,13 @@
 				$append = ($clear) ? null : FILE_APPEND;
 
 				if ($backup) {
-					$result = (copy($this->path . $this->filename . ".log", $this->path . $this->filename . "_" . str_replace(" ", "_", $this->date) . "-backup.log")) ? 1 : 0;
-					$append = ($result) ? $result : FILE_APPEND;
+					//$result = (copy($this->path . $this->filename . ".log", $this->path . $this->filename . "_" . str_replace(" ", "_", $this->date) . "-backup.log")) ? 1 : 0;
+					//$append = ($result) ? $result : FILE_APPEND;
 				}
 			};
 			$log = $this->date." [ip] ". $this->ip." [text] ".$text.PHP_EOL;
 					
-			$result = (file_put_contents($this->path . $this->filename . $date . ".log", $log, $append)) ? 1 : 0;
+			$result = (file_put_contents($this->path . $this->filename . $date . ".log", $log, $append)) ? false : true;
 
 			return $result;
 		}

@@ -11,8 +11,8 @@ $(document).ready(function(){
 	actualizarCliente();
 ////////////////////////////////////////////////////
 		/**************************
-	     *		BOTONOES		  *
-	     **************************/
+	    *		BOTONOES		  *
+	    **************************/
 		//BOTÓN REFRESCAR
 	$("#btnRefresh").on('click',function(){
 		global.cargarPagina('Cliente');
@@ -23,33 +23,11 @@ $(document).ready(function(){
 	});
 		//BOTÓN GUARDAR
 	$("#btnSave").on('click',function(){
-		$(this).prop('disabled',true);
-		var cadena = $("#frmAgregarCliente").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.messajes('Advertencia','!Debe llenar Todos los Campos','warning','','','','');
-		} else {
-			if ( validarCampos() ) {  //prueba rfc = CUPU800825569
-				global.envioAjax('ControllerCliente',parametros);
-			}
-		}
-		$(this).prop('disabled',false);
+		enviarDatos();
 	});
 		//BOTÓN ACTUALIZAR
 	$("#btnUpdate").on('click',function(){
-		$(this).prop('disabled',true);
-		var cadena = $("#frmAgregarCliente").serialize();
-		var parametros = {opc: 'guardar',cadena };
-
-		if (cadena == "") {
-			global.mensajes('Advertencia','!Debe llenar Todos los Campos','warning','','','','');
-		} else {
-			if ( validarCampos() ) {  //prueba rfc = CUPU800825569
-				global.envioAjax('ControllerCliente',parametros);
-			}
-		}	
-		$(this).prop('disabled',false);
+		enviarDatos();
 	});
 		//BOTÓN BUSCAR
 	$("#btnSearch").on('click',function(e){
@@ -96,12 +74,12 @@ $(document).ready(function(){
 	});
 		//BOTÓN SIGUIENTE TAB
 	$("#btnSig").click(function() {
-		$('ul.tabs').tabs('select_tab', 'direccion');
+		nextTab('direccion');
 		$("#calle").focus();
 	});
 		//BOTÓN ANTERIOR TAB
 	$("#btnAnt").click(function() {
-		$('ul.tabs').tabs('select_tab', 'datosCliente');
+		nextTab('datosCliente');
 		$("#nombreCliente").focus();
 	});
 /////////////////////////////////////////////////////////////////////////////
@@ -319,9 +297,15 @@ $(document).ready(function(){
 		validarDatos();
 	});
 //////////////////////////////////////////////
-		/**************************
-	    *		FUNCIONES		  *
-	    **************************/
+	/**************************
+	*		FUNCIONES		  *
+	**************************/
+		//FUNCIÓN PARA AVANZAR A LA SIGUIENTE TABS
+	function nextTab(tab) {
+		$('li.tab').removeClass('disabled');
+		$('ul.tabs').tabs('select_tab', tab);
+		$('li.tab').addClass('disabled');
+	}
 		//FUNCIÓN PARA VALIDAR DATOS CORRECTOS
 	function validarCampos(){
 		var rfc = $("#rfc").val();
@@ -344,6 +328,21 @@ $(document).ready(function(){
 		} else {
 			return true;
 		}
+	}
+		//FUNCIÓN PARA ENVIAR DATOS
+	function enviarDatos(){
+		$(this).prop('disabled',true);
+		var cadena = JSON.stringify(global.json("#frmAgregarCliente"));
+		var parametros = {opc: 'guardar',cadena };
+
+		if (cadena == "") {
+			global.messajes('Advertencia','!Debe llenar Todos los Campos','warning','','','','');
+		} else {
+			if ( validarCampos() ) {  //prueba rfc = CUPU800825569
+				global.envioAjax('ControllerCliente',parametros);
+			}
+		}
+		$(this).prop('disabled',false);
 	}
 		//FUNCIÓN PARA HABILITAR BOTÓN GUARDAR
     function validarDatos(){
