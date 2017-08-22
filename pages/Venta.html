@@ -78,6 +78,67 @@
                     </table>
                 </div>
             </fieldset>
+            <!-- SE CREA LA modal  -->
+            <div id="modal2" class="modal">
+                <div class="modal-content">
+                    <div class="col s12">
+                        <fieldset>
+                            <legend class="titulo">Total a Pagar</legend>
+                            <div class="col s12">
+                                <div class="row">
+                                    <div class="col s12" style="margin-bottom: 25px;">
+                                        <ul class="tabs">
+                                            <li class="tab col s6"><a href="#metodoPago" class="active">Método de Pago</a></li>
+                                            <li class="tab col s5"><a href="#pagar">Pagar</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div id="metodoPago" class="col s12">
+                                    <div class="row">
+                                        <div class="col s10 m6 offset-m4">
+                                            <div class="row">
+                                                <div class="col s5">
+                                                    <label for="metPago">Método de pago</label>
+                                                    <select class="browser-default" id="metPago" name="metPago">
+                                                        <option value="0">SELECCIONE</option>
+                                                        <option value="1">EFECTVO</option>
+                                                        <option value="2">TARJETA</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col s5" id="folTarj">
+                                                    <label for="textfield">Folio Tarjeta</label>
+                                                    <input type="text" name="folioTarjeta" id="folioTarjeta" maxlength="20">
+                                                </div>
+                                                <div class="col s2">
+                                                    <button type="button" id="btnSig" class="arrow_right btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_forward</i>
+                                                </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="pagar" class="col s12">
+                                    <div class="row">
+                                        <div class="col s12 m6 offset-m3">
+                                            <div class="col s3" style="margin-top: 15px;">
+                                                <button type="button" id="btnAnt" class="btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
+                                            </button>
+                                            </div>
+                                            <div class="col s5">
+                                                <label for="total">Total</label>
+                                                <input type="text" id="total" name="total" readonly="true" class="swal2-input">
+                                            </div>
+                                            <div class="col s3">
+                                                <button type="button" id="btnSave" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
         </form>
         <!-- SE CREA LA modal  -->
         <div id="modal" class="modal modal-fixed-footer">
@@ -112,67 +173,6 @@
                                         <div class="col s3">
                                             <label for="textfield">Subtotal</label>
                                             <input type="text" name="subtotal" id="subtotal" readonly="true">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
-        </div>
-        <!-- SE CREA LA modal  -->
-        <div id="modal2" class="modal">
-            <div class="modal-content">
-                <form class="col s12">
-                    <fieldset>
-                        <legend class="titulo">Total a Pagar</legend>
-                        <div class="col s12">
-                            <div class="row">
-                                <div class="col s12" style="margin-bottom: 25px;">
-                                    <ul class="tabs">
-                                        <li class="tab col s6"><a href="#metodoPago" class="active">Método de Pago</a></li>
-                                        <li class="tab col s5"><a href="#pagar">Pagar</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div id="metodoPago" class="col s12">
-                                <div class="row">
-                                    <div class="col s10 m6 offset-m4">
-                                        <div class="row">
-                                            <div class="col s5">
-                                                <label for="metPago">Método de pago</label>
-                                                <select class="browser-default" id="metPago" name="metPago">
-												    <option value="0">SELECCIONE</option>
-                                                    <option value="1">EFECTVO</option>
-												    <option value="2">TARJETA</option>
-												</select>
-                                            </div>
-                                            <div class="col s5" id="folTarj">
-                                                <label for="textfield">Folio Tarjeta</label>
-                                                <input type="text" name="folioTarjeta" id="folioTarjeta" maxlength="20">
-                                            </div>
-                                            <div class="col s2">
-                                                <button type="button" id="btnSig" class="arrow_right btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_forward</i>
-											</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="pagar" class="col s12">
-                                <div class="row">
-                                    <div class="col s12 m6 offset-m3">
-                                        <div class="col s3" style="margin-top: 15px;">
-                                            <button type="button" id="btnAnt" class="btn-floating blue darken-4 waves-effect waves-light"><i class="material-icons">arrow_back</i>
-										</button>
-                                        </div>
-                                        <div class="col s5">
-                                            <label for="total">Total</label>
-                                            <input type="text" id="total" name="total" readonly="true" class="swal2-input">
-                                        </div>
-                                        <div class="col s3">
-                                            <button type="button" id="btnSave" class="icon-save btn-large btn-floating blue darken-4 waves-effect waves-light"></button>
                                         </div>
                                     </div>
                                 </div>

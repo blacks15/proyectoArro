@@ -1,7 +1,7 @@
 <?php 
-require_once('../Clases/funciones.php');
-require_once('../Clases/Producto.php');
-require_once('../Models/productoModel.php');
+require_once(CLASES.'funciones.php');
+require_once(CLASES.'Producto.php');
+require_once(MODEL.'productoModel.php');
 /*	
 	Clase: Model vENTAS
 	Autor: Felipe Monzón
@@ -9,51 +9,58 @@ require_once('../Models/productoModel.php');
 */
 class VentaModel {
     public function listarProductos(){
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog(); 
         try {
-            $c = 0;
             $a = 1;
-            $productosList = new ArrayObject();
+            $productosList = array();
+            $buscarProducto = new ArrayObject();
             $productosModel = new ProductoModel();
-            $inventario = $productosModel->cargarProductos('0',$c,'5','0');   
 
-            $total  = ceil($inventario->numFilas/5);
+            $buscarProducto->codigo = '0';
+            $buscarProducto->inicio = '0';
+            $buscarProducto->tamanioPag = TAMANIO_PAGINACION;
+            $buscarProducto->tipoBusqueda = '0';
+            $buscarProducto->paginaActual = '0';
 
-            for ($i = 1; $i <= $total ; $i++) {     
-                foreach ($inventario->Productos as $key => $value) {
-                    $producto = new Producto();
+            $inventario = $productosModel->cargarProductos($buscarProducto);   
 
-                    $producto->setCodigo($value['id']);
-                    $producto->setCodigoBarras($value['codigoBarras']);
-                    $producto->setNombreProducto($value['nombreProducto']);
-                    $producto->setStockAct($value['stActual']);
-                    $producto->setStockMax($value['stMax']);
-                    $producto->setPrecioVenta($value['venta']);
-                    $producto->setStatus($value['status']);
+            $total  = ceil($inventario['numFilas']/TAMANIO_PAGINACION);
 
-                    $productosList[$a] = $producto;
+            for ($i = 1; $i <= $total ; $i++) {
+                foreach ($inventario['Productos'] as $value) {
+                    $productosList[$a] = array('codigo' => $value['codigoProducto'],
+                        'codigoBarras' => $value['codigoBarras'],
+                        'nombreProducto' => $value['nombreProducto'],
+                        'stockAct' => $value['stActual'],
+                        'stMax' => $value['stMax'],
+                        'precioVenta' => $value['venta'],
+                        'status' => $value['status']
+                    );
                     $a++;
                 }
 
-                $c = $c + 5;
-                $inventario = $productosModel->cargarProductos('0',$c,'5','0');  
+                $buscarProducto->inicio = $buscarProducto->inicio + TAMANIO_PAGINACION;
+                $inventario = $productosModel->cargarProductos($buscarProducto);  
             }
 
             return $productosList;
         } catch (Exception $e) {
-            $log->insert('Error validarStock '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
+            $logger->write('guardarVenta: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
         }
     }
 
     public function guardarVenta($venta,$detalleVenta,$stock){
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
         try {
             	//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if ($venta == "" || $detalleVenta == "" || $stock == "") {
-				$retorno->CodRetorno = '004';
-				$retorno->Mensaje = 'Parametros Vacios';
+			if (empty($venta) || empty($detalleVenta) || empty($stock) ) {
+				$retorno = array('codRetorno' => '004',
+                    'form' => VENTA,
+                    'mensaje' => PARAM_VACIOS
+                );
 
 				return $retorno;
-				exit();
 			}
 
             $stm = $this->insertaVenta($venta);
@@ -95,8 +102,8 @@ class VentaModel {
 
             return $retorno;
         } catch(Exception $e) {
-            $log->insert('Error cargarProveedores '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
+            $logger->write('guardarVenta: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
         }
     }
 
@@ -131,9 +138,17 @@ var_dump($stm);
     private function insertaVenta($venta){
         $datos = array($venta->getFolio(),$venta->getCajero(),$venta->getCliente(),$venta->getTotal(),$venta->getMetodoPago(),$venta->getFolioTarjeta(),$venta->getStatus(),$_SESSION['INGRESO']['nombre'] );
 
-        $consulta = "CALL spInsVenta(?,?,?,?,?,?,?,?,@codRetorno,@msg)";
+        $sql = "CALL spInsVenta(:folio,:cajero,:cliente,:total,:metodoPago,:foliotarjeta,:status,:usuario,:bandera,@codRetorno,@msg,@msgSQL)";
 
         $stm = executeSP($consulta,$datos);
+
+        try{
+            $sql = "";
+			$db = new Conexion();
+        } catch(Exception $e){
+            $logger->write('guardarVenta: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
+        }
 
         return $stm;
     }

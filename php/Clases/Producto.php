@@ -17,7 +17,8 @@ class Producto {
 	private $categoria;
 	private $status;
 
-	function __construct($codigo,$codigoBarras,$nombre_producto,$proveedor,$stockMin,$stockMax,$stockAct,$precioCompra,$precioVenta,$categoria,$status){
+    function __construct($codigo = null,$codigoBarras = null,$nombre_producto = null,$proveedor = null,$stockMin = null,
+    $stockMax = null,$stockAct = null,$precioCompra = null,$precioVenta = null,$categoria = null,$status = null){
 		$this->codigo = $codigo;
 		$this->codigoBarras = $codigoBarras;
 		$this->nombre_producto = $nombre_producto;

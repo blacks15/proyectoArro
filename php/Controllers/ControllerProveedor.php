@@ -16,7 +16,7 @@
 		break;
 	}
 		//FUNCIÓN PARA GUARDAR
-	function guardarProveedor(){	
+	function guardarProveedor(){
 		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 			//ASIGNACIÓN DE VARIABLES
@@ -28,7 +28,8 @@
 			if ($proveedor->codigoEmpresa == "") {
 				$proveedor->codigoEmpresa = 0;
 			}
-			if ($proveedor->status == "") {
+
+			if (!isset($proveedor->status)) {
 				$proveedor->status = 'DISPONIBLE';
 			}
 				//VALIDAMOS LA SESSION
@@ -50,7 +51,7 @@
 					'Titulo' => 'Advertencia',
 					'Mensaje' => PARAM_VACIOS
 				);
-				$log->insert('Proveedor CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);	
+				$logger->write(PROVEEDOR.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}

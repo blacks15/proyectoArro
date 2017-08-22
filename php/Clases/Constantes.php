@@ -31,6 +31,9 @@ const EMPLEADO = 'Empleado';
 const CLIENTE = 'Cliente';
     //PROVEEDOR
 const PROVEEDOR = 'Proveedor';
+    //VENTA
+const VENTA = 'Venta';
+const PRODUCTO_INSUFICIENTE = 'Producto insuficiente para la venta';
     //LLAMADA SP'S
 const SP_INSUPDEDITORIAL= "CALL spInsUpdEditorial(:codigoEditorial,:nombreEditorial,:usuario,:status,@codRetorno,@msg,@msgSQL,@id)";
 const SP_INSUPDAUTOR = "CALL spInsUpdAutor(:codigoAutor,:nombreAutor,:usuario,:status,@codRetorno,@msg,@msgSQL,@id)";

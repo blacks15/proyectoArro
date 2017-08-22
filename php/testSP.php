@@ -1,44 +1,42 @@
 <?php
 
-	phpinfo();
-
-
-
-
-
-	//require_once('clases/Conexion.php');
-	// $db = new Conexion();
+	//phpinfo();
+	require_once('clases/Conexion.php');
+	$db = new Conexion();
 	// $p = '';
 	// $datos = array($p);
 
-	// $result = array();
+	$result = new ArrayObject();
 
-	// $editorial = new ArrayObject();
-	// $retorno = new ArrayObject();
+	$editorial = new ArrayObject();
+	$retorno = new ArrayObject();
 
-	// $editorial->nombreditorial = 'oceano';
-	// $editorial->usuario = 'felipe';
-	// $editorial->status = 'DISPONIBLE';
+	$editorial->nombreditorial = '0';
+	$editorial->usuario = '0';
+	$editorial->status = '5';
+	$editorial->bus = '0';
 
-	// $sql = "CALL spInsEditorial(?,?,?,@codRetorno,@msg,@msgSQL)";
+	$sql = "CALL spConsultaProductos(?,?,?,?,@codRetorno,@msg,@numFilas,@msgSQL)";
 
-	// $stm = $db->prepare($sql);
+	$stm = $db->prepare($sql);
 
-	// $stm->bindParam(1,$editorial->nombreditorial,PDO::PARAM_STR);
-	// $stm->bindParam(2,$editorial->usuario,PDO::PARAM_STR);
-	// $stm->bindParam(3,$editorial->status,PDO::PARAM_STR);
+	$stm->bindParam(1,$editorial->nombreditorial,PDO::PARAM_INT);
+	$stm->bindParam(2,$editorial->usuario,PDO::PARAM_INT);
+	$stm->bindParam(3,$editorial->status,PDO::PARAM_INT);
+	$stm->bindParam(4,$editorial->bus,PDO::PARAM_INT);
 
-	// $stm->execute();
-	// //var_dump($stm);
-	// //$result = $stm->fetchAll(PDO::FETCH_ASSOC);
+	$stm->execute();
+	//var_dump($stm);
+	$result->prod = $stm->fetchAll(PDO::FETCH_ASSOC);
 	// $retorno->id = $db->lastInsertId();
-	// $stm->closeCursor();
-
+	$stm->nextRowSet();
+	//$stm->closeCursor();
+	$result->lib = $stm->fetchAll(PDO::FETCH_ASSOC);
 	// $retorno->codRetorno = $db->query('SELECT @CodRetorno AS codRetorno')->fetch(PDO::FETCH_ASSOC);
 	// $retorno->Mensaje = $db->query('SELECT @msg AS msg')->fetch(PDO::FETCH_ASSOC);
 	// $retorno->msgSQL = $db->query('SELECT @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
 
-	// print_r($retorno);
+	print_r($result);
 	
 	// $encrypta = encrypta("123456");
 	// //$result = $stm->fetchAll(PDO::FETCH_ASSOC);

@@ -10,8 +10,10 @@ CREATE PROCEDURE spInsVenta (
     IN pFolioTarjeta INT,
     IN pStatus CHAR(15),
     IN pUsuario CHAR(15),
-    OUT CodRetorno CHAR(3),
-    OUT msg VARCHAR(100)
+    IN pBandera INT,
+    OUT codRetorno CHAR(3),
+    OUT msg VARCHAR(100),
+    OUT msgSQL VARCHAR(100)
 )
 -- ======================================================
 -- Author:              Felipe Monzón
@@ -24,8 +26,8 @@ BEGIN
         GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
         @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
         SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-        SET CodRetorno = '002';
-        SET msg = @full_error;
+        SET codRetorno = '002';
+        SET msgSQL = @full_error;
         RESIGNAL;
         ROLLBACK;
     END; 
@@ -35,29 +37,44 @@ BEGIN
         GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
         @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
         SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-        SET CodRetorno = '002';
-        SET msg = @full_error;
+        SET codRetorno = '002';
+        SET msgSQL = @full_error;
         SHOW WARNINGS LIMIT 1;
         RESIGNAL;
         ROLLBACK;
     END;
 
-    IF (pFolio = 0 || pNumEmpleado = 0 || pNumCliente = 0 || pTotal = 0.00 || pIsTarjeta = 0 || pStatus = '' || pUsuario = '') THEN
-        SET CodRetorno = '004';
+    IF (pFolio = 0 || pNumEmpleado = 0 || pNumCliente = 0 || pTotal = 0.00 || pIsTarjeta = 0 || pStatus = '' || pUsuario = '' || pBandera = 0) THEN
+        SET codRetorno = '004';
         SET msg = 'Parametros Vacios';
     ELSE 
-        IF NOT EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN 
-            START TRANSACTION;
-                INSERT INTO ventas (folio,fecha_venta,empleado,cliente,total,isTarjeta,folioTarjeta,status,usuario,fechaCreacion,fechaModificacion) 
-                VALUES (pFolio, NOW(), pNumEmpleado, pNumCliente, pTotal, pIsTarjeta, pFolioTarjeta, pStatus, pUsuario, NOW(), NOW());
-                CALL spUpdFolios('ventas',@codRetorno,@msg);
-                SET CodRetorno = '000';
-                SET msg = 'SP Ejecutado con Exito';
-            COMMIT; 
+        IF (pBandera = 1) THEN
+            IF NOT EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN 
+                START TRANSACTION;
+                    INSERT INTO ventas (folio,fecha_venta,empleado,cliente,total,isTarjeta,folioTarjeta,status,usuario,fechaCreacion,fechaModificacion) 
+                    VALUES (pFolio, NOW(), pNumEmpleado, pNumCliente, pTotal, pIsTarjeta, pFolioTarjeta, pStatus, pUsuario, NOW(), NOW());
+                    CALL spUpdFolios('ventas',@codRetorno,@msg);
+                    SET codRetorno = '000';
+                    SET msg = 'SP Ejecutado con Exito';
+                COMMIT; 
+            ELSE
+                SET codRetorno = '001';
+                SET msg = 'El Folio ya fue Registrado';
+                ROLLBACK;  
+            END IF;
         ELSE
-            SET CodRetorno = '001';
-            SET msg = 'El Folio ya fue Registrado';
-            ROLLBACK;  
+            IF EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN
+                START TRANSACTION; 
+                    DELETE FROM ventas WHERE folio = pFolio;
+                    CALL spDelFolios('ventas',@codRetorno,@msg);
+                    SET codRetorno = '000';
+                    SET msg = 'SP Ejecutado Correctamente';
+                COMMIT; 
+            ELSE 
+                SET codRetorno = '001';
+                SET msg = 'El Folio No Existe';
+                ROLLBACK;
+            END IF;
         END IF;
     END IF;
 END$$

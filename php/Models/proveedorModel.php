@@ -7,14 +7,14 @@ require_once(CLASES.'funciones.php');
 	Fecha: 02-MAY-2017
 */
 class ProveedorModel {
-	public function guardarProveedor($proveedores) {
+	public function guardarProveedor($proveedor) {
 		$logger = new PHPTools\PHPErrorLog\PHPErrorLog();
 		try {
 			$sql = "";
 			$retorno = array();
 			$db = new Conexion();
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if (empty($proveedores) ) {
+			if (empty($proveedor) ) {
 				$retorno = array( 'codRetorno' => '004',
 					'Mensaje' => PARAM_VACIOS
 				);
@@ -25,23 +25,23 @@ class ProveedorModel {
 			$sql = SP_INSUPDPROVEEDORES;
 			
 			$stm = $db->prepare($sql);	
-			$stm->bindParam(':codigoCliente',$cliente->codigoEmpresa,PDO::PARAM_INT);
-			$stm->bindParam(':nombreEmpresa',$cliente->nombreEmpresa,PDO::PARAM_STR);
-			$stm->bindParam(':nombreContacto',$cliente->nombreContacto,PDO::PARAM_STR);
-			$stm->bindParam(':apellidoPaterno',$cliente->apellidoPaterno,PDO::PARAM_STR);
-			$stm->bindParam(':apellidoMaterno',$cliente->apellidoMaterno,PDO::PARAM_STR);
-			$stm->bindParam(':calle',$cliente->calle,PDO::PARAM_STR);
-			$stm->bindParam(':numExt',$cliente->numExt,PDO::PARAM_INT);
-			$stm->bindParam(':numInt',$cliente->numInt,PDO::PARAM_INT);
-			$stm->bindParam(':colonia',$cliente->colonia,PDO::PARAM_STR);
-			$stm->bindParam(':ciudad',$cliente->ciudad,PDO::PARAM_STR);
-			$stm->bindParam(':estado',$cliente->estado,PDO::PARAM_STR);
-			$stm->bindParam(':telefono',$cliente->telefono,PDO::PARAM_INT);
-			$stm->bindParam(':celular',$cliente->celular,PDO::PARAM_INT);
-			$stm->bindParam(':email',$cliente->email,PDO::PARAM_INT);
-			$stm->bindParam(':web',$cliente->web,PDO::PARAM_STR);
-			$stm->bindParam(':status',$cliente->status,PDO::PARAM_STR);
-			$stm->bindParam(':usuario',$cliente->usuario,PDO::PARAM_STR);
+			$stm->bindParam(':codigoCliente',$proveedor->codigoEmpresa,PDO::PARAM_INT);
+			$stm->bindParam(':nombreEmpresa',$proveedor->nombreEmpresa,PDO::PARAM_STR);
+			$stm->bindParam(':nombreContacto',$proveedor->nombreContacto,PDO::PARAM_STR);
+			$stm->bindParam(':apellidoPaterno',$proveedor->apellidoPaterno,PDO::PARAM_STR);
+			$stm->bindParam(':apellidoMaterno',$proveedor->apellidoMaterno,PDO::PARAM_STR);
+			$stm->bindParam(':calle',$proveedor->calle,PDO::PARAM_STR);
+			$stm->bindParam(':numExt',$proveedor->numExt,PDO::PARAM_INT);
+			$stm->bindParam(':numInt',$proveedor->numInt,PDO::PARAM_INT);
+			$stm->bindParam(':colonia',$proveedor->colonia,PDO::PARAM_STR);
+			$stm->bindParam(':ciudad',$proveedor->ciudad,PDO::PARAM_STR);
+			$stm->bindParam(':estado',$proveedor->estado,PDO::PARAM_STR);
+			$stm->bindParam(':telefono',$proveedor->telefono,PDO::PARAM_INT);
+			$stm->bindParam(':celular',$proveedor->celular,PDO::PARAM_INT);
+			$stm->bindParam(':email',$proveedor->email,PDO::PARAM_STR);
+			$stm->bindParam(':web',$proveedor->web,PDO::PARAM_STR);
+			$stm->bindParam(':status',$proveedor->status,PDO::PARAM_STR);
+			$stm->bindParam(':usuario',$proveedor->usuario,PDO::PARAM_STR);
 			
 			$stm->execute();
 			$stm->closeCursor();

@@ -125,6 +125,7 @@ class ProductoModel {
 			$db = new Conexion();
 			$productos = array();
 			$datos = new ArrayObject();
+			$datosLib = new ArrayObject();
 				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
 			if ( empty($buscarProducto) ) {
 				$retorno = array( 'codRetorno' => '004',
@@ -144,6 +145,9 @@ class ProductoModel {
 
 			$stm->execute();
 			$datos = $stm->fetchAll(PDO::FETCH_ASSOC);
+			$stm->nextRowSet();
+			$datosLib = $stm->fetchAll(PDO::FETCH_ASSOC);
+			$datos = array_merge($datos,$datosLib);
 			$stm->closeCursor();
 			
 			$error = $stm->errorInfo();
@@ -223,6 +227,7 @@ class ProductoModel {
 				}
 					//ASIGNAMOS DATOS AL RETORNO
 				$retorno['Productos'] = $productos;
+				$retorno['Productos'] = array_merge($retorno['Productos'],$libros);
 				$retorno['Libros'] = $libros;
 			}
 

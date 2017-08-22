@@ -1,7 +1,7 @@
 $(document).ready(function() {
     $("#user-name").html(sessionStorage.usuario);
     $("#tipoUsuario").val(sessionStorage.tipo);
-    global.cargarPagina("Cliente");
+    global.cargarPagina("Venta");
     /*if ($("#tipoUsuario").val() != 1) {
         global.cargarPagina("Inicio");
     } else {

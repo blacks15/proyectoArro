@@ -80,7 +80,7 @@
 					'form' => PRODUCTO,
 					'Mensaje' => SESSION_CADUCADA
 				);
-				$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
+				$logger->write(PRODUCTO.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
@@ -91,7 +91,7 @@
 					'Titulo' => 'Advertencia',
 					'Mensaje' => PARAM_VACIOS
 				);
-				$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
+				$logger->write(PRODUCTO.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
 				exit();
 			}
@@ -127,7 +127,7 @@
 					'Mensaje' => $resModel['Mensaje']
 				);
 			}
-			$logger->write(PRODUCTO.'codRetorno :  '.$salidaJSON['codRetorno'] , 6 );		
+			$logger->write(PRODUCTO.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );		
 			print json_encode($salidaJSON);
 		} catch (Exception $e) {
 			$logger->write('guardarProducto: '.$e->getMessage() , 3 );

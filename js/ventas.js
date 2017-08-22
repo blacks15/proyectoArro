@@ -118,7 +118,7 @@ $(document).ready(function() {
         select: function(event, ui) {
             if (ui.item.value != "") {
                 $('#codigoCliente').val(ui.item.id);
-            } 
+            }
             return ui.item.label;
         },
         response: function(event, ui) {

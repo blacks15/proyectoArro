@@ -14,7 +14,7 @@ class Venta {
 	private $folioTarjeta;
 	private $status;
 
-	function __construct($folio,$fecha,$cajero,$cliente,$total,$metodoPago,$folioTarjeta,$status){
+	function __construct($folio = null,$fecha = null,$cajero = null,$cliente = null,$total = null,$metodoPago = null,$folioTarjeta = null,$status = null){
 		$this->folio = $folio;
 		$this->fecha = $fecha;
 		$this->cajero = $cajero;
