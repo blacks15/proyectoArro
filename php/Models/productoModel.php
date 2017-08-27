@@ -1,6 +1,6 @@
 <?php 
-require_once(CLASES.'funciones.php');
 require_once(CLASES.'Combo.php');
+require_once(CLASES.'funciones.php');
 require_once(MODEL.'libroModel.php');
 /*	
 	Clase: Model Proveedor
@@ -238,41 +238,52 @@ class ProductoModel {
 		}
 	}
 
-	public function stock($codigo,$stockActual,$status){
-		$productos = new ArrayObject();
-		$i = 0;
-		try {
-				//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if ($codigo == "" || $stockActual == "" || $status == "") {
-				$retorno->CodRetorno = '004';
-				$retorno->Mensaje = 'Parametros Vacios';
+    public function updStock($stock){
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
+        try {
+            $db = new Conexion();
+            $sql = SP_UPD_STOCK;
+            
+            $stm = $db->prepare($sql);
 
-				return $retorno;
-				exit();
+            $stm->bindParam(':codigoProducto',$stock['codigoProducto'],PDO::PARAM_INT);
+			$stm->bindParam(':stockActual',$stock['stock'],PDO::PARAM_INT);
+            $stm->bindParam(':status',$stock['status'],PDO::PARAM_STR);
+            
+            $stm->execute();			
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
+
+			if ($error[2] != "") {
+				$logger->write('spUpdStock: '.$error[2], 3 );
 			}
 
-			$datos = array($codigo,$stockActual,$status);
-			$consulta = "CALL spUpdStock(?,?,?,@CodRetorno,@msg)";
-				//EJECUTAMOS LA CONSULTA
-			$stm = SP ($consulta,$datos);
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spUpdStock:  '.$retorno['codRetorno'] ,6 );
 
-			if ($stm->codRetorno[0] == '000') { 
-				$retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = $stm->Mensaje[0];
-			} else {
-				$retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = $stm->Mensaje[0];
-			} 
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spUpdStock: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
+			}
+
+			$db = null;
 
 			return $retorno;
-		} catch (Exception $e) {
-			$logger->write('stock: '.$e->getMessage() , 3 );
-			print('Ocurrio un Error'.$e->getMessage());
-		}
-	}
+        } catch (Exception $e){
+            $logger->write('guardarVenta: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
+        }
+    }
 
 		//FUNCIÓN PARA CALCULAR STATUS
-	private function calculaStatus($stActual,$stMax){
+	public function calculaStatus($stActual,$stMax){
 		if ($stActual <= 0) {
 			$status = 'AGOTADO';
 		} else if ($stActual > $stMax) {

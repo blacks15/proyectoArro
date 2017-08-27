@@ -1,33 +1,72 @@
 <?php 
-require_once('../Clases/funciones.php');
+require_once(CLASES.'funciones.php');
 /*
 	Clase: Movimientos Model
 	Autor: Felipe Monzón
 	Fecha: 18-May-2017
 */
 class MovimientosModel {
-    public function recuperarFolio($nombre,$id){
+    public function recuperarFolio($retiro){
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
         try {
-            $datos = array($nombre,$id);
-            $consulta = "CALL spRecuperaFolio(?,?,@codRetorno,@msg)";
+            $sql = "";
+            $db = new Conexion();
+            $datos = new ArrayObject();
+             	//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
+			if (empty($retiro->tabla) || empty($retiro->idEmpleado) ) {
+				$retorno = array('codRetorno' => '004',
+                    'form' => VENTA,
+                    'Mensaje' => PARAM_VACIOS
+                );
 
-            $stm = executeSP($consulta,$datos);
+				return $retorno;
+            }
+            
+            $sql = SP_RECUPERA_FOLIO;
+            $stm = $db->prepare($sql);
 
-            if ($stm->codRetorno[0] == '000') {
-                $retorno->CodRetorno = $stm->codRetorno[0];
-                $retorno->Datos = $stm->datos;
-            } else if ($stm->codRetorno[0] == '001') {
-                $retorno->CodRetorno = $stm->codRetorno[0];
-                $retorno->Mensaje = $stm->Mensaje[0];
-            } else {
-                $retorno->CodRetorno = '002';
-                $retorno->Mensaje = 'Ocurrio un Error';
+            $stm->bindParam(':tabla',$retiro->tabla,PDO::PARAM_STR);
+            $stm->bindParam(':codigoEmpelado',$retiro->idEmpleado,PDO::PARAM_INT);
+            
+            $stm->execute();
+            $datos = $stm->fetchAll(PDO::FETCH_ASSOC);            
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
+
+			if ($error[2] != "") {
+				$logger->write('spRecuperaFolio: '.$error[2], 3 );
+			}
+
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spRecuperaFolio:  '.$retorno['codRetorno'] ,6 );
+
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spRecuperaFolio: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
+			}
+
+            if ($retorno['codRetorno'] == '000') {
+                foreach ($datos as $value) {
+                    $datosFolio = array('folio' => $value['folio'],
+                        'nombreEmpleado' => $value['nombreEmpleado']);
+                }
+
+                $retorno['DatosFolio'] = $datosFolio;
             }
 
-            return $retorno;
+			$db = null;
+
+			return $retorno;
         } catch (Exception $e) {
-			$log->insert('Error recuperarFolio '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());
+			$logger->write('RecuperaFolio: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
 		}
     }
 

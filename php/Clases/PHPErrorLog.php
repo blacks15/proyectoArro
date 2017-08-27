@@ -32,13 +32,13 @@ class PHPErrorLog {
 		$emails      = $this->validaEmails($destination);
 		$headers     = $this->validarHeaders($headers,$destination);
 		$destination = '../../LOG/log.log';
+		$folder = '../../LOG';
 
-		if (!!$message){
+		if (!!$message) {
 			array_push($arguments, $message);
-
 			if (!!$emails) {
 				array_push($arguments,1,$emails,$headers);
-			} else if ($this->isFile($destination)) {
+			} else if ($this->isFile($destination,$folder)) {
 				array_push($arguments,3,$destination);
 			} else {
 				$args = explode("]",$arguments[0]);
@@ -82,7 +82,11 @@ class PHPErrorLog {
 	 * @param  string  $file Cadena de texto a evaluar
 	 * @return boolean       Devuelve TRUE si es un archivo valido o FALSE en caso contrario
 	 */
-	private function isFile($file) {
+	private function isFile($file,$folder) {
+		if (!is_dir($folder)) {
+			mkdir($folder, 0777);
+		}
+
 		if (!!file_exists($file)) {
 			if (!!is_writable($file)) {
 				return true;

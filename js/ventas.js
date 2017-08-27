@@ -28,18 +28,12 @@ $(document).ready(function() {
     });
     //BOTÓN PAGAR
     $("#btnSave").on('click', function() {
-        var datos = $("#datos").tableToJSON();
-        var folio = $("#folio").val();
-        var metPago = $("#metPago").val();
-        var folTarj = $("#folioTarjeta").val();
-        var total = $("#total").val();
-        var cliente = $("#codigoCliente").val();
-        var id = $("#codigoEmpleado").val();
-        var datos = JSON.stringify(datos);
+        var datos = JSON.stringify($("#datos").tableToJSON());
+        var cadena = JSON.stringify(global.json("#frmAgregarVenta"));
 
-        var parametros = { opc: 'guardar', datos: datos, metodo: metPago, folTarj: folTarj, folio: folio, total: total, id: id, cliente: cliente };
+        var parametros = { opc: 'guardar', datos, cadena };
 
-        if (datos == "" && folio == "" && metPago == "") {
+        if (datos == "" || cadena == "") {
             global.messajes('Error', '!Debe llenar Todos los Campos', 'warning', '', '', '', '');
         } else {
             global.envioAjax('ControllerVenta', parametros);
@@ -171,7 +165,7 @@ $(document).ready(function() {
      **************************/
     //FUNCIÓN PARA RECUPERAR EL FOLIO ACTUAL
     function recuperarFolio() {
-        var datos = global.cargaFolio('ControllerMovimientos', 'recuperaFolio', 'ventas');
+        var datos = global.cargaFolio('ControllerVenta', 'filtroVentas', 'ventas');
         if (datos.codRetorno = '000') {
             $("#folio").val(datos.folio);
             $("#nombreEmpleado").val(datos.nombreEmpleado);
@@ -278,7 +272,7 @@ $(document).ready(function() {
         limpiarCampos();
         habilitar();
 
-        data.clear;
+        data.length = 0
         $("#agregar").prop('disabled', true);
         $("#quitar").prop('disabled', true);
         $("#btnPagar").prop('disabled', false);

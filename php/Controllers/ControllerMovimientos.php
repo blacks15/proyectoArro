@@ -1,8 +1,8 @@
 <?php 
 	header('Content-Type: application/json');
-	require_once('../Models/movimientosModel.php');
-	include "../Clases/Log.php";
-	error_reporting(0);
+	require_once('../Clases/Constantes.php');
+	require_once(MODEL.'movimientosModel.php');
+	require_once(CLASES.'PHPErrorLog.php');
 	session_start();
 
 	$opc = $_POST["opc"];
@@ -25,55 +25,54 @@
 	}
 		//FUNCIÓN FILTRO 
     function filtroRetiro(){
-        $log = new Log("log", "../../log/");
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
         try {
 				//RECIBIMOS EL SERIALIZE() Y LO ASIGNAMOS A VARIABLES
 			parse_str($_POST["parametros"], $_POST);
-			$tipo =	 trim($_POST['codigo']);
-            $sql = new MovimientosModel();
+			$retiro = new ArrayObject();
+            $modelo = new MovimientosModel();
+			$retiro->tabla = trim($_POST['codigo']);
+			$retiro->idEmpleado = $_SESSION['INGRESO']['id'];
             	//VALIDAMOS LA SESSION
-			if (!isset($_SESSION) || empty($_SESSION['INGRESO'])) {
+			if (!isset($_SESSION) || empty($_SESSION['INGRESO']) ) {
 				$salidaJSON = array('codRetorno' => '003',
-					'form' => 'Retiro',
-					'Mensaje' => 'Sesión Caducada'
+					'form' => RETIRO,
+					'Mensaje' => SESSION_CADUCADA
 				);
-				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+				$logger->write(RETIRO.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
-				exit();
-			}
+			}  
 				//VALIDMOS LOS PERMISOS
 			if ($_SESSION['INGRESO']['tipo'] != 1 && $_SESSION['INGRESO']['tipo'] != 2) {
 				$salidaJSON = array('codRetorno' => '005',
 					'form' => 'Inicio',
 					'bus' => '1',
-					'Mensaje' => 'No Cuenta con los permisos necesarios'
+					'Mensaje' => SIN_PERMISOS
 				);
-				$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno'] , false, true, true);
+				$logger->write(RETIRO.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 				print json_encode($salidaJSON);
-				exit();
 			} 
 
-            $folio = $sql->recuperarFolio($tipo,$_SESSION['INGRESO']['id']);
+            $resModel = $modelo->recuperarFolio($retiro);
 
-			if ($folio->CodRetorno == "000") {
-				$salidaJSON = array('codRetorno' => '000',
-					'folio' => $folio->Datos[0]['vFolio'],
-					'nombreEmpleado' => strtoupper($folio->Datos[0]['nombreEmpleado']),
-					'matricula' => $_SESSION['INGRESO']['id']
+			if ($resModel['codRetorno'] == "000") {
+				$salidaJSON = array('codRetorno' => $resModel['codRetorno'],
+					'folio' => $resModel['DatosFolio']['folio'],
+					'nombreEmpleado' => strtoupper($resModel['DatosFolio']['nombreEmpleado']),
+					'matricula' => $retiro->idEmpleado
 				);
 			} else {
 				$salidaJSON = array('codRetorno' => '002',
-					'form' => 'Retiro',
+					'form' => RETIRO,
 					'Titulo' => 'Error',
-					'Mensaje' => 'Ocurrio un Error'
+					'Mensaje' => MENSAJE_ERROR
 				);
 			}
-
-			$log->insert('Retiro CodRetorno: '.$salidaJSON['codRetorno']  , false, true, true);
+			$logger->write(RETIRO.' codRetorno :  '.$salidaJSON['codRetorno'] , 6 );	
 			print json_encode($salidaJSON);
         } catch (Exception $e) {
-			$log->insert('Error recuperaFolio '.$e->getMessage(), false, true, true);	
-			print('Ocurrio un Error'.$e->getMessage());	
+			$logger->write('Recuperafolio: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
 		}
     }
 		//FUNCIÓN PARA GUARDAR RETIROS

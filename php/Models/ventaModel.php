@@ -1,6 +1,5 @@
 <?php 
 require_once(CLASES.'funciones.php');
-require_once(CLASES.'Producto.php');
 require_once(MODEL.'productoModel.php');
 /*	
 	Clase: Model vENTAS
@@ -50,54 +49,48 @@ class VentaModel {
         }
     }
 
-    public function guardarVenta($venta,$detalleVenta,$stock){
+    public function guardarVenta($venta,$detalleVenta){
         $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
         try {
+            $productosModel = new ProductoModel();
             	//VALIDAR QUE LOS DATOS NO ESTEN VACIOS
-			if (empty($venta) || empty($detalleVenta) || empty($stock) ) {
+			if (empty($venta) || empty($detalleVenta) ) {
 				$retorno = array('codRetorno' => '004',
                     'form' => VENTA,
-                    'mensaje' => PARAM_VACIOS
+                    'Mensaje' => PARAM_VACIOS
                 );
 
 				return $retorno;
 			}
 
-            $stm = $this->insertaVenta($venta);
+            $respVenta = $this->insertaVenta($venta);
 
-			if ($stm->codRetorno[0] == '000') { 
+			if ($respVenta['codRetorno'] == '000') {
                 for ($i = 0; $i < count($detalleVenta); $i++) {
-                    $stm = $this->insertaDetalle($detalleVenta[$i]);
+                    $resDetalle = $this->insertaDetalle($detalleVenta[$i],$venta->bandera);
 
-                    if ($stm->codRetorno[0] == '000') {
-                        $stm = $this->updStock($stock);
-
-                        $retorno->CodRetorno = $stm->codRetorno[0];
-                        $retorno->Mensaje = $stm->Mensaje[0];
-                    } else {
-                        $stm = $this->delVenta($venta);
-
-                        if ($stm->codRetorno[0] == '000') {
-                            $stm = $this->delDetalleVenta($venta);
-
-                            if ($stm->codRetorno[0] == '000') {
-                                $retorno->CodRetorno = $stm->codRetorno[0];
-                                $retorno->Mensaje = $stm->Mensaje[0];
-                            }
+                    if ($resDetalle['codRetorno'] == '000') {
+                        $resUpdStock = $productosModel->updStock($detalleVenta[$i]);
+                        
+                        if ($resUpdStock['codRetorno'] == '000') {
+                            $retorno = array( 'codRetorno' => $resUpdStock['codRetorno'],
+                                'Mensaje' => VENTA_EXITO.$venta->folio
+                            );
                         } else {
-                            $retorno->CodRetorno = $stm->codRetorno[0];
-                            $retorno->Mensaje = $stm->Mensaje[0];
+                            for ($j = ($i-1); $j < 0; $j--) { 
+                                $detalleVenta[$j]['stock'] = $detalleVenta[$j]['stock'] ;
+                                $resUpdStock = $productosModel->updStock($detalleVenta[$J]);
+                            }
+                            $retorno = $this->eliminarVenta($venta,$detalleVenta[$i]);
                         }
-
-                        return $retorno;
-                    }
+                    } else {
+                        $retorno = $this->eliminarVenta($venta,$detalleVenta[$i]);
+                    } //IF DETALLE
                 } //END FOR
-			} else if ($stm->codRetorno[0] == '002') {
-                $retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = 'Ocurrio un Error';
-            }  else {
-				$retorno->CodRetorno = $stm->codRetorno[0];
-				$retorno->Mensaje = $stm->Mensaje[0];
+			} else {
+                $retorno = array( 'codRetorno' => $respVenta['codRetorno'],
+                    'Mensaje' => $respVenta['Mensaje']
+                );
 			}
 
             return $retorno;
@@ -107,61 +100,127 @@ class VentaModel {
         }
     }
 
-    private function delDetalleVenta($venta){
-        $consulta = "CALL spDelDetalleVenta(?,@codRetorno,@msg)";
-        $folio = array( $venta->getFolio() );
+    private function eliminarVenta($venta,$detalleVenta){
+        $venta->bandera = ELIMINAR_VENTA;
+        $respVenta = $this->insertaVenta($venta);
 
-        $stm = executeSP($consulta,$folio);
+        if ($respVenta['codRetorno'] == '000') {
+            $resDetalle = $this->insertaDetalle($detalleVenta,$venta->bandera);
 
-        return $stm;
-    }
+            if ($resDetalle['codRetorno'] == '000') {
+                $retorno = array( 'codRetorno' => '002',
+                    'Mensaje' => MENSAJE_ERROR
+                );
+            } else {                
+                $retorno = array( 'codRetorno' => $resUpdStock['codRetorno'],
+                    'Mensaje' => MENSAJE_ERROR
+                );
+            }
+        } else {
+            $retorno = array( 'codRetorno' => $respVenta['codRetorno'],
+                'Mensaje' => MENSAJE_ERROR
+            );
+        }
 
-    private function delVenta($venta){
-        $consulta = "CALL spDelVenta(?,@codRetorno,@msg)";
-        $folio = array( $venta->getFolio() );
-
-        $stm = executeSP($consulta,$folio);
-
-        return $stm;
-    }
-
-    private function updStock($stock){
-        var_dump($stock->getCodigoBarras(),$stock->getStockAct(),$stock->getStatus());
-        $consulta = "CALL spUpdStock(?,?,?,@CodRetorno,@msg)";
-        $datos = array($stock->getCodigoBarras(),$stock->getStockAct(),$stock->getStatus());
-
-        $stm = executeSP($consulta,$datos);
-var_dump($stm);
-        return $stm;
+        return $retorno;
     }
 
     private function insertaVenta($venta){
-        $datos = array($venta->getFolio(),$venta->getCajero(),$venta->getCliente(),$venta->getTotal(),$venta->getMetodoPago(),$venta->getFolioTarjeta(),$venta->getStatus(),$_SESSION['INGRESO']['nombre'] );
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
+        try {
+            $db = new Conexion();
+            $sql = SP_INSDEL_VENTA;
+            
+            $stm = $db->prepare($sql);
 
-        $sql = "CALL spInsVenta(:folio,:cajero,:cliente,:total,:metodoPago,:foliotarjeta,:status,:usuario,:bandera,@codRetorno,@msg,@msgSQL)";
+            $stm->bindParam(':folio',$venta->folio,PDO::PARAM_INT);
+			$stm->bindParam(':cajero',$venta->codigoEmpleado,PDO::PARAM_INT);
+			$stm->bindParam(':cliente',$venta->codigoCliente,PDO::PARAM_INT);
+            $stm->bindParam(':total',$venta->total,PDO::PARAM_INT);
+            $stm->bindParam(':metodoPago',$venta->metPago,PDO::PARAM_INT);
+            $stm->bindParam(':foliotarjeta',$venta->folioTarjeta,PDO::PARAM_INT);
+            $stm->bindParam(':status',$venta->status,PDO::PARAM_STR);
+            $stm->bindParam(':usuario',$venta->usuario,PDO::PARAM_STR);
+            $stm->bindParam(':bandera',$venta->bandera,PDO::PARAM_INT);
+            
+            $stm->execute();			
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
 
-        $stm = executeSP($consulta,$datos);
+			if ($error[2] != "") {
+				$logger->write('spInsDelVenta: '.$error[2], 3 );
+			}
 
-        try{
-            $sql = "";
-			$db = new Conexion();
-        } catch(Exception $e){
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spInsDelVenta:  '.$retorno['codRetorno'] ,6 );
+
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spInsDelVenta: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
+			}
+
+			$db = null;
+
+			return $retorno;
+        } catch (Exception $e){
             $logger->write('guardarVenta: '.$e->getMessage() , 3 );
 			print(MENSAJE_ERROR.$e->getMessage());
         }
-
-        return $stm;
     }
 
-    private function insertaDetalle($detalleVenta){
-        $datos = array($detalleVenta->getFolio(),$detalleVenta->getCodigoProducto(),$detalleVenta->getCantidad(),$detalleVenta->getPrecio(),$detalleVenta->getSubtotal() );
-        $consulta = "CALL spInsDetalleVenta(?,?,?,?,?,@codRetorno,@msg)";
+    private function insertaDetalle($detalleVenta,$bandera){
+        $logger = new PHPTools\PHPErrorLog\PHPErrorLog();
+        try {
+            $db = new Conexion();
+            $sql = SP_INSDEL_DETALLE_VENTA;
+            $detalleVenta['bandera'] = $bandera;
+            
+            $stm = $db->prepare($sql);
 
-        $stm = executeSP($consulta,$datos);
+            $stm->bindParam(':folio',$detalleVenta['folio'],PDO::PARAM_INT);
+			$stm->bindParam(':codigoProducto',$detalleVenta['codigoProducto'],PDO::PARAM_INT);
+			$stm->bindParam(':cantidad',$detalleVenta['cantidad'],PDO::PARAM_INT);
+            $stm->bindParam(':precio',$detalleVenta['precio'],PDO::PARAM_INT);
+            $stm->bindParam(':subTotal',$detalleVenta['subTotal'],PDO::PARAM_INT);
+            $stm->bindParam(':bandera',$detalleVenta['bandera'],PDO::PARAM_INT);
+            
+            $stm->execute();			
+			$stm->closeCursor();
+			
+			$error = $stm->errorInfo();
 
-        return $stm;
+			if ($error[2] != "") {
+				$logger->write('spInsDetalleVenta: '.$error[2], 3 );
+			}
+
+			$retorno = $db->query('SELECT @codRetorno AS codRetorno, @msg AS Mensaje, @msgSQL AS msgSQL80')->fetch(PDO::FETCH_ASSOC);
+			$logger->write('codRetorno spInsDetalleVenta:  '.$retorno['codRetorno'] ,6 );
+
+			if ($retorno['msgSQL80'] != '' || $retorno['msgSQL80'] != null) {
+				$logger->write('spInsDetalleVenta: '.$retorno['msgSQL80'] , 3 );
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+			}
+
+			if ($retorno['codRetorno'] == "" ) {
+				$retorno['codRetorno'] = '002';
+				$retorno['Mensaje'] = MENSAJE_ERROR;
+				return $retorno;
+			}
+
+			$db = null;
+
+			return $retorno;
+        } catch (Exception $e){
+            $logger->write('guardarVenta: '.$e->getMessage() , 3 );
+			print(MENSAJE_ERROR.$e->getMessage());
+        }
     }
-
 }
-
 ?>

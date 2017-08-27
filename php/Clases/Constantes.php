@@ -8,7 +8,7 @@ const RUTA_LOG = '../../log/';
 const PRODUCTO = 'Producto';
 const SESSION_CADUCADA = 'Sesión Caducada';
 const PARAM_VACIOS = 'Parametros Vacios';
-const MENSAJE_ERROR = 'Ocurrio un Error';
+const MENSAJE_ERROR = 'Ocurrio un Error ';
 const SIN_PERMISOS = 'No Cuenta con los permisos necesarios';
 const SIN_DATOS = 'No Hay Datos Para Mostrar';
     //LOGIN
@@ -33,7 +33,12 @@ const CLIENTE = 'Cliente';
 const PROVEEDOR = 'Proveedor';
     //VENTA
 const VENTA = 'Venta';
+const ACTIVAR_VENTA = '1';
+const ELIMINAR_VENTA = '2';
 const PRODUCTO_INSUFICIENTE = 'Producto insuficiente para la venta';
+const VENTA_EXITO = 'Venta Realizada con Éxito con Folio: ';
+    //RETIRO
+const RETIRO = 'Retiro';
     //LLAMADA SP'S
 const SP_INSUPDEDITORIAL= "CALL spInsUpdEditorial(:codigoEditorial,:nombreEditorial,:usuario,:status,@codRetorno,@msg,@msgSQL,@id)";
 const SP_INSUPDAUTOR = "CALL spInsUpdAutor(:codigoAutor,:nombreAutor,:usuario,:status,@codRetorno,@msg,@msgSQL,@id)";
@@ -42,6 +47,7 @@ const SP_INSUPDLIBROS = "CALL spInsUpdLibro(:codigoLibro,:nombreLibro,:isbn,:cod
 const SP_INSUPDPRODUCTO = "CALL spInsUpdProducto(:codigoProducto,:nombreProducto,:codigoBarras,:proveedor,:stActual,:stMin,:stMax,:compra,:venta,
 				:categoria,:status,:isLibro,:usuario,@codRetorno,@msg,@msgSQL)";
 const SP_CONSULTAPRODUCTOS = "CALL spConsultaProductos(:codigoProducto,:inicio,:limite,:tipoBusqueda,@codRetorno,@msg,@numFilas,@msgSQL)";
+const SP_UPD_STOCK = "CALL spUpdStock(:codigoProducto,:stockActual,:status,@codRetorno,@msg,@msgSQL)";
 const SP_VALIDAUSUARIO = "CALL spValidaUsuario(:nombreUsuario,:usuario,@codRetorno,@msg,@msgSQL)";
 const SP_BLOQUEA_USUARIO = "CALL spBloqueaUsuario(:nombreUsuario,@codRetorno,@msg,@msgSQL)";
 const SP_INSDELUSUARIO = "CALL spInsDelUsuarios(:codigoEmpleado,:nombreUsuario,:contrasenia,:tipo,:status,:bandera,@codRetorno,@msg,@msgSQL)";
@@ -55,5 +61,7 @@ const Sp_CONSULTA_CLIENTES = "CALL spConsultaClientes(:codigoCliente,:inicio,:li
 const SP_INSUPDPROVEEDORES = "CALL spInsUpdProveedor(:codigoCliente,:nombreEmpresa,:nombreContacto,:apellidoPaterno,:apellidoMaterno,:calle,
                 :numExt,:numInt,:colonia,:ciudad,:estado,:telefono,:celular,:email,:web,:status,:usuario,@codRetorno,@msg,@msgSQL)";
 const SP_CONSULTA_PROVEEDORES = "CALL spConsultaProveedores(:codigoProveedor,:inicio,:limite,@codRetorno,@msg,@numFilas,@msgSQL)";
-
+const SP_INSDEL_VENTA =  "CALL spInsDelVenta(:folio,:cajero,:cliente,:total,:metodoPago,:foliotarjeta,:status,:usuario,:bandera,@codRetorno,@msg,@msgSQL)";
+const SP_INSDEL_DETALLE_VENTA = "CALL spInsDetalleVenta(:folio,:codigoProducto,:cantidad,:precio,:subTotal,:bandera,@codRetorno,@msg,@msgSQL)";
+const SP_RECUPERA_FOLIO = "CALL spRecuperaFolio(:tabla,:codigoEmpelado,@codRetorno,@msg,@msgSQL)";
 ?>

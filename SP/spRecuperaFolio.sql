@@ -4,14 +4,15 @@ DELIMITER $$
 CREATE PROCEDURE spRecuperaFolio (
     IN pTabla VARCHAR(10),
 	IN pCodigo BIGINT,
-	OUT CodRetorno CHAR(3),
-	OUT msg VARCHAR(100)
+	OUT codRetorno CHAR(3),
+	OUT msg VARCHAR(100),
+	OUT msgSQL VARCHAR(100)
 )
--- =============================================
+-- ======================================================
 -- Author:       	Felipe Monzón Mendoza
 -- Create date: 	19/May/2017
 -- Description:   	Procedimiento para Recuperar el Folio
--- =============================================
+-- ======================================================
 BEGIN
     DECLARE vFolio BIGINT;
     DECLARE vAnio INT;
@@ -24,8 +25,8 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
-		SET CodRetorno = '002';
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -34,15 +35,15 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pTabla,'') = '' && pCodigo = 0) THEN
-		SET CodRetorno = '004';
+	IF (pCodigo = 0 || pTabla = '') THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
 		IF EXISTS (SELECT * FROM empleados WHERE matricula = pCodigo ) THEN
@@ -57,17 +58,17 @@ BEGIN
             	SET vFolio = CONCAT((vFolio * 10000),vConsecutivo);
             ELSE
             	START TRANSACTION;
-            	INSERT INTO folios (nombre,anio,consecutivo) VALUES(pTabla,vAnio,1);
-            	SET vFolio = CONCAT((vFolio * 10000),1);
+            		INSERT INTO folios (nombre,anio,consecutivo) VALUES(pTabla,vAnio,1);
+            		SET vFolio = CONCAT((vFolio * 10000),1);
             	COMMIT;
             END IF;
 
-			SELECT vFolio,CONCAT(nombre_empleado,' ',apellido_paterno,' ',apellido_materno) AS nombreEmpleado FROM empleados WHERE matricula = pCodigo;
+			SELECT vFolio AS folio,CONCAT(nombre_empleado,' ',apellido_paterno,' ',apellido_materno) AS nombreEmpleado FROM empleados WHERE matricula = pCodigo;
 
-            SET CodRetorno = '000';
+            SET codRetorno = '000';
 			SET msg = 'SP Ejecutado Correctamente';
 		ELSE
-			SET CodRetorno = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Empleado no Existe';
 		END IF;
 	END IF;

@@ -2,10 +2,10 @@
 -- version 4.5.1
 -- http://www.phpmyadmin.net
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 18-08-2017 a las 00:57:57
--- Versión del servidor: 10.1.19-MariaDB
--- Versión de PHP: 5.6.28
+-- Host: 127.0.0.1
+-- Generation Time: Aug 26, 2017 at 07:18 PM
+-- Server version: 10.1.19-MariaDB
+-- PHP Version: 5.6.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -17,12 +17,12 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `ventas`
+-- Database: `ventas`
 --
 
 DELIMITER $$
 --
--- Procedimientos
+-- Procedures
 --
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spBloqueaUsuario` (IN `pUsuario` VARCHAR(10), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -897,14 +897,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelUsuarios` (IN `pCodigo` BIG
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDetalleVenta` (IN `pFolio` BIGINT, IN `pIdProducto` BIGINT, IN `pCantidad` INT, IN `pPrecio` DECIMAL(10,2), IN `pSubTotal` DECIMAL(10,2), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDelVenta` (IN `pFolio` BIGINT, IN `pNumEmpleado` BIGINT, IN `pNumCliente` BIGINT, IN `pTotal` DECIMAL(10,2), IN `pIsTarjeta` INT, IN `pFolioTarjeta` INT, IN `pStatus` CHAR(15), IN `pUsuario` CHAR(15), IN `pBandera` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
         @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
         SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-        SET CodRetorno = '002';
-        SET msg = @full_error;
+        SET codRetorno = '002';
+        SET msgSQL = @full_error;
         RESIGNAL;
         ROLLBACK;
     END; 
@@ -914,29 +914,102 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDetalleVenta` (IN `pFolio` BIG
         GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
         @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
         SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-        SET CodRetorno = '002';
-        SET msg = @full_error;
+        SET codRetorno = '002';
+        SET msgSQL = @full_error;
         SHOW WARNINGS LIMIT 1;
         RESIGNAL;
         ROLLBACK;
     END;
 
-    IF (pFolio = 0 || pIdProducto = 0 || pCantidad = 0 || pPrecio = 0.00 || pSubTotal = 0.00) THEN
-        SET CodRetorno = '004';
+    IF (pFolio = 0 || pNumEmpleado = 0 || pNumCliente = 0 || pTotal = 0.00 || pIsTarjeta = 0 || pStatus = '' || pUsuario = '' || pBandera = 0 || (pBandera != 1 && pBandera != 2)) THEN
+        SET codRetorno = '004';
         SET msg = 'Parametros Vacios';
     ELSE 
-        IF NOT EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio AND clave_producto = pIdProducto) THEN
-            START TRANSACTION;
-                INSERT INTO detalle_venta (folio,clave_producto,cantidad,precio,subtotal)
-                VALUES(pFolio,pIdProducto,pCantidad,pPrecio,pSubTotal);
+        IF (pBandera = 1) THEN
+            IF NOT EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN 
+                START TRANSACTION;
+                    INSERT INTO ventas (folio,fecha_venta,empleado,cliente,total,isTarjeta,folioTarjeta,status,usuario,fechaCreacion,fechaModificacion) 
+                    VALUES (pFolio, NOW(), pNumEmpleado, pNumCliente, pTotal, pIsTarjeta, pFolioTarjeta, pStatus, pUsuario, NOW(), NOW());
+                    CALL spUpdFolios('ventas',1,@codRetorno,@msg);
+                    SET codRetorno = '000';
+                    SET msg = 'SP Ejecutado con Exito';
+                COMMIT; 
+            ELSE
+                SET codRetorno = '001';
+                SET msg = 'El Folio ya fue Registrado';
+                ROLLBACK;  
+            END IF;
+        ELSEIF (pBandera = 2) THEN
+            IF EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN
+                START TRANSACTION; 
+                    DELETE FROM ventas WHERE folio = pFolio;
+                    CALL spUpdFolios('ventas',2,@codRetorno,@msg);
+                    SET codRetorno = '000';
+                    SET msg = 'SP Ejecutado Correctamente';
+                COMMIT; 
+            ELSE 
+                SET codRetorno = '001';
+                SET msg = 'El Folio No Existe';
+                ROLLBACK;
+            END IF;
+        END IF;
+    END IF;
+END$$
 
-                SET CodRetorno = '000';
-                SET msg = 'Venta Guardada con Exito';
-            COMMIT; 
-        ELSE 
-            SET CodRetorno = '001';
-            SET msg = 'El Folio ya fue Registrado';
-            ROLLBACK;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsDetalleVenta` (IN `pFolio` BIGINT, IN `pIdProducto` BIGINT, IN `pCantidad` INT, IN `pPrecio` DECIMAL(10,2), IN `pSubTotal` DECIMAL(10,2), IN `pBandera` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET codRetorno = '002';
+        SET msgSQL = @full_error;
+        RESIGNAL;
+        ROLLBACK;
+    END; 
+
+    DECLARE EXIT HANDLER FOR SQLWARNING
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
+        @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
+        SET codRetorno = '002';
+        SET msgSQL = @full_error;
+        SHOW WARNINGS LIMIT 1;
+        RESIGNAL;
+        ROLLBACK;
+    END;
+
+    IF (pFolio = 0 || pIdProducto = 0 || pCantidad = 0 || pPrecio = 0.00 || pSubTotal = 0.00 || (pBandera != 1 && pBandera != 2) ) THEN
+        SET codRetorno = '004';
+        SET msg = 'Parametros Vacios';
+    ELSE 
+        IF (pBandera = 1) THEN
+            IF NOT EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio AND clave_producto = pIdProducto) THEN
+                START TRANSACTION;
+                    INSERT INTO detalle_venta (folio,clave_producto,cantidad,precio,subtotal)
+                    VALUES (pFolio,pIdProducto,pCantidad,pPrecio,pSubTotal);
+
+                    SET codRetorno = '000';
+                    SET msg = 'Venta Guardada con Exito';
+                COMMIT; 
+            ELSE 
+                SET codRetorno = '001';
+                SET msg = 'El Folio ya fue Registrado';
+                ROLLBACK;
+            END IF;
+        ELSEIF (pBandera = 2) THEN
+            IF EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio) THEN
+                START TRANSACTION; 
+                    DELETE FROM detalle_venta WHERE folio = pFolio;
+                    SET codRetorno = '000';
+                    SET msg = 'SP Ejecutado Correctamente';
+                COMMIT;
+            ELSE
+                SET codRetorno = '001';
+                SET msg = 'El Folio No Existe';
+                ROLLBACK;
+            END IF;
         END IF;
     END IF;
 END$$
@@ -1551,7 +1624,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsVenta` (IN `pFolio` BIGINT, IN
     END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCHAR(10), IN `pCodigo` BIGINT, OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCHAR(10), IN `pCodigo` BIGINT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
     DECLARE vFolio BIGINT;
     DECLARE vAnio INT;
     DECLARE vMes INT;
@@ -1563,8 +1636,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
-		SET CodRetorno = '002';
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -1573,15 +1646,15 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SET msg = @full_error;
+		SET msgSQL = @full_error;
 		SHOW WARNINGS LIMIT 1;
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (COALESCE(pCodigo,'') = '' && COALESCE(pTabla,'') = '' && pCodigo = 0) THEN
-		SET CodRetorno = '004';
+	IF (pCodigo = 0 || pTabla = '') THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
 		IF EXISTS (SELECT * FROM empleados WHERE matricula = pCodigo ) THEN
@@ -1596,23 +1669,23 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spRecuperaFolio` (IN `pTabla` VARCH
             	SET vFolio = CONCAT((vFolio * 10000),vConsecutivo);
             ELSE
             	START TRANSACTION;
-            	INSERT INTO folios (nombre,anio,consecutivo) VALUES(pTabla,vAnio,1);
-            	SET vFolio = CONCAT((vFolio * 10000),1);
+            		INSERT INTO folios (nombre,anio,consecutivo) VALUES(pTabla,vAnio,1);
+            		SET vFolio = CONCAT((vFolio * 10000),1);
             	COMMIT;
             END IF;
 
-			SELECT vFolio,CONCAT(nombre_empleado,' ',apellido_paterno,' ',apellido_materno) AS nombreEmpleado FROM empleados WHERE matricula = pCodigo;
+			SELECT vFolio AS folio,CONCAT(nombre_empleado,' ',apellido_paterno,' ',apellido_materno) AS nombreEmpleado FROM empleados WHERE matricula = pCodigo;
 
-            SET CodRetorno = '000';
+            SET codRetorno = '000';
 			SET msg = 'SP Ejecutado Correctamente';
 		ELSE
-			SET CodRetorno = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Empleado no Existe';
 		END IF;
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdFolios` (IN `pTabla` VARCHAR(10), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdFolios` (IN `pTabla` VARCHAR(10), IN `pBandera` INT, OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
     DECLARE vAnio INT;
     DECLARE vConsecutivo INT;
 
@@ -1622,7 +1695,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdFolios` (IN `pTabla` VARCHAR(1
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -1633,34 +1706,42 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdFolios` (IN `pTabla` VARCHAR(1
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (COALESCE(pTabla,'') = '') THEN
-		SET CodRetorno = '004';
+	IF (pTabla = '' || (pBandera != 1 && pBandera != 2)) THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
 		SELECT YEAR(NOW()) INTO vAnio;
 		SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
 
-    	START TRANSACTION;
-    	UPDATE folios SET consecutivo = vConsecutivo+1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
-    	COMMIT;
-
-        SET CodRetorno = '000';
-		SET msg = 'SP Ejecutado Correctamente';
-END IF;
+		IF (pBandera = 1) THEN
+			START TRANSACTION;
+				UPDATE folios SET consecutivo = vConsecutivo+1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
+			COMMIT;
+			SET codRetorno = '000';
+			SET msg = 'SP Ejecutado Correctamente';
+		ELSEIF (pBandera = 2) THEN
+			START TRANSACTION;
+    			UPDATE folios SET consecutivo = vConsecutivo-1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
+    		COMMIT;
+	        SET codRetorno = '000';
+			SET msg = 'SP Ejecutado Correctamente';
+		END IF;
+	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, IN `pStActual` INT, IN `pStatus` VARCHAR(15), OUT `CodRetorno` CHAR(3), OUT `msg` VARCHAR(100))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, IN `pStActual` INT, IN `pStatus` VARCHAR(15), OUT `codRetorno` CHAR(3), OUT `msg` VARCHAR(100), OUT `msgSQL` VARCHAR(100))  BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -1669,28 +1750,29 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spUpdStock` (IN `pCodigo` BIGINT, I
 		GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, 
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
-		SELECT @full_error;
+		SET msgSQL = @full_error;
+		SET codRetorno = '002';
 		SHOW WARNINGS LIMIT 1;
 		RESIGNAL;
 		ROLLBACK;
 	END;
 		
-	IF (pCodigo != 0 || COALESCE(pCodigo,NULL) = NULL) THEN
-		IF EXISTS(SELECT * FROM productos WHERE codigo_producto = pCodigo) THEN
+	IF (pCodigo = 0 || pStActual = 0 || pStatus = '') THEN
+		SET codRetorno = '004';
+		SET msg = 'Parametros Vacios';
+	ELSE
+		IF EXISTS(SELECT * FROM productos WHERE codigoBarras = pCodigo) THEN
 			START TRANSACTION;
 				UPDATE productos SET stockActual = pStActual, status = pStatus, fechaModificacion = NOW()
-				WHERE codigo_producto = pCodigo;
-				SET CodRetorno = '000';
+				WHERE codigoBarras = pCodigo;
+				SET codRetorno = '000';
 				SET msg = 'Stock Actualizado con Exito';
 			COMMIT; 
 		ELSE
 			ROLLBACK;
-			SET CodRetorno = '001';
+			SET codRetorno = '001';
 			SET msg = 'El Producto no Existe';
 		END IF;
-	ELSE
-		SET CodRetorno = '004';
-		SET msg = 'Parametros Vacios';
 	END IF; 
 END$$
 
@@ -1763,7 +1845,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `autores`
+-- Table structure for table `autores`
 --
 
 CREATE TABLE `autores` (
@@ -1776,7 +1858,7 @@ CREATE TABLE `autores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `autores`
+-- Dumping data for table `autores`
 --
 
 INSERT INTO `autores` (`codigo_autor`, `nombre_autor`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -1801,7 +1883,7 @@ INSERT INTO `autores` (`codigo_autor`, `nombre_autor`, `usuario`, `status`, `fec
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `categorias_producto`
+-- Table structure for table `categorias_producto`
 --
 
 CREATE TABLE `categorias_producto` (
@@ -1810,7 +1892,7 @@ CREATE TABLE `categorias_producto` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `categorias_producto`
+-- Dumping data for table `categorias_producto`
 --
 
 INSERT INTO `categorias_producto` (`codigo_catpro`, `nombre_categoria`) VALUES
@@ -1823,7 +1905,7 @@ INSERT INTO `categorias_producto` (`codigo_catpro`, `nombre_categoria`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `clientes`
+-- Table structure for table `clientes`
 --
 
 CREATE TABLE `clientes` (
@@ -1849,7 +1931,7 @@ CREATE TABLE `clientes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `clientes`
+-- Dumping data for table `clientes`
 --
 
 INSERT INTO `clientes` (`matricula`, `rfc`, `empresa`, `nombre_contacto`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -1867,7 +1949,7 @@ INSERT INTO `clientes` (`matricula`, `rfc`, `empresa`, `nombre_contacto`, `apell
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `cortecaja`
+-- Table structure for table `cortecaja`
 --
 
 CREATE TABLE `cortecaja` (
@@ -1884,7 +1966,7 @@ CREATE TABLE `cortecaja` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
--- Volcado de datos para la tabla `cortecaja`
+-- Dumping data for table `cortecaja`
 --
 
 INSERT INTO `cortecaja` (`folioCorte`, `fecha_corte`, `empleado`, `ingreso`, `egreso`, `total`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -1893,7 +1975,7 @@ INSERT INTO `cortecaja` (`folioCorte`, `fecha_corte`, `empleado`, `ingreso`, `eg
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `detalle_venta`
+-- Table structure for table `detalle_venta`
 --
 
 CREATE TABLE `detalle_venta` (
@@ -1905,7 +1987,7 @@ CREATE TABLE `detalle_venta` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
--- Volcado de datos para la tabla `detalle_venta`
+-- Dumping data for table `detalle_venta`
 --
 
 INSERT INTO `detalle_venta` (`folio`, `clave_producto`, `cantidad`, `precio`, `subtotal`) VALUES
@@ -1974,12 +2056,14 @@ INSERT INTO `detalle_venta` (`folio`, `clave_producto`, `cantidad`, `precio`, `s
 (2017032400025, 9786074009811, 1, '220.00', '220.00'),
 (2017032900026, 9788478887590, 1, '150.00', '150.00'),
 (2017032900026, 9788478887606, 2, '300.00', '600.00'),
-(2017032900026, 9788478887613, 1, '300.00', '300.00');
+(2017032900026, 9788478887613, 1, '300.00', '300.00'),
+(2017082500001, 8, 2, '180.00', '360.00'),
+(2017082500001, 9788478887613, 2, '300.00', '600.00');
 
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `deudas`
+-- Table structure for table `deudas`
 --
 
 CREATE TABLE `deudas` (
@@ -1997,7 +2081,7 @@ CREATE TABLE `deudas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
--- Volcado de datos para la tabla `deudas`
+-- Dumping data for table `deudas`
 --
 
 INSERT INTO `deudas` (`clave_deuda`, `folio_deuda`, `fecha_compra`, `folio_venta`, `matricula_cliente`, `total_deuda`, `total_abbono`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2011,7 +2095,7 @@ INSERT INTO `deudas` (`clave_deuda`, `folio_deuda`, `fecha_compra`, `folio_venta
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `editoriales`
+-- Table structure for table `editoriales`
 --
 
 CREATE TABLE `editoriales` (
@@ -2024,7 +2108,7 @@ CREATE TABLE `editoriales` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `editoriales`
+-- Dumping data for table `editoriales`
 --
 
 INSERT INTO `editoriales` (`codigo_editorial`, `nombre_editorial`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2047,7 +2131,7 @@ INSERT INTO `editoriales` (`codigo_editorial`, `nombre_editorial`, `status`, `us
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `empleados`
+-- Table structure for table `empleados`
 --
 
 CREATE TABLE `empleados` (
@@ -2073,7 +2157,7 @@ CREATE TABLE `empleados` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `empleados`
+-- Dumping data for table `empleados`
 --
 
 INSERT INTO `empleados` (`matricula`, `nombre_empleado`, `apellido_paterno`, `apellido_materno`, `calle`, `numExt`, `numInt`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `sueldo`, `puesto`, `status`, `isUsu`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2090,7 +2174,7 @@ INSERT INTO `empleados` (`matricula`, `nombre_empleado`, `apellido_paterno`, `ap
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `folios`
+-- Table structure for table `folios`
 --
 
 CREATE TABLE `folios` (
@@ -2101,7 +2185,7 @@ CREATE TABLE `folios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
--- Volcado de datos para la tabla `folios`
+-- Dumping data for table `folios`
 --
 
 INSERT INTO `folios` (`id`, `nombre`, `anio`, `consecutivo`) VALUES
@@ -2114,12 +2198,12 @@ INSERT INTO `folios` (`id`, `nombre`, `anio`, `consecutivo`) VALUES
 (11, 'venta', 2017, 26),
 (12, 'corteCaja', 2017, 1),
 (13, 'retiros', 2017, 3),
-(14, 'ventas', 2017, 1);
+(14, 'ventas', 2017, 2);
 
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `generos`
+-- Table structure for table `generos`
 --
 
 CREATE TABLE `generos` (
@@ -2131,7 +2215,7 @@ CREATE TABLE `generos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `generos`
+-- Dumping data for table `generos`
 --
 
 INSERT INTO `generos` (`codigo_genero`, `nombre_genero`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2144,7 +2228,7 @@ INSERT INTO `generos` (`codigo_genero`, `nombre_genero`, `usuario`, `fechaCreaci
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `libros`
+-- Table structure for table `libros`
 --
 
 CREATE TABLE `libros` (
@@ -2162,7 +2246,7 @@ CREATE TABLE `libros` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `libros`
+-- Dumping data for table `libros`
 --
 
 INSERT INTO `libros` (`codigo_libro`, `nombre_libro`, `isbn`, `autor`, `editorial`, `descripcion`, `rutaIMG`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2185,7 +2269,7 @@ INSERT INTO `libros` (`codigo_libro`, `nombre_libro`, `isbn`, `autor`, `editoria
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `productos`
+-- Table structure for table `productos`
 --
 
 CREATE TABLE `productos` (
@@ -2207,7 +2291,7 @@ CREATE TABLE `productos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `productos`
+-- Dumping data for table `productos`
 --
 
 INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `proveedor`, `stockActual`, `stockMin`, `stockMax`, `compra`, `venta`, `categoria`, `status`, `isLibro`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2218,10 +2302,10 @@ INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `
 (9, 9786074009811, 'ochenta melodÃ­as de pasiÃ³n en amarillo', 1, 5, 1, 10, '185.00', '250.00', 1, 'DISPONIBLE', 2, 'felipe', '2016-09-02 11:00:00', '2017-07-31 15:30:33'),
 (10, 5, 'el principito', 1, 2, 1, 4, '15.00', '25.00', 1, 'DISPONIBLE', 1, 'felipe', '2016-09-03 07:31:00', '2017-08-04 11:08:42'),
 (11, 6, 'ochenta melodias de pasiÃ³n en azul', 1, 14, 1, 10, '100.00', '180.00', 1, 'SOBRESTOCK', 6, 'felipe', '2017-01-17 04:54:00', '2017-07-31 15:36:32'),
-(12, 8, 'ochenta melodias de pasion en rojo', 1, 5, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 7, 'felipe', '2017-01-17 04:55:00', '2017-08-04 10:00:11'),
+(12, 8, 'ochenta melodias de pasion en rojo', 1, 3, 1, 10, '130.00', '180.00', 1, 'DISPONIBLE', 7, 'felipe', '2017-01-17 04:55:00', '2017-08-25 23:58:45'),
 (13, 7, 'las aventuras de tom sayer', 2, 0, 1, 5, '30.00', '60.00', 1, 'AGOTADO', 4, 'felipe', '2017-01-17 04:57:00', '2017-01-17 06:49:00'),
 (14, 9788478887590, 'harry potter y la piedra filosofal', 4, 1, 1, 15, '100.00', '150.00', 1, 'DISPONIBLE', 8, 'felipe', '2017-03-08 05:48:00', '2017-08-04 11:07:30'),
-(15, 9788478887613, 'harry potter y el prisionero de azkaban', 4, 5, 1, 10, '200.00', '300.00', 1, 'DISPONIBLE', 9, 'felipe', '2017-03-12 10:26:00', '2017-08-04 11:54:40'),
+(15, 9788478887613, 'harry potter y el prisionero de azkaban', 4, 3, 1, 10, '200.00', '300.00', 1, 'DISPONIBLE', 9, 'felipe', '2017-03-12 10:26:00', '2017-08-25 23:58:13'),
 (16, 9788478887606, 'harry potter y la camara de los secretos', 4, 15, 1, 10, '150.00', '300.00', 1, 'SOBRESTOCK', 10, 'felipe', '2017-03-12 10:27:00', '2017-08-03 12:48:06'),
 (17, 9788478887446, 'harry potter y la orden del fÃ©nix', 4, 15, 1, 10, '100.00', '157.00', 1, 'SOBRESTOCK', 12, 'felipe', '2017-04-01 01:29:00', '2017-08-04 11:05:23'),
 (18, 9781401236960, 'maid sama tomo 2', 5, 15, 1, 10, '80.00', '99.00', 3, 'SOBRESTOCK', 15, 'felipe', '2017-04-09 12:05:00', '2017-08-04 11:50:11'),
@@ -2230,7 +2314,7 @@ INSERT INTO `productos` (`codigo_producto`, `codigoBarras`, `nombre_producto`, `
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `proveedores`
+-- Table structure for table `proveedores`
 --
 
 CREATE TABLE `proveedores` (
@@ -2256,12 +2340,12 @@ CREATE TABLE `proveedores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `proveedores`
+-- Dumping data for table `proveedores`
 --
 
 INSERT INTO `proveedores` (`codigo_proveedor`, `nombre_proveedor`, `contacto`, `apellido_paterno`, `apellido_materno`, `calle`, `num_ext`, `num_int`, `colonia`, `ciudad`, `estado`, `telefono`, `celular`, `email`, `web`, `usuario`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
 (1, 'Grupo Editorial Tomo S.A de C.V', 'pamela silva', '', '', 'NicolÃ¡s San Juan', 1043, '5', 'del valle', 'benito juarez', 'CDMX', '5555750186', '6673031398', 'pamelas@grupotomo.com.mx', 'www.grupotomo.com.mx', '1', 'DISPONIBLE', '2016-08-22 10:50:00', '2017-01-16 05:57:00'),
-(2, 'librerÃ­a mÃ©xico', 'luis lopez sanchez', '', '', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'luis_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-01-16 05:55:00'),
+(2, 'librerÃ­a mÃ©xico', 'luis', 'lopez', 'sanchez', 'sindicalismo', 4818, 'a', 'infonavit barrancos', 'culiacan', 'sinaloa', '6677106788', '6673031398', 'luis_21@libreriamexico.com', 'www.libreriamexico.com', 'felipe', 'DISPONIBLE', '2017-01-14 06:07:00', '2017-08-18 14:28:50'),
 (3, 'materiales didacticos roggers', 'maria lopez', '', '', 'av obregon', 7852, '52', 'centro', 'tlaquepalque', 'guadalajara', '5555750186', '6674568266', 'malo@hotmail.com', '', 'felipe', 'DISPONIBLE', '2017-01-17 05:36:00', '2017-01-17 05:36:00'),
 (4, 'editorial Oceano de Mexico SA de CV', 'lorena montes', '', '', 'eugenio sue', 5500, '0', 'miguel hidalgo', 'polanco chapultepec', 'CDMX', '5591785100', '', 'lorena.montes@editorialoceano.com', 'www.oceano.com.mx', 'felipe', 'DISPONIBLE', '2017-03-13 03:37:00', '2017-03-13 03:37:00'),
 (5, 'grupo editorial panini', 'juan panini', '', '', 'benito juarez', 61, 'a', 'buenos aires', 'iztaalapa', 'cmdx', '5572154881', '6678251867', 'john.panini@paniigroup.com', 'www.comisc.panini.com', 'felipe', 'DISPONIBLE', '2017-04-09 12:05:00', '2017-04-09 12:05:00'),
@@ -2270,7 +2354,7 @@ INSERT INTO `proveedores` (`codigo_proveedor`, `nombre_proveedor`, `contacto`, `
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `retiros`
+-- Table structure for table `retiros`
 --
 
 CREATE TABLE `retiros` (
@@ -2287,7 +2371,7 @@ CREATE TABLE `retiros` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 --
--- Volcado de datos para la tabla `retiros`
+-- Dumping data for table `retiros`
 --
 
 INSERT INTO `retiros` (`codigo_retiro`, `folio`, `fecha`, `empleado`, `cantidad`, `descripcion`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2311,7 +2395,7 @@ INSERT INTO `retiros` (`codigo_retiro`, `folio`, `fecha`, `empleado`, `cantidad`
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `tipo_usuarios`
+-- Table structure for table `tipo_usuarios`
 --
 
 CREATE TABLE `tipo_usuarios` (
@@ -2320,7 +2404,7 @@ CREATE TABLE `tipo_usuarios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `tipo_usuarios`
+-- Dumping data for table `tipo_usuarios`
 --
 
 INSERT INTO `tipo_usuarios` (`id_tipoUsuario`, `descripcion`) VALUES
@@ -2331,7 +2415,7 @@ INSERT INTO `tipo_usuarios` (`id_tipoUsuario`, `descripcion`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `usuarios`
+-- Table structure for table `usuarios`
 --
 
 CREATE TABLE `usuarios` (
@@ -2346,7 +2430,7 @@ CREATE TABLE `usuarios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `usuarios`
+-- Dumping data for table `usuarios`
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `password`, `tipo_usuario`, `matricula_empleado`, `status`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2359,7 +2443,7 @@ INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `password`, `tipo_usuari
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `ventas`
+-- Table structure for table `ventas`
 --
 
 CREATE TABLE `ventas` (
@@ -2377,7 +2461,7 @@ CREATE TABLE `ventas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Volcado de datos para la tabla `ventas`
+-- Dumping data for table `ventas`
 --
 
 INSERT INTO `ventas` (`folio`, `fecha_venta`, `empleado`, `cliente`, `total`, `isTarjeta`, `folioTarjeta`, `status`, `usuario`, `fechaCreacion`, `fechaModificacion`) VALUES
@@ -2428,77 +2512,78 @@ INSERT INTO `ventas` (`folio`, `fecha_venta`, `empleado`, `cliente`, `total`, `i
 (2017032100023, '2017-03-21 03:54:00', 2, 0, '440.00', 0, 0, 'PAGADA', 'felipe', '2017-03-21 03:54:00', '2017-03-21 03:54:00'),
 (2017032200024, '2017-03-22 08:30:00', 2, 0, '150.00', 0, 0, 'PAGADA', 'felipe', '2017-03-22 08:30:00', '2017-03-22 08:30:00'),
 (2017032400025, '2017-03-24 09:07:00', 2, 0, '220.00', 0, 0, 'PAGADA', 'felipe', '2017-03-24 09:07:00', '2017-03-24 09:07:00'),
-(2017032900026, '2017-03-29 08:04:00', 2, 0, '1050.00', 0, 0, 'PAGADA', 'felipe', '2017-03-29 08:04:00', '2017-03-29 08:04:00');
+(2017032900026, '2017-03-29 08:04:00', 2, 0, '1050.00', 0, 0, 'PAGADA', 'felipe', '2017-03-29 08:04:00', '2017-03-29 08:04:00'),
+(2017082500001, '2017-08-25 23:58:07', 2, 1, '960.00', 1, 0, 'PAGADA', 'felipe', '2017-08-25 23:58:07', '2017-08-25 23:58:07');
 
 --
--- Índices para tablas volcadas
+-- Indexes for dumped tables
 --
 
 --
--- Indices de la tabla `autores`
+-- Indexes for table `autores`
 --
 ALTER TABLE `autores`
   ADD PRIMARY KEY (`codigo_autor`),
   ADD KEY `usuario` (`usuario`);
 
 --
--- Indices de la tabla `categorias_producto`
+-- Indexes for table `categorias_producto`
 --
 ALTER TABLE `categorias_producto`
   ADD PRIMARY KEY (`codigo_catpro`);
 
 --
--- Indices de la tabla `clientes`
+-- Indexes for table `clientes`
 --
 ALTER TABLE `clientes`
   ADD PRIMARY KEY (`matricula`);
 
 --
--- Indices de la tabla `cortecaja`
+-- Indexes for table `cortecaja`
 --
 ALTER TABLE `cortecaja`
   ADD PRIMARY KEY (`folioCorte`);
 
 --
--- Indices de la tabla `detalle_venta`
+-- Indexes for table `detalle_venta`
 --
 ALTER TABLE `detalle_venta`
   ADD PRIMARY KEY (`folio`,`clave_producto`);
 
 --
--- Indices de la tabla `deudas`
+-- Indexes for table `deudas`
 --
 ALTER TABLE `deudas`
   ADD PRIMARY KEY (`clave_deuda`);
 
 --
--- Indices de la tabla `editoriales`
+-- Indexes for table `editoriales`
 --
 ALTER TABLE `editoriales`
   ADD PRIMARY KEY (`codigo_editorial`),
   ADD KEY `usuario` (`usuario`);
 
 --
--- Indices de la tabla `empleados`
+-- Indexes for table `empleados`
 --
 ALTER TABLE `empleados`
   ADD PRIMARY KEY (`matricula`);
 
 --
--- Indices de la tabla `folios`
+-- Indexes for table `folios`
 --
 ALTER TABLE `folios`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indices de la tabla `generos`
+-- Indexes for table `generos`
 --
 ALTER TABLE `generos`
   ADD PRIMARY KEY (`codigo_genero`),
   ADD KEY `usuario` (`usuario`);
 
 --
--- Indices de la tabla `libros`
+-- Indexes for table `libros`
 --
 ALTER TABLE `libros`
   ADD PRIMARY KEY (`codigo_libro`),
@@ -2507,7 +2592,7 @@ ALTER TABLE `libros`
   ADD KEY `autor` (`autor`);
 
 --
--- Indices de la tabla `productos`
+-- Indexes for table `productos`
 --
 ALTER TABLE `productos`
   ADD PRIMARY KEY (`codigo_producto`),
@@ -2515,117 +2600,117 @@ ALTER TABLE `productos`
   ADD KEY `categoria` (`categoria`);
 
 --
--- Indices de la tabla `proveedores`
+-- Indexes for table `proveedores`
 --
 ALTER TABLE `proveedores`
   ADD PRIMARY KEY (`codigo_proveedor`),
   ADD KEY `usuario` (`usuario`);
 
 --
--- Indices de la tabla `retiros`
+-- Indexes for table `retiros`
 --
 ALTER TABLE `retiros`
   ADD PRIMARY KEY (`codigo_retiro`);
 
 --
--- Indices de la tabla `tipo_usuarios`
+-- Indexes for table `tipo_usuarios`
 --
 ALTER TABLE `tipo_usuarios`
   ADD PRIMARY KEY (`id_tipoUsuario`);
 
 --
--- Indices de la tabla `usuarios`
+-- Indexes for table `usuarios`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id_usuario`),
   ADD KEY `tipo_usuario` (`tipo_usuario`);
 
 --
--- Indices de la tabla `ventas`
+-- Indexes for table `ventas`
 --
 ALTER TABLE `ventas`
   ADD PRIMARY KEY (`folio`);
 
 --
--- AUTO_INCREMENT de las tablas volcadas
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT de la tabla `autores`
+-- AUTO_INCREMENT for table `autores`
 --
 ALTER TABLE `autores`
   MODIFY `codigo_autor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 --
--- AUTO_INCREMENT de la tabla `categorias_producto`
+-- AUTO_INCREMENT for table `categorias_producto`
 --
 ALTER TABLE `categorias_producto`
   MODIFY `codigo_catpro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 --
--- AUTO_INCREMENT de la tabla `clientes`
+-- AUTO_INCREMENT for table `clientes`
 --
 ALTER TABLE `clientes`
   MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 --
--- AUTO_INCREMENT de la tabla `deudas`
+-- AUTO_INCREMENT for table `deudas`
 --
 ALTER TABLE `deudas`
   MODIFY `clave_deuda` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
--- AUTO_INCREMENT de la tabla `editoriales`
+-- AUTO_INCREMENT for table `editoriales`
 --
 ALTER TABLE `editoriales`
   MODIFY `codigo_editorial` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 --
--- AUTO_INCREMENT de la tabla `empleados`
+-- AUTO_INCREMENT for table `empleados`
 --
 ALTER TABLE `empleados`
   MODIFY `matricula` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 --
--- AUTO_INCREMENT de la tabla `folios`
+-- AUTO_INCREMENT for table `folios`
 --
 ALTER TABLE `folios`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 --
--- AUTO_INCREMENT de la tabla `generos`
+-- AUTO_INCREMENT for table `generos`
 --
 ALTER TABLE `generos`
   MODIFY `codigo_genero` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 --
--- AUTO_INCREMENT de la tabla `libros`
+-- AUTO_INCREMENT for table `libros`
 --
 ALTER TABLE `libros`
   MODIFY `codigo_libro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 --
--- AUTO_INCREMENT de la tabla `productos`
+-- AUTO_INCREMENT for table `productos`
 --
 ALTER TABLE `productos`
   MODIFY `codigo_producto` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 --
--- AUTO_INCREMENT de la tabla `proveedores`
+-- AUTO_INCREMENT for table `proveedores`
 --
 ALTER TABLE `proveedores`
   MODIFY `codigo_proveedor` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
--- AUTO_INCREMENT de la tabla `retiros`
+-- AUTO_INCREMENT for table `retiros`
 --
 ALTER TABLE `retiros`
   MODIFY `codigo_retiro` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 --
--- AUTO_INCREMENT de la tabla `tipo_usuarios`
+-- AUTO_INCREMENT for table `tipo_usuarios`
 --
 ALTER TABLE `tipo_usuarios`
   MODIFY `id_tipoUsuario` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 --
--- AUTO_INCREMENT de la tabla `usuarios`
+-- AUTO_INCREMENT for table `usuarios`
 --
 ALTER TABLE `usuarios`
   MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 --
--- Restricciones para tablas volcadas
+-- Constraints for dumped tables
 --
 
 --
--- Filtros para la tabla `libros`
+-- Constraints for table `libros`
 --
 ALTER TABLE `libros`
   ADD CONSTRAINT `libro_autor` FOREIGN KEY (`autor`) REFERENCES `autores` (`codigo_autor`) ON DELETE CASCADE ON UPDATE CASCADE,

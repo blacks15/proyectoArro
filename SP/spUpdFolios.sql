@@ -3,7 +3,8 @@ DROP PROCEDURE IF EXISTS spUpdFolios;
 DELIMITER $$
 CREATE PROCEDURE spUpdFolios (
     IN pTabla VARCHAR(10),
-	OUT CodRetorno CHAR(3),
+	IN pBandera INT,
+	OUT codRetorno CHAR(3),
 	OUT msg VARCHAR(100)
 )
 -- =============================================
@@ -21,7 +22,7 @@ BEGIN
 		@errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END; 
@@ -32,24 +33,31 @@ BEGIN
 		SET @full_error = CONCAT("ERROR ", @errno, " (", @sqlstate, "): ", @text);
 		SET msg = @full_error;
 		SHOW WARNINGS LIMIT 1;
-		SET CodRetorno = '002';
+		SET codRetorno = '002';
 		RESIGNAL;
 		ROLLBACK;
 	END;
 
-	IF (COALESCE(pTabla,'') = '') THEN
-		SET CodRetorno = '004';
+	IF (pTabla = '' || (pBandera != 1 && pBandera != 2)) THEN
+		SET codRetorno = '004';
 		SET msg = 'Parametros Vacios';
 	ELSE
 		SELECT YEAR(NOW()) INTO vAnio;
 		SELECT consecutivo INTO vConsecutivo FROM folios WHERE nombre = pTabla AND anio = vAnio;
 
-    	START TRANSACTION;
-    	UPDATE folios SET consecutivo = vConsecutivo+1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
-    	COMMIT;
-
-        SET CodRetorno = '000';
-		SET msg = 'SP Ejecutado Correctamente';
-END IF;
+		IF (pBandera = 1) THEN
+			START TRANSACTION;
+				UPDATE folios SET consecutivo = vConsecutivo+1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
+			COMMIT;
+			SET codRetorno = '000';
+			SET msg = 'SP Ejecutado Correctamente';
+		ELSEIF (pBandera = 2) THEN
+			START TRANSACTION;
+    			UPDATE folios SET consecutivo = vConsecutivo-1 WHERE anio = vAnio AND nombre = CONVERT(pTabla USING utf8) COLLATE utf8_general_ci;
+    		COMMIT;
+	        SET codRetorno = '000';
+			SET msg = 'SP Ejecutado Correctamente';
+		END IF;
+	END IF;
 END$$
 DELIMITER ;

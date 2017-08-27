@@ -1,22 +1,25 @@
-DROP PROCEDURE IF EXISTS spInsDetalleVenta;
+DROP PROCEDURE IF EXISTS spInsDelVenta;
 
 DELIMITER $$
-CREATE PROCEDURE spInsDetalleVenta (
+CREATE PROCEDURE spInsDelVenta (
     IN pFolio BIGINT,
-    IN pIdProducto BIGINT,
-    IN pCantidad INT,
-    IN pPrecio DECIMAL(10,2),
-    IN pSubTotal DECIMAL(10,2),
+    IN pNumEmpleado BIGINT,
+    IN pNumCliente BIGINT,
+    IN pTotal DECIMAL(10,2),
+    IN pIsTarjeta INT,
+    IN pFolioTarjeta INT,
+    IN pStatus CHAR(15),
+    IN pUsuario CHAR(15),
     IN pBandera INT,
     OUT codRetorno CHAR(3),
     OUT msg VARCHAR(100),
     OUT msgSQL VARCHAR(100)
 )
--- ==============================================================================
--- Author:          Felipe Monzón
--- Create date:     19/Jun/2017
--- Description:     Procedimiento para guardar o Eliminar el detalle de una venta
--- ==============================================================================
+-- =================================================================
+-- Author:              Felipe Monzón
+-- Create date:         19/Jun/2017
+-- Description:         Procedimiento para guardar o Eliminar ventas
+-- =================================================================
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -41,32 +44,33 @@ BEGIN
         ROLLBACK;
     END;
 
-    IF (pFolio = 0 || pIdProducto = 0 || pCantidad = 0 || pPrecio = 0.00 || pSubTotal = 0.00 || (pBandera != 1 && pBandera != 2) ) THEN
+    IF (pFolio = 0 || pNumEmpleado = 0 || pNumCliente = 0 || pTotal = 0.00 || pIsTarjeta = 0 || pStatus = '' || pUsuario = '' || pBandera = 0 || (pBandera != 1 && pBandera != 2)) THEN
         SET codRetorno = '004';
         SET msg = 'Parametros Vacios';
     ELSE 
         IF (pBandera = 1) THEN
-            IF NOT EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio AND clave_producto = pIdProducto) THEN
+            IF NOT EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN 
                 START TRANSACTION;
-                    INSERT INTO detalle_venta (folio,clave_producto,cantidad,precio,subtotal)
-                    VALUES (pFolio,pIdProducto,pCantidad,pPrecio,pSubTotal);
-
+                    INSERT INTO ventas (folio,fecha_venta,empleado,cliente,total,isTarjeta,folioTarjeta,status,usuario,fechaCreacion,fechaModificacion) 
+                    VALUES (pFolio, NOW(), pNumEmpleado, pNumCliente, pTotal, pIsTarjeta, pFolioTarjeta, pStatus, pUsuario, NOW(), NOW());
+                    CALL spUpdFolios('ventas',1,@codRetorno,@msg);
                     SET codRetorno = '000';
-                    SET msg = 'Venta Guardada con Exito';
+                    SET msg = 'SP Ejecutado con Exito';
                 COMMIT; 
-            ELSE 
+            ELSE
                 SET codRetorno = '001';
                 SET msg = 'El Folio ya fue Registrado';
-                ROLLBACK;
+                ROLLBACK;  
             END IF;
         ELSEIF (pBandera = 2) THEN
-            IF EXISTS (SELECT folio FROM detalle_venta WHERE folio = pFolio) THEN
+            IF EXISTS (SELECT folio FROM ventas WHERE folio = pFolio) THEN
                 START TRANSACTION; 
-                    DELETE FROM detalle_venta WHERE folio = pFolio;
+                    DELETE FROM ventas WHERE folio = pFolio;
+                    CALL spUpdFolios('ventas',2,@codRetorno,@msg);
                     SET codRetorno = '000';
                     SET msg = 'SP Ejecutado Correctamente';
-                COMMIT;
-            ELSE
+                COMMIT; 
+            ELSE 
                 SET codRetorno = '001';
                 SET msg = 'El Folio No Existe';
                 ROLLBACK;

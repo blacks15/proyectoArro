@@ -75,7 +75,7 @@ var global = {
         });
     },
     //FUNCIÓN PARA CREAR MENSAJES
-    mensajes: function(titulo, texto, tipo, url, codRetorno, form, bus) { 
+    mensajes: function(titulo, texto, tipo, url, codRetorno, form, bus) {
         swal({
             title: titulo,
             type: tipo,
@@ -110,7 +110,7 @@ var global = {
     //FUNCIÓN PARA CARGAR LAS PÁGINAS
     cargarPagina: function(pagina) {
         $("#loader").fadeIn(500);
-        $("#pages").load('pages/'+pagina+'.html', function(responseText, statusText, xhr) {
+        $("#pages").load('pages/' + pagina + '.html', function(responseText, statusText, xhr) {
             if (statusText == "error") {
                 $("#pages").load("errores/404.html");
             }
